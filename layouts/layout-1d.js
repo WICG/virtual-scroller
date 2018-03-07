@@ -19,6 +19,8 @@ export default class Layout extends Layout1dBase {
         this._tMeasured = 0;
 
         this._estimate = true;
+        this._first = 0;
+        this._last = 1;
     }
         
 	updateChildSizes(indexedMetrics) {
@@ -302,6 +304,8 @@ export default class Layout extends Layout1dBase {
 
         this._updateScrollSize();
         this._getActiveItems();
+
+        console.debug(`#${this._list._container.id} _reflow: ${1+this._last-this._first}/${this._totalItems} ${this._first} -> ${this._last} (${1+_last-_first}/${this._totalItems} ${_first} -> ${_last})`);
 
         if (this._scrollSize !== _scrollSize) {
             this._emitScrollSize();

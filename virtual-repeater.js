@@ -187,6 +187,7 @@ export const Repeats = Superclass => class extends Superclass {
 
         }
         const shouldMeasure = this._num > 0 && this._measureCallback && (rangeChanged || this._needsRemeasure || this._needsReset);
+        console.debug(`#${this._container.id} _render: ${this._num}/${this._items.length} ${this._first} -> ${this._last} (${this._prevNum}/${this._items.length} ${this._prevFirst} -> ${this._prevLast}) stable=${this._stable} measure=${shouldMeasure}`);
         if (shouldMeasure) {
             this._measureChildren();
         }
@@ -368,6 +369,7 @@ export const Repeats = Superclass => class extends Superclass {
         // offsetWidth doesn't take transforms in consideration,
         // so we use getBoundingClientRect which does.
         const {width, height} = child.getBoundingClientRect();
+        console.debug(`#${child.id} height: ${height}px`);
         return Object.assign({
             width,
             height,

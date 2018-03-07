@@ -3,41 +3,67 @@ import {Repeats} from './virtual-repeater.js';
 export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass) {
     constructor() {
         super();
-        this._num = 0;
-        this._first = -1;
-        this._last = -1;
-        this._prevFirst = -1;
-        this._prevLast = -1;
+        this._num = 1;
+        this._first = 0;
+        this._last = 1;
         this._sizeCallback = null;
         this._adjustRange = this._adjustRange.bind(this);
         this._correctScrollError = this._correctScrollError.bind(this);
         this._sizeContainer = this._sizeContainer.bind(this);
         this._positionChildren = this._positionChildren.bind(this);
         this._notifyStable = this._notifyStable.bind(this);
-
+        
         this._pendingUpdateView = null;
     }
 
     set container(node) {
+        if (this._container) this._container._list = null;
         super.container = node;
+        if (this._container) this._container._list = this;
         if (!this._listening) {
             // TODO: Listen on actual container
             window.addEventListener('scroll', e => this._scheduleUpdateView());
             window.addEventListener('resize', e => this._scheduleUpdateView());
 
             node.addEventListener('listResized', e => {
-                if (e.target !== this && typeof this._layout.updateChildSizes === 'function') {
-                    e.stopPropagation();
-                    const child = e.path[e.path.findIndex(el => el === this) - 1];
-                    const item = this._active.get(child);
-                    // TODO: Should be able to remove this check when we stop hiding children
-                    if (item) {
-                        this._layout.updateChildSizes({
-                            [item]: super._measureChild(child)
-                        });    
-                    }
-                }
+                if (typeof this._layout.updateChildSizes !== 'function') return;
+                const path = e.composedPath();
+                const nestedList = path[0]._list;
+                if (nestedList === this) return;
+
+                e.stopPropagation();
+                const child = path[path.findIndex(el => el._list === this) - 1];
+                // TODO: Should be able to remove this check when we stop hiding children
+                if (!this._active.has(child)) return;
+                const item = this._active.get(child);
+                this._layout.updateChildSizes({
+                    [item]: super._measureChild(child)
+                });
             }, true);
+
+            node.addEventListener('listConnected', e => {
+                const path = e.composedPath();
+                const nestedList = path[0]._list;
+                if (nestedList === this) return;
+                e.stopPropagation();
+                const parentListIdx = path.findIndex(el => el._list === this);
+                const parentListChild = path[parentListIdx - 1];
+                parentListChild._nestedLists = parentListChild._nestedLists || [];
+                parentListChild._nestedLists.push(nestedList);
+                nestedList._parentList = this;
+                nestedList._parentListChild = parentListChild;
+                // console.debug(`#${nestedList._container.id} < #${parentListChild.id} < #${this._container.id}`);
+            }, true);
+            const whenReady = this._container.isConnected ? cb => cb() : cb => Promise.resolve().then(cb);
+            whenReady(() => {
+                // console.debug(`#${this._container.id} fire listConnected`);
+                const event = new Event('listConnected', {
+                    bubbles: true,
+                    cancelable: true,
+                    composed: true,
+                });
+                this._container.dispatchEvent(event);
+            });
             this._listening = true;
         }
         this._scheduleUpdateView();
@@ -69,7 +95,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._detachLayout();
         this._layout = layout;
         // For easier debugging.
-        this._layout._repeater = this;
+        this._layout._list = this;
         layout.addListener('size', this._sizeContainer);
         layout.addListener('position', this._positionChildren);
         layout.addListener('range', this._adjustRange);
@@ -84,7 +110,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     _detachLayout() {
         if (this._layout) {
             // For easier debugging.
-            this._layout._repeater = null;
+            this._layout._list = null;
             this._layout.removeListener('size', this._sizeContainer);
             this._layout.removeListener('position', this._positionChildren);
             this._layout.removeListener('range', this._adjustRange);
@@ -105,7 +131,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._layout.totalItems = this._items.length;
         // Containers can be shadowRoots, so get the host.
         const listBounds = (this._container.host || this._container).getBoundingClientRect();
-        // TODO(valdrin): exit early if 0x0 bounds
         const scrollerWidth = window.innerWidth;
         const scrollerHeight = window.innerHeight;
         const x = Math.max(0, -listBounds.x);
@@ -132,12 +157,19 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
 
     _notifyStable() {
         if (typeof this._sizeCallback === 'function') {
+            // console.debug(`#${this._container.id} stable, invoke sizeCallback`);
             this._sizeCallback();
-            this._sizeCallback = null;
+            this.sizeCallback = null;
         }
-        // Containers can be shadowRoots, so check also the host.
-        else if ((this._container === this || this._container.host === this) && this.offsetParent) {
-            this.dispatchEvent(new Event('listResized', {bubbles: true}));
+        else if (this._parentList) {
+            // console.debug(`#${this._container.id} stable, invoke #${this._parentList._container.id}._updateChildSize(#${this._parentListChild.id})`)
+            //this._parentList._updateChildSize(this._parentListChild);
+            // this.requestRemeasure();
+            this._container.dispatchEvent(new Event('listResized', {
+                bubbles: true,
+                cancelable: true,
+                composed: true,
+            }));
         }
     }
 
@@ -149,8 +181,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             const c = key - this._first;
             const n = k[c];
             if (n) {
+                // console.debug(`#${this._container.id} _positionChild #${n.id}: top ${y}`);
                 n.style.position = 'absolute';
-                n.style.transform = `Translate3d(${x}px, ${y}px, 0)`;
+                n.style.transform = `translate3d(${x}px, ${y}px, 0)`;
             }
         });
     }
@@ -181,12 +214,34 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         window.scroll(window.scrollX - x, window.scrollY - y);
     }
 
+    _updateChildSize(child) {
+        if (typeof this._layout.updateChildSizes !== 'function') return;
+        // TODO: Should be able to remove this check when we stop hiding children
+        if (!this._active.has(child)) return;
+        const item = this._active.get(child);
+        this._layout.updateChildSizes({
+            [item]: super._measureChild(child)
+        });    
+    }
+
     _measureChild(child) {
-        const lists = child.querySelectorAll('virtual-list');
-        if (lists.length) {
+        if (child._nestedLists && child._nestedLists.length) {
             this._layout._estimate = false;
-            const listSizes = [...lists].map(l => new Promise(resolve => l.sizeCallback = resolve));
-            return Promise.all(listSizes).then(() => super._measureChild(child));
+            const nestedList = child._nestedLists[0];
+            console.debug(`#${this._container.id}._measureChild(#${child.id}): #${nestedList._container.id} pending...`);
+            const listSizes = child._nestedLists.map(l => new Promise(resolve => {
+                // if (l._stable) {
+                //     resolve();
+                // } else {
+                    l.sizeCallback = () => {
+                        resolve();
+                    };
+                // }
+            }));
+            return Promise.all(listSizes).then(() => {
+                console.debug(`#${this._container.id}._measureChild(#${child.id}): #${child._nestedLists[0]._container.id} ready!`);
+                return super._measureChild(child);
+            });
         }
         return super._measureChild(child);
     }
