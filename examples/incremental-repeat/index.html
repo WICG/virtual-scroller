@@ -1,0 +1,57 @@
+<!--
+@license
+Copyright (c) 2017 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!doctype html>
+<html>
+  <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+
+    <label for="jank">enable jank:</label>
+    <input type="checkbox" id="jank">
+    <label for="chunk">chunk size:</label>
+    <input type="number" id="chunk" value="10" onchange="updateChunk()">
+    <button onclick="resetList()">reset</button>
+    <incremental-list id="list" chunk="10">
+      <template>
+        <li><span class="idx"></span>: <span class="value"></span></li>
+      </template>  
+    </incremental-list>
+
+    <script type="module">
+      import './incremental-list.js';
+
+      window.list = document.querySelector('#list');
+      window.jank = document.querySelector('#jank');
+      window.chunk = document.querySelector('#chunk');
+
+      window.resetList = () => {
+        const items = [];
+        for (let i = 0; i < 10000; i++) {
+            items.push(`Item ${i}`);
+        }
+        list.items = items;
+      }
+
+      window.updateChunk = () => {
+        list.chunk = chunk.valueAsNumber;
+      }
+
+      resetList();
+
+      requestAnimationFrame(function dojank() {
+        if (jank.checked) {
+          for(var i = 0; i<1e8; i++);
+        }
+        requestAnimationFrame(dojank);
+      });
+    </script>
+  </body>
+</html>
