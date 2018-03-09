@@ -1,4 +1,4 @@
-import {html, render} from '../../../../../../lit-html/lib/lit-extended.js';
+import {html, render} from '/node_modules/lit-html/lib/lit-extended.js';
 import {repeat} from '../../lit-repeater.js';
 import {Sample as BaseSample} from '../../../../examples/basic-repeat/basic-repeat.js';
 
