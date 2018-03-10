@@ -17,14 +17,15 @@
 org="PolymerLabs"
 repo="virtual-list"
 
-rm -rf dist
-mkdir dist
+rm -rf $repo
+mkdir $repo
 git clone https://github.com/$org/$repo.git --single-branch
 # switch to gh-pages branch
-pushd dist >/dev/null
+pushd $repo >/dev/null
 git checkout --orphan gh-pages
 # remove all content
 rm .gitignore
+rm deploy-to-gh-pages.sh
 npm install
 
 # send it all to github
@@ -33,4 +34,4 @@ git commit -am 'seed gh-pages'
 git push -u origin gh-pages --force
 
 popd >/dev/null
-rm -rf dist
+rm -rf $repo
