@@ -1,8 +1,9 @@
 {
-  "name": "@polymer/virtual-list",
+  "name": "virtual-list",
   "version": "0.0.1",
   "description": "A virtual list that optimizes the rendering of DOM according to the visible area and available data.",
-  "main": "index.js",
+  "main": "virtual-list.js",
+  "module": "virtual-list.js",
   "flat": true,
   "directories": {},
   "dependencies": {
