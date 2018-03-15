@@ -16,7 +16,7 @@ export class Sample extends BaseSample {
 
     render() {
         render(html`
-                ${list(this)}
+                ${list(this.items, this.template)}
         `, document.body);
     }
 }

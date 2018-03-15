@@ -144,12 +144,15 @@ export const LitMixin = Superclass => class extends Superclass {
 
 export const LitRepeater = LitMixin(VirtualRepeater);
 
-export const repeat = (config, RepeaterClass = LitRepeater) => directive(part => {
-    Object.assign(config, {part});
+export const repeat = (items, template, config = {}, RepeaterClass = LitRepeater) => directive(part => {
     let repeater = partToRepeater.get(part);
     if (!repeater) {
         repeater = new RepeaterClass();
         partToRepeater.set(part, repeater);
+        // Assign template only once.
+        repeater.template = template;
     }
+    repeater.items = items;
+    repeater.part = part;
     Object.assign(repeater, config);
 });

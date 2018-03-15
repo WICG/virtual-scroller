@@ -38,7 +38,7 @@ class LitIncrementalListElement extends HTMLElement {
     render() {
         this._asyncRender = null;
         const {chunk, items, template} = this;
-        render(html`${repeat({items, chunk, template})}`, this);
+        render(html`${repeat(items, template, {chunk})}`, this);
     }
 }
 

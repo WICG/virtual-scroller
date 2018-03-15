@@ -7,13 +7,13 @@ const layout = new Layout({direction: 'vertical'});
 
 export const LitList = LitMixin(VirtualList);
 
-export const list = (config) => {
+export const list = (items, template, config = {}) => {
   // Recycle by default.
-  if (config && !config.hasOwnProperty('recycle')) {
+  if (!config.hasOwnProperty('recycle')) {
     config.recycle = true;
   }
-  if (config && !config.hasOwnProperty('layout')) {
+  if (!config.hasOwnProperty('layout')) {
     config.layout = layout;
   }
-  return repeat(config, LitList);
+  return repeat(items, template, config, LitList);
 };
