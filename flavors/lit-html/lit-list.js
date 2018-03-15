@@ -1,6 +1,6 @@
 import {VirtualList} from '../../virtual-list.js';
 import {LitMixin, repeat} from './lit-repeater.js';
-import {directive} from '/node_modules/lit-html/lit-html.js';
+import {directive} from '../../../../lit-html/lit-html.js';
 
 const partToList = new WeakMap();
 

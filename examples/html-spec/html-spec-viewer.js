@@ -1,7 +1,7 @@
 import {RepeatsAndScrolls} from '../../virtual-list.js';
 import Layout from '../../layouts/layout-1d.js';
-import {HtmlSpec} from '/node_modules/streaming-spec/HtmlSpec.js';
-import {iterateStream} from '/node_modules/streaming-spec/iterateStream.js';
+import {HtmlSpec} from '../../../../streaming-spec/HtmlSpec.js';
+import {iterateStream} from '../../../../streaming-spec/iterateStream.js';
 
 class HTMLSpecViewer extends RepeatsAndScrolls(HTMLElement) {
 

@@ -1,5 +1,5 @@
 import {VirtualRepeater} from '../../virtual-repeater.js';
-import {directive, NodePart} from '/node_modules/lit-html/lit-html.js';
+import {directive, NodePart} from '../../../../lit-html/lit-html.js';
 
 const partToRepeater = new WeakMap();
 

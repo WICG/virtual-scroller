@@ -1,5 +1,5 @@
 import {VirtualRepeater} from '../../virtual-repeater.js';
-import {Component, h, render} from '/node_modules/preact/dist/preact.esm.js';
+import {Component, h, render} from '../../../../preact/dist/preact.esm.js';
 
 export class Repeat extends Component {
     componentWillMount() {
@@ -13,7 +13,7 @@ export class Repeat extends Component {
     _updateRepeater(props) {
         const {first, num, items, component} = props;
         Object.assign(this._repeater, {first, num, items, component});
-        this._repeater.render();
+        // this._repeater.render();
     }
 
     componentWillReceiveProps(nextProps) {

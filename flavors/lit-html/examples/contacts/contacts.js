@@ -1,4 +1,4 @@
-import {html, render} from '/node_modules/lit-html/lib/lit-extended.js';
+import {html, render} from '../../../../../../lit-html/lib/lit-extended.js';
 import {list} from '../../lit-list.js';
 import {Sample as BaseSample} from '../../../../examples/contacts/contacts.js';
 
