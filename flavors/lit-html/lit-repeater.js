@@ -149,7 +149,9 @@ export const repeat = (items, template, config = {}, RepeaterClass = LitRepeater
     if (!repeater) {
         repeater = new RepeaterClass();
         partToRepeater.set(part, repeater);
-        // Assign template only once.
+    }
+    // Assign template only once.
+    if (!repeater.template) {
         repeater.template = template;
     }
     repeater.items = items;
