@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<body>
+  <style>
+    my-container {
+      position: relative;
+      display: block;
+      outline: 1px solid;
+    }
+
+    section {
+      width: 100%;
+      outline: 1px solid;
+      background-color: lime;
+    }
+
+    .title {
+      height: 50px;
+      background-color: yellow;
+    }
+
+    .innerContainer>div {
+      height: 200px;
+      width: 100%;
+      outline: 1px solid orange;
+    }
+  </style>
+  <!-- <my-container>
+    <section>
+      <div class="title">test</div>
+      <div class="innerContainer">
+        <div>test.test</div>
+        <div>test.test</div>
+      </div>
+    </section>
+    <section>
+      <div class="title">test</div>
+      <div class="innerContainer">
+        <div>test.test</div>
+        <div>test.test</div>
+      </div>
+    </section>
+  </my-container> -->
+
+  <my-container id="container"></my-container>
+  <script type="module" src="nested.js"></script>
+</body>
+
+</html>

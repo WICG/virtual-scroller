@@ -52,17 +52,16 @@ export default class Layout extends Layout1dBase {
                 }
                 this._tMeasured = this._tMeasured + delta;
             }
-		});
-
-        this._updateItemSize();
-        this._scheduleReflow();
+        });
+        if (!this._nMeasured) {
+            console.warn(`#${this._list._container.id} no items measured yet.`);
+        } else {
+            this._updateItemSize();
+            this._scheduleReflow();
+        }
 	}
 
     _updateItemSize() {
-        if (!this._nMeasured) {
-            console.error('_updateItemSize: divide by 0, skipping.');
-            return;
-        }
         this._itemSize[this._axis] = this._tMeasured / this._nMeasured;
     }
 
@@ -305,7 +304,7 @@ export default class Layout extends Layout1dBase {
         this._updateScrollSize();
         this._getActiveItems();
 
-        console.debug(`#${this._list._container.id} _reflow: ${1+this._last-this._first}/${this._totalItems} ${this._first} -> ${this._last} (${1+_last-_first}/${this._totalItems} ${_first} -> ${_last})`);
+        // console.debug(`#${this._list._container.id} _reflow: ${1+this._last-this._first}/${this._totalItems} ${this._first} -> ${this._last} (${1+_last-_first}/${this._totalItems} ${_first} -> ${_last})`);
 
         if (this._scrollSize !== _scrollSize) {
             this._emitScrollSize();
