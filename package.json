@@ -12,6 +12,7 @@
     "streaming-spec": "git+https://github.com/jakearchibald/streaming-html-spec.git"
   },
   "scripts": {
+    "gh-pages": "./deploy-to-gh-pages.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
