@@ -31,15 +31,18 @@ git checkout --orphan gh-pages
 git rm -rf -q .
 
 # use npm to install runtime deployment
-# copy the package.json from master here
-git show ${branch}:package.json > package.json
+# copy the package.json from master here, remove module name so
+# we can install it
+git show ${branch}:package.json | sed /\"$repo\"/d > package.json
 
 # install the npm deps and also this repo so we can copy the demo
-npm install
-npm install $org/$repo#$branch --force
+yarn install --flat
+yarn add --flat $org/$repo#$branch
+
+mv node_modules/ components/
 
 # redirect by default to the component folder
-echo "<META http-equiv="refresh" content=\"0;URL=node_modules/$repo/demo/\">" >index.html
+echo "<META http-equiv="refresh" content=\"0;URL=components/$repo/demo/\index.html">" >index.html
 
 # send it all to github
 git add -A .
