@@ -36,13 +36,13 @@ git rm -rf -q .
 git show ${branch}:package.json | sed /\"$repo\"/d > package.json
 
 # install the npm deps and also this repo so we can copy the demo
-yarn install --flat
-yarn add --flat $org/$repo#$branch
+npm install
+npm install $org/$repo#$branch
 
 mv node_modules/ components/
 
 # redirect by default to the component folder
-echo "<META http-equiv="refresh" content=\"0;URL=components/$repo/demo/\index.html">" >index.html
+echo "<META http-equiv=\"refresh\" content=\"0;URL=components/$repo/demo/\index.html\">" > index.html
 
 # send it all to github
 git add -A .
