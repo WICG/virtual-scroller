@@ -46,6 +46,16 @@ export const Repeats = Superclass => class extends Superclass {
 
     // API
 
+    push(item) {
+        const newIndex = this._items.length;
+        if (newIndex >= this._first && newIndex <= this._first + this._num) {
+            // HACK
+            this.items = this._items.concat([item]);
+        } else {
+            this._items.push(item);
+        }
+    }
+
     set first(idx) {
         if (typeof idx === 'number') {
             const len = this._items ? this._items.length : 0;

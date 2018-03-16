@@ -16,17 +16,33 @@
 # Run in a clean directory passing in a GitHub org and repo name
 org="PolymerLabs"
 repo="virtual-list"
+branch="master" # default to master when branch isn't specified
 
+# make folder (same as input, no checking!)
 rm -rf $repo
 mkdir $repo
 git clone https://github.com/$org/$repo.git --single-branch
+
 # switch to gh-pages branch
 pushd $repo >/dev/null
 git checkout --orphan gh-pages
+
 # remove all content
-rm .gitignore
-rm deploy-to-gh-pages.sh
-npm install
+git rm -rf -q .
+
+# use npm to install runtime deployment
+# copy the package.json from master here, remove module name so
+# we can install it
+git show ${branch}:package.json | sed /\"$repo\"/d > package.json
+
+# install the npm deps and also this repo so we can copy the demo
+yarn install --flat
+yarn add --flat $org/$repo#$branch
+
+mv node_modules/ components/
+
+# redirect by default to the component folder
+echo "<META http-equiv="refresh" content=\"0;URL=components/$repo/demo/\index.html">" >index.html
 
 # send it all to github
 git add -A .

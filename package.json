@@ -1,13 +1,15 @@
 {
-  "name": "@polymer/virtual-list",
+  "name": "virtual-list",
   "version": "0.0.1",
   "description": "A virtual list that optimizes the rendering of DOM according to the visible area and available data.",
-  "main": "index.js",
+  "main": "virtual-list.js",
+  "module": "virtual-list.js",
   "flat": true,
   "directories": {},
   "dependencies": {
     "lit-html": "latest",
-    "preact": "^8.2.6"
+    "preact": "^8.2.6",
+    "streaming-spec": "git+https://github.com/jakearchibald/streaming-html-spec.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
