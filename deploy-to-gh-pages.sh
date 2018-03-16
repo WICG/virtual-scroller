@@ -42,7 +42,7 @@ npm install $org/$repo#$branch
 mv node_modules/ components/
 
 # redirect by default to the component folder
-echo "<META http-equiv=\"refresh\" content=\"0;URL=components/$repo/demo\/\">" > index.html
+echo "<META http-equiv=\"refresh\" content=\"0;URL=components/$repo/demo\">" > index.html
 
 # send it all to github
 git add -A .
