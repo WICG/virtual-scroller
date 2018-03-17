@@ -43,13 +43,13 @@ Some implementations append DOM incrementally, others recycle the DOM.
 ### VirtualList
 
 ```js 
-import Layout from './node_modules/virtual-list/layouts/layout-1d.js';
-import {VirtualList} from './node_modules/virtual-list/virtual-list.js';
+import Layout from './layouts/layout-1d.js';
+import {VirtualList} from './virtual-list.js';
 
 (async () => {
 
   const layout = new Layout({direction: 'vertical'});
-  const items = await fetch('./examples/contacts/contacts.json').then(response => response.json());
+  const items = await fetch('./demo/contacts/contacts.json').then(response => response.json());
   const recycledChildren = [];
   
   const list = Object.assign(new VirtualList(), {
@@ -79,12 +79,12 @@ import {VirtualList} from './node_modules/virtual-list/virtual-list.js';
 ### `verticalList` directive (lit-html)
 
 ```js 
-import {verticalList} from './node_modules/virtual-list/lit-html/lit-list.js';
-import {html, render} from './node_modules/lit-html/lit-html.js';
+import {verticalList} from './lit-html/lit-list.js';
+import {html, render} from '../../lit-html/lit-html.js';
 
 (async () => {
 
-  const items = await fetch('./examples/contacts/contacts.json').then(response => response.json());
+  const items = await fetch('./demo/contacts/contacts.json').then(response => response.json());
 
   render(html`${verticalList(items, (item, idx) => 
       html`<section><h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p></section>`)}`, document.body);
