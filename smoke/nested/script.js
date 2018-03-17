@@ -1,17 +1,17 @@
 import {
   VirtualVerticalList
-} from '../virtual-list.js';
+} from '../../virtual-list.js';
 import {
   list
-} from '../flavors/lit-html/lit-list.js';
+} from '../../lit-html/lit-list.js';
 import {
   html,
   render
-} from '/node_modules/lit-html/lit-html.js';
+} from '../../../lit-html/lit-html.js';
 
-const items = new Array(4).fill({
+const items = new Array(40).fill({
   name: 'item',
-  items: new Array(5).fill({
+  items: new Array(1).fill({
     name: 'inner item',
   })
 });
@@ -30,7 +30,9 @@ container._recycledChildren = [];
 
 /* ------------- raw js ------------- */
 
-window.vlist = Object.assign(new VirtualVerticalList(), {
+window.vlist = new VirtualVerticalList();
+Object.assign(window.vlist, {
+  id: 'vlist',
   items,
   container,
   newChildFn: (item, idx) => {
@@ -42,8 +44,12 @@ window.vlist = Object.assign(new VirtualVerticalList(), {
         title: section.querySelector('.title'),
         container: section.querySelector('.innerContainer')
       };
+      section.id = `section_${idx}`;
+      section.$.container.id = `innerContainer_${idx}`;
       section._recycledChildren = [];
-      section._list = Object.assign(new VirtualVerticalList(), {
+      section._list = new VirtualVerticalList();
+      Object.assign(section._list, {
+        id: `nestedList_${idx}`,
         container: section.$.container,
         newChildFn: (innerItem, innerIdx) => {
           return (section._recycledChildren.pop() || document.createElement('div'));
@@ -64,6 +70,7 @@ window.vlist = Object.assign(new VirtualVerticalList(), {
     section.id = `section_${idx}`;
     section.$.container.id = `innerContainer_${idx}`;
     section.$.title.textContent = `${idx} - ${item.name}`;
+    section._list.id = `nestedList_${idx}`;
     section._list.items = item.items;
   },
   recycleChildFn: (section, item, idx) => {

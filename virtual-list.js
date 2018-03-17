@@ -21,6 +21,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         if (this._container) this._container._list = null;
         super.container = node;
         if (this._container) this._container._list = this;
+        // console.debug(this.id, 'container #' + this._container.id, 'listening? ' + this._listening);
         if (!this._listening) {
             // TODO: Listen on actual container
             window.addEventListener('scroll', e => this._scheduleUpdateView());
@@ -63,10 +64,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
                     cancelable: true,
                     composed: true,
                 });
-                this._container.dispatchEvent(event);
+                //this._container.dispatchEvent(event);
             });
             this._listening = true;
         }
+        // console.debug(this.id, 'container #' + this._container.id, 'listening! ' + this._listening);
         this._scheduleUpdateView();
     }
 
@@ -182,7 +184,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             const c = key - this._first;
             const n = k[c];
             if (n) {
-                console.debug(`_positionChild #${this._container.id} > #${n.id}: top ${y}`);
+                // console.debug(`_positionChild #${this._container.id} > #${n.id}: top ${y}`);
                 n.style.position = 'absolute';
                 n.style.transform = `translate3d(${x}px, ${y}px, 0)`;
             }
@@ -229,7 +231,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         if (child._nestedLists && child._nestedLists.length) {
             this._layout._estimate = false;
             const nestedList = child._nestedLists[0];
-            console.debug(`_measureChild #${this._container.id} > #${child.id}: pending... #${nestedList._container.id}`);
+            // console.debug(`_measureChild #${this._container.id} > #${child.id}: pending... #${nestedList._container.id}`);
             const listSizes = child._nestedLists.map(l => new Promise(resolve => {
                 // if (l._stable) {
                 //     resolve();
@@ -240,7 +242,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
                 // }
             }));
             return Promise.all(listSizes).then(() => {
-                console.debug(`_measureChild #${this._container.id} > #${child.id}: ready!!! #${child._nestedLists[0]._container.id}`);
+                // console.debug(`_measureChild #${this._container.id} > #${child.id}: ready!!! #${child._nestedLists[0]._container.id}`);
                 return super._measureChild(child);
             });
         }

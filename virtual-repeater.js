@@ -379,7 +379,7 @@ export const Repeats = Superclass => class extends Superclass {
         // offsetWidth doesn't take transforms in consideration,
         // so we use getBoundingClientRect which does.
         const {width, height} = child.getBoundingClientRect();
-        console.debug(`_measureChild #${this._container.id} > #${child.id}: height: ${height}px`);
+        // console.debug(`_measureChild #${this._container.id} > #${child.id}: height: ${height}px`);
         return Object.assign({
             width,
             height,
