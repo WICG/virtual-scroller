@@ -43,8 +43,8 @@ Some implementations append DOM incrementally, others recycle the DOM.
 ### VirtualList
 
 ```js 
-import Layout from './layouts/layout-1d.js';
-import {VirtualList} from './virtual-list.js';
+import Layout from './node_modules/virtual-list/layouts/layout-1d.js';
+import {VirtualList} from './node_modules/virtual-list/virtual-list.js';
 
 (async () => {
 
@@ -79,8 +79,8 @@ import {VirtualList} from './virtual-list.js';
 ### `verticalList` directive (lit-html)
 
 ```js 
-import {verticalList} from './flavors/lit-html/lit-list.js';
-import {html, render} from '../../lit-html/lit-html.js';
+import {verticalList} from './node_modules/virtual-list/lit-html/lit-list.js';
+import {html, render} from './node_modules/lit-html/lit-html.js';
 
 (async () => {
 
