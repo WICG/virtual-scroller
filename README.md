@@ -9,7 +9,7 @@ Ensure you have installed the npm dependencies and serve from the project root
 $ npm install
 $ polymer serve --npm
 ```
-Then, navigate to the url: http://localhost:8081/components/@polymer/virtual-list/
+Then, navigate to the url: http://localhost:8081/components/virtual-list/
 
 ## Concepts and Domain
 
@@ -79,7 +79,6 @@ import {VirtualList} from './virtual-list.js';
 ### `verticalList` directive (lit-html)
 
 ```js 
-import Layout from './layouts/layout-1d.js';
 import {verticalList} from './flavors/lit-html/lit-list.js';
 import {html, render} from '../../lit-html/lit-html.js';
 
