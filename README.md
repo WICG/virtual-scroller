@@ -76,18 +76,18 @@ import {VirtualList} from './virtual-list.js';
 
 ```
 
-### `list` directive (lit-html)
+### `verticalList` directive (lit-html)
 
 ```js 
 import Layout from './layouts/layout-1d.js';
-import {list} from './flavors/lit-html/lit-list.js';
+import {verticalList} from './flavors/lit-html/lit-list.js';
 import {html, render} from '../../lit-html/lit-html.js';
 
 (async () => {
 
   const items = await fetch('./examples/contacts/contacts.json').then(response => response.json());
 
-  render(html`${list(items, (item, idx) => 
+  render(html`${verticalList(items, (item, idx) => 
       html`<section><h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p></section>`)}`, document.body);
 
 })();

@@ -24,8 +24,10 @@ export class Sample extends BaseSample {
     render() {
         const {layout, items, template, resetValue} = this;
         render(html`
-            ${list(items, template, {
+            ${list({
                 layout,
+                items,
+                template,
                 resetValue
             })}
         `, document.body);

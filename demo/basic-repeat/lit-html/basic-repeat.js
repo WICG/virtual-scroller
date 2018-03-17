@@ -13,7 +13,7 @@ export class Sample extends BaseSample {
         const {template} = this;
         render(html`
             <ul>
-                ${repeat(items, template, {first, num})}
+                ${repeat({first, num, items, template})}
             </ul>
         `, document.body);
     }

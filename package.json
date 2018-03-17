@@ -9,7 +9,7 @@
   "dependencies": {
     "lit-html": "latest",
     "preact": "^8.2.6",
-    "streaming-spec": "git+https://github.com/jakearchibald/streaming-html-spec.git"
+    "streaming-spec": "github:jakearchibald/streaming-html-spec#master"
   },
   "scripts": {
     "gh-pages": "./deploy-to-gh-pages.sh",

@@ -1,8 +1,6 @@
 import {VirtualRepeater} from '../virtual-repeater.js';
 import {directive, NodePart} from '../../lit-html/lit-html.js';
 
-const partToRepeater = new WeakMap();
-
 export const LitMixin = Superclass => class extends Superclass {
     constructor() {
         super();
@@ -144,17 +142,17 @@ export const LitMixin = Superclass => class extends Superclass {
 
 export const LitRepeater = LitMixin(VirtualRepeater);
 
-export const repeat = (items, template, config = {}, RepeaterClass = LitRepeater) => directive(part => {
+const partToRepeater = new WeakMap();
+export const repeat = (config = {}) => directive(part => {
     let repeater = partToRepeater.get(part);
     if (!repeater) {
-        repeater = new RepeaterClass();
+        repeater = new LitRepeater();
         partToRepeater.set(part, repeater);
     }
-    // Assign template only once.
-    if (!repeater.template) {
-        repeater.template = template;
-    }
-    repeater.items = items;
-    repeater.part = part;
+    Object.assign(config, {
+        part,
+        // Assign template only once.
+        template: repeater.template || config.template,
+    });
     Object.assign(repeater, config);
 });
