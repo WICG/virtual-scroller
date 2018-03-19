@@ -16,7 +16,6 @@ const items = new Array(40).fill({
   })
 });
 const container = document.getElementById('container');
-container._recycledChildren = [];
 
 // const ro = new ResizeObserver(entries => {
 //   for (let entry of entries) {
@@ -30,13 +29,16 @@ container._recycledChildren = [];
 
 /* ------------- raw js ------------- */
 
+let listsCount = 0;
 window.vlist = new VirtualVerticalList();
+vlist._recycledChildren = [];
+vlist.layout._itemSize.y = 250;
 Object.assign(window.vlist, {
   id: 'vlist',
   items,
   container,
   newChildFn: (item, idx) => {
-    let section = container._recycledChildren.pop();
+    let section = vlist._recycledChildren.pop();
     if (!section) {
       section = document.createElement('section');
       section.innerHTML = `<div class="title"></div><div class="innerContainer"></div>`;
@@ -46,23 +48,32 @@ Object.assign(window.vlist, {
       };
       section.id = `section_${idx}`;
       section.$.container.id = `innerContainer_${idx}`;
-      section._recycledChildren = [];
       section._list = new VirtualVerticalList();
+      section._list._recycledChildren = [];
+      section._list.layout._itemSize.y = 200;
       Object.assign(section._list, {
-        id: `nestedList_${idx}`,
+        id: 'nested_' + listsCount++,
         container: section.$.container,
         newChildFn: (innerItem, innerIdx) => {
-          return (section._recycledChildren.pop() || document.createElement('div'));
+          let child = section._list._recycledChildren.pop();
+          if (!child) {
+            child = document.createElement('div');
+          } else {
+            console.debug(section._list.id + ' used recycled #' + child.id);
+          }
+          return child;
         },
         updateChildFn: (child, innerItem, innerIdx) => {
           child.id = `innerContent_${idx}.${innerIdx}`;
           child.innerHTML = `${idx}.${innerIdx} - ${innerItem.name}`;
         },
         recycleChildFn: (child, innerItem, innerIdx) => {
-          section._recycledChildren.push(child);
+          section._list._recycledChildren.push(child);
+          console.debug(section._list.id + ' recycled #' + child.id);
         }
       });
-      // section._list._layout._itemSize.y = 1000000;
+    } else {
+      console.debug(vlist.id + ' used recycled #' + section.id);
     }
     return section;
   },
@@ -70,11 +81,11 @@ Object.assign(window.vlist, {
     section.id = `section_${idx}`;
     section.$.container.id = `innerContainer_${idx}`;
     section.$.title.textContent = `${idx} - ${item.name}`;
-    section._list.id = `nestedList_${idx}`;
     section._list.items = item.items;
   },
   recycleChildFn: (section, item, idx) => {
-    container._recycledChildren.push(section);
+    vlist._recycledChildren.push(section);
+    console.debug(vlist.id + ' recycled #' + section.id);
   }
 });
 

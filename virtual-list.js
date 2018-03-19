@@ -4,45 +4,33 @@ import Layout from './layouts/layout-1d.js';
 export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass) {
     constructor() {
         super();
-        this._num = 1;
-        this._first = 0;
-        this._last = 1;
+        this._num = 0;
+        this._first = -1;
+        this._last = -1;
+        this._prevFirst = -1;
+        this._prevLast = -1;
+        // this._num = 1;
+        // this._first = 0;
+        // this._last = 1;
         this._sizeCallback = null;
         this._adjustRange = this._adjustRange.bind(this);
         this._correctScrollError = this._correctScrollError.bind(this);
         this._sizeContainer = this._sizeContainer.bind(this);
         this._positionChildren = this._positionChildren.bind(this);
         this._notifyStable = this._notifyStable.bind(this);
-        
+
         this._pendingUpdateView = null;
     }
 
     set container(node) {
+        console.debug(this.id, 'set container: #' + node.id, this._container ? 'old: #' + this._container.id : '');
         if (this._container) this._container._list = null;
         super.container = node;
         if (this._container) this._container._list = this;
-        // console.debug(this.id, 'container #' + this._container.id, 'listening? ' + this._listening);
         if (!this._listening) {
             // TODO: Listen on actual container
             window.addEventListener('scroll', e => this._scheduleUpdateView());
             window.addEventListener('resize', e => this._scheduleUpdateView());
-
-            node.addEventListener('listResized', e => {
-                if (typeof this._layout.updateChildSizes !== 'function') return;
-                const path = e.composedPath();
-                const nestedList = path[0]._list;
-                if (nestedList === this) return;
-
-                e.stopPropagation();
-                const child = path[path.findIndex(el => el._list === this) - 1];
-                // TODO: Should be able to remove this check when we stop hiding children
-                if (!this._active.has(child)) return;
-                const item = this._active.get(child);
-                this._layout.updateChildSizes({
-                    [item]: super._measureChild(child)
-                });
-            }, true);
-
             node.addEventListener('listConnected', e => {
                 const path = e.composedPath();
                 const nestedList = path[0]._list;
@@ -54,7 +42,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
                 parentListChild._nestedLists.push(nestedList);
                 nestedList._parentList = this;
                 nestedList._parentListChild = parentListChild;
-                // console.debug(`#${nestedList._container.id} < #${parentListChild.id} < #${this._container.id}`);
+                // console.debug(`#${this._container.id} > #${parentListChild.id} > #${nestedList._container.id} connected!`);
             }, true);
             const whenReady = this._container.isConnected ? cb => cb() : cb => Promise.resolve().then(cb);
             whenReady(() => {
@@ -64,11 +52,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
                     cancelable: true,
                     composed: true,
                 });
-                //this._container.dispatchEvent(event);
+                this._container.dispatchEvent(event);
             });
             this._listening = true;
         }
-        // console.debug(this.id, 'container #' + this._container.id, 'listening! ' + this._listening);
         this._scheduleUpdateView();
     }
 
@@ -165,15 +152,21 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             this.sizeCallback = null;
         }
         else if (this._parentList) {
-            // console.debug(`#${this._container.id} stable, invoke #${this._parentList._container.id}._updateChildSize(#${this._parentListChild.id})`)
-            //this._parentList._updateChildSize(this._parentListChild);
-            // this.requestRemeasure();
-            this._container.dispatchEvent(new Event('listResized', {
-                bubbles: true,
-                cancelable: true,
-                composed: true,
-            }));
+            this._parentList._onNestedListResized(this._parentListChild);
         }
+    }
+
+    _onNestedListResized(child) {
+        // TODO: Should be able to remove the _active check when we
+        // stop hiding children
+        if ('function' !== typeof this._layout.updateChildSizes || 
+            false === this._active.has(child)) {
+            return;
+        }
+        const item = this._active.get(child);
+        this._layout.updateChildSizes({
+            [item]: super._measureChild(child)
+        });
     }
 
     async _positionChildren(pos) {
