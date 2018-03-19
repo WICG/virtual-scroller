@@ -187,11 +187,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             this._sizeCallback();
             this._sizeCallback = null;
         } else if (this._parentList) {
-            this._parentList._onChildListResized(this._parentListChild);
+            this._parentList._updateChildSize(this._parentListChild);
         }
     }
 
-    async _onChildListResized(child) {
+    async _updateChildSize(child) {
         // TODO: Should be able to remove the _active check when we
         // stop hiding children
         if ('function' !== typeof this._layout.updateChildSizes ||
@@ -251,16 +251,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             y
         } = err;
         window.scroll(window.scrollX - x, window.scrollY - y);
-    }
-
-    _updateChildSize(child) {
-        if (typeof this._layout.updateChildSizes !== 'function') return;
-        // TODO: Should be able to remove this check when we stop hiding children
-        if (!this._active.has(child)) return;
-        const item = this._active.get(child);
-        this._layout.updateChildSizes({
-            [item]: super._measureChild(child)
-        });
     }
 
     _measureChild(child) {
