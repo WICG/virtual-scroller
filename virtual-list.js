@@ -1,4 +1,6 @@
-import {Repeats} from './virtual-repeater.js';
+import {
+    Repeats
+} from './virtual-repeater.js';
 import Layout from './layouts/layout-1d.js';
 
 export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass) {
@@ -18,50 +20,56 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._sizeContainer = this._sizeContainer.bind(this);
         this._positionChildren = this._positionChildren.bind(this);
         this._notifyStable = this._notifyStable.bind(this);
+        this._scheduleUpdateView = this._scheduleUpdateView.bind(this);
+        this._onListConnected = this._onListConnected.bind(this);
+
+        this._layoutItemSize = {};
+
+        this._childLists = new Map();
+        this._parentList = null;
+        this._parentListChild = null;
 
         this._pendingUpdateView = null;
     }
 
     set container(node) {
-        console.debug(this.id, 'set container: #' + node.id, this._container ? 'old: #' + this._container.id : '');
-        if (this._container) this._container._list = null;
-        super.container = node;
-        if (this._container) this._container._list = this;
-        if (!this._listening) {
-            // TODO: Listen on actual container
-            window.addEventListener('scroll', e => this._scheduleUpdateView());
-            window.addEventListener('resize', e => this._scheduleUpdateView());
-            node.addEventListener('listConnected', e => {
-                const path = e.composedPath();
-                const nestedList = path[0]._list;
-                if (nestedList === this) return;
-                e.stopPropagation();
-                const parentListIdx = path.findIndex(el => el._list === this);
-                const parentListChild = path[parentListIdx - 1];
-                parentListChild._nestedLists = parentListChild._nestedLists || [];
-                parentListChild._nestedLists.push(nestedList);
-                nestedList._parentList = this;
-                nestedList._parentListChild = parentListChild;
-                // console.debug(`#${this._container.id} > #${parentListChild.id} > #${nestedList._container.id} connected!`);
-            }, true);
-            const whenReady = this._container.isConnected ? cb => cb() : cb => Promise.resolve().then(cb);
-            whenReady(() => {
-                // console.debug(`#${this._container.id} fire listConnected`);
-                const event = new Event('listConnected', {
-                    bubbles: true,
-                    cancelable: true,
-                    composed: true,
-                });
-                this._container.dispatchEvent(event);
-            });
-            this._listening = true;
+        if (this._container) {
+            this._container.removeEventListener('listConnected', this._onListConnected);
+            this._container._list = null;
+            this._childLists = new Map();
+            this._parentList = null;
+            this._parentListChild = null;
         }
-        this._scheduleUpdateView();
+
+        super.container = node;
+
+        if (!this._container) {
+            return;
+        }
+
+        this._container._list = this;
+
+        // TODO: Listen on actual container
+        // NOTE: addEventListener already handles the deduplication of listeners.
+        window.addEventListener('scroll', this._scheduleUpdateView);
+        window.addEventListener('resize', this._scheduleUpdateView);
+
+        this._container.addEventListener('listConnected', this._onListConnected);
+        const whenReady = this._container.isConnected ? cb => cb() : cb => Promise.resolve().then(cb);
+        whenReady(() => {
+            const event = new Event('listConnected', {
+                bubbles: true,
+                cancelable: true,
+                composed: true,
+            });
+            this._container.dispatchEvent(event);
+            this._scheduleUpdateView();
+        });
     }
 
     set layout(layout) {
         if (layout !== this._layout) {
-            this._attachLayout(layout);  
+            this._attachLayout(layout);
         }
     }
 
@@ -72,13 +80,37 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         }
     }
 
+    requestUpdateView() {
+        Object.assign(this._layout._itemSize, this._layoutItemSize);
+        this._scheduleUpdateView();
+    }
+
     // Rename _ordered to _kids?
     get _kids() {
         return this._ordered;
     }
 
-    set sizeCallback(fn) {
-        this._sizeCallback = fn;
+    _onListConnected(event) {
+        // Listen once.
+        this._container.removeEventListener('listConnected', this._onListConnected);
+
+        const path = event.composedPath();
+        const childList = path[0]._list;
+        if (childList === this) {
+            return;
+        }
+        event.stopPropagation();
+        const idx = path.findIndex(el => el._list === this);
+        const child = path[idx - 1];
+        let childLists = this._childLists.get(child);
+        if (!childLists) {
+            childLists = [];
+            this._childLists.set(child, childLists);
+        }
+        childLists.push(childList);
+        childList._parentList = this;
+        childList._parentListChild = child;
+        // console.debug(`#${this._container.id} > #${child.id} > #${childList._container.id} connected!`);
     }
 
     _attachLayout(layout) {
@@ -106,7 +138,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             this._layout.removeListener('range', this._adjustRange);
             this._layout.removeListener('scrollError', this._correctScrollError);
             this._measureCallback = null;
-            this._layout = null;    
+            this._layout = null;
         }
     }
 
@@ -119,6 +151,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
 
     _updateView() {
         this._layout.totalItems = this._items.length;
+        Object.assign(this._layoutItemSize, this._layout._itemSize);
         // Containers can be shadowRoots, so get the host.
         const listBounds = (this._container.host || this._container).getBoundingClientRect();
         const scrollerWidth = window.innerWidth;
@@ -127,13 +160,16 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         const y = Math.max(0, -listBounds.y);
         const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
         const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
-        const xMax = Math.max(0, Math.min(scrollerWidth, Infinity/*listBounds.right*/));
-        const yMax = Math.max(0, Math.min(scrollerHeight, Infinity/*listBounds.bottom*/));
+        const xMax = Math.max(0, Math.min(scrollerWidth, Infinity /*listBounds.right*/ ));
+        const yMax = Math.max(0, Math.min(scrollerHeight, Infinity /*listBounds.bottom*/ ));
         this._layout.viewportSize = {
             x: xMax - xMin,
             y: yMax - yMin
         }
-        this._layout.scrollTo({x, y});
+        this._layout.scrollTo({
+            x,
+            y
+        });
         this._pendingUpdateView = null;
     }
 
@@ -149,39 +185,43 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         if (typeof this._sizeCallback === 'function') {
             // console.debug(`#${this._container.id} stable, invoke sizeCallback`);
             this._sizeCallback();
-            this.sizeCallback = null;
-        }
-        else if (this._parentList) {
-            this._parentList._onNestedListResized(this._parentListChild);
+            this._sizeCallback = null;
+        } else if (this._parentList) {
+            this._parentList._onChildListResized(this._parentListChild);
         }
     }
 
-    _onNestedListResized(child) {
+    async _onChildListResized(child) {
         // TODO: Should be able to remove the _active check when we
         // stop hiding children
-        if ('function' !== typeof this._layout.updateChildSizes || 
+        if ('function' !== typeof this._layout.updateChildSizes ||
             false === this._active.has(child)) {
             return;
         }
         const item = this._active.get(child);
-        this._layout.updateChildSizes({
-            [item]: super._measureChild(child)
-        });
+        return Promise.resolve()
+            .then(() => this._measureChild(child))
+            .then((size) => this._layout.updateChildSizes({
+                [item]: size
+            }));
     }
 
     async _positionChildren(pos) {
         await Promise.resolve();
-        const k = this._kids;
-        Object.keys(pos).forEach(key => {
-            const {x, y} = pos[key];
-            const c = key - this._first;
-            const n = k[c];
-            if (n) {
+        const kids = this._kids;
+        for (const key in pos) {
+            const idx = key - this._first;
+            const child = kids[idx];
+            if (child) {
+                const {
+                    x,
+                    y
+                } = pos[key];
                 // console.debug(`_positionChild #${this._container.id} > #${n.id}: top ${y}`);
-                n.style.position = 'absolute';
-                n.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                child.style.position = 'absolute';
+                child.style.transform = `translate3d(${x}px, ${y}px, 0)`;
             }
-        });
+        }
     }
 
     _adjustRange(range) {
@@ -206,7 +246,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _correctScrollError(err) {
-        const {x, y} = err;
+        const {
+            x,
+            y
+        } = err;
         window.scroll(window.scrollX - x, window.scrollY - y);
     }
 
@@ -217,27 +260,30 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         const item = this._active.get(child);
         this._layout.updateChildSizes({
             [item]: super._measureChild(child)
-        });    
+        });
     }
 
     _measureChild(child) {
-        if (child._nestedLists && child._nestedLists.length) {
+        const childLists = this._childLists.get(child);
+        if (childLists) {
             this._layout._estimate = false;
-            const nestedList = child._nestedLists[0];
-            // console.debug(`_measureChild #${this._container.id} > #${child.id}: pending... #${nestedList._container.id}`);
-            const listSizes = child._nestedLists.map(l => new Promise(resolve => {
+            // console.debug(`_measureChild #${this._container.id} > #${child.id}: pending... #${childLists[0]._container.id}`);
+            const listSizes = childLists.map(l => new Promise(resolve => {
                 // if (l._stable) {
                 //     resolve();
                 // } else {
-                    l.sizeCallback = () => {
-                        resolve();
-                    };
+                l._sizeCallback = () => {
+                    resolve();
+                };
                 // }
             }));
-            return Promise.all(listSizes).then(() => {
-                // console.debug(`_measureChild #${this._container.id} > #${child.id}: ready!!! #${child._nestedLists[0]._container.id}`);
-                return super._measureChild(child);
-            });
+            return Promise.all(listSizes)
+                // Wait next frame so inner lists have time to set their size.
+                // .then(() => new Promise(resolve => setTimeout(resolve)))
+                .then(() => {
+                    // console.debug(`_measureChild #${this._container.id} > #${child.id}: ready!!! #${childLists[0]._container.id}`);
+                    return super._measureChild(child);
+                });
         }
         return super._measureChild(child);
     }
