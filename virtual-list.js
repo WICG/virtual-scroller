@@ -1,7 +1,4 @@
-import {
-    Repeats
-} from './virtual-repeater.js';
-import Layout from './layouts/layout-1d.js';
+import {Repeats} from './virtual-repeater.js';
 
 export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass) {
     constructor() {
@@ -55,8 +52,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         window.addEventListener('resize', this._scheduleUpdateView);
 
         this._container.addEventListener('listConnected', this._onListConnected);
-        const whenReady = this._container.isConnected ? cb => cb() : cb => Promise.resolve().then(cb);
+        const whenReady = this._container.isConnected ?
+            cb => cb() :
+            cb => Promise.resolve().then(cb);
         whenReady(() => {
+            // console.debug(`#${this._container.id} connected`);
             const event = new Event('listConnected', {
                 bubbles: true,
                 cancelable: true,
@@ -91,17 +91,21 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _onListConnected(event) {
-        // Listen once.
-        this._container.removeEventListener('listConnected', this._onListConnected);
-
         const path = event.composedPath();
         const childList = path[0]._list;
         if (childList === this) {
             return;
         }
         event.stopPropagation();
+
+        // This list has nested lists, so disable estimation.
+        this._layout._estimate = false;
+        
         const idx = path.findIndex(el => el._list === this);
         const child = path[idx - 1];
+        
+        // console.debug(`#${this._container.id} > #${child.id} > #${childList._container.id}`);
+
         let childLists = this._childLists.get(child);
         if (!childLists) {
             childLists = [];
@@ -110,7 +114,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         childLists.push(childList);
         childList._parentList = this;
         childList._parentListChild = child;
-        // console.debug(`#${this._container.id} > #${child.id} > #${childList._container.id} connected!`);
     }
 
     _attachLayout(layout) {
@@ -217,7 +220,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
                     x,
                     y
                 } = pos[key];
-                // console.debug(`_positionChild #${this._container.id} > #${n.id}: top ${y}`);
+                // console.debug(`_positionChild #${this._container.id} > #${child.id}: top ${y}`);
                 child.style.position = 'absolute';
                 child.style.transform = `translate3d(${x}px, ${y}px, 0)`;
             }
@@ -232,6 +235,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         }
         this._stable = range.stable;
         this._incremental = !(range.stable);
+        if (!this._pendingRender && this._stable) {
+            this._notifyStable();
+        }
     }
 
     _shouldRender() {
@@ -256,7 +262,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     _measureChild(child) {
         const childLists = this._childLists.get(child);
         if (childLists) {
-            this._layout._estimate = false;
             // console.debug(`_measureChild #${this._container.id} > #${child.id}: pending... #${childLists[0]._container.id}`);
             const listSizes = childLists.map(l => new Promise(resolve => {
                 // if (l._stable) {
@@ -275,21 +280,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
                     return super._measureChild(child);
                 });
         }
+        // console.debug(`_measureChild #${this._container.id} > #${child.id}: go!`);
         return super._measureChild(child);
     }
 };
 
 export const VirtualList = RepeatsAndScrolls(class {});
-
-export const VirtualVerticalList = class extends VirtualList {
-    constructor() {
-        super();
-        this.layout = new Layout();
-    }
-    get layout() {
-        return this._layout;
-    }
-    set layout(layout) {
-        super.layout = layout;
-    }
-};

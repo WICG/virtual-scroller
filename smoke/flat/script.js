@@ -1,20 +1,27 @@
 import {
-  VirtualVerticalList
+  VirtualList
 } from '../../virtual-list.js';
 
-const items = new Array(40).fill({
+import Layout from '../../layouts/layout-1d.js';
+
+const items = new Array(400).fill({
   name: 'item'
 });
 const container = document.getElementById('container');
 
-
-window.vlist = new VirtualVerticalList();
+const layout = new Layout({
+  itemSize: {
+    x: window.innerWidth,
+    y: window.innerHeight
+  }
+});
+window.vlist = new VirtualList();
 vlist._recycledChildren = [];
-vlist.layout._itemSize.y = 250;
 Object.assign(window.vlist, {
   id: 'vlist',
   items,
   container,
+  layout,
   newChildFn: (item, idx) => {
     let section = vlist._recycledChildren.pop();
     if (!section) {
@@ -23,6 +30,10 @@ Object.assign(window.vlist, {
       section._title = section.querySelector('.title');
       // Update it immediately.
       vlist._updateChildFn(section, item, idx);
+
+      // setTimeout(() => {
+      //   section.appendChild(section._title.cloneNode(true));
+      // }, 1000);
     }
     return section;
   },
@@ -35,9 +46,8 @@ Object.assign(window.vlist, {
   }
 });
 
-
-container.style.display = 'none';
-setTimeout(() => {
-  container.style.display = '';
-  vlist.requestUpdateView();
-}, 1000);
+// container.style.display = 'none';
+// setTimeout(() => {
+//   container.style.display = '';
+//   vlist.requestUpdateView();
+// }, 1000);
