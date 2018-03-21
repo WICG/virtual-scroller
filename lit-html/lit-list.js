@@ -16,12 +16,12 @@ export const list = (config = {}) => directive(part => {
       part,
       // Assign template only once.
       template: list.template || config.template,
-      // Default layout.
-      layout: (config.layout || list.layout || new Layout()),
+      // Assign layout only once.
+      layout: list.layout || config.layout,
       // Recycle by default.
       recycle: Boolean(config.hasOwnProperty('recycle') === false || config.recycle),
   });
   Object.assign(list, config);
 });
 
-export const verticalList = (items, template) => list({items, template});
+export const verticalList = (items, template, layout = new Layout()) => list({items, template, layout});
