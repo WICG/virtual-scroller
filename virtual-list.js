@@ -28,23 +28,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
 
     set container(node) {
         if (this._container) {
-            this._container.removeEventListener('listConnected', this._onListConnected);
-            this._container._list = null;
-            this._childLists = new Map();
-            this._parentList = null;
-            this._parentListChild = null;
-        }
-
-        super.container = node;
-
-        if (!this._container) {
+            console.warn('container can be set only once.');
             return;
         }
+        super.container = node;
 
         this._container._list = this;
 
         // TODO: Listen on actual container
-        // NOTE: addEventListener already handles the deduplication of listeners.
         window.addEventListener('scroll', this._scheduleUpdateView);
         window.addEventListener('resize', this._scheduleUpdateView);
         /*
