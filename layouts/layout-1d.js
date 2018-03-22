@@ -30,8 +30,8 @@ export default class Layout extends Layout1dBase {
 
             // TODO(valdrin) Handle margin collapsing.
             // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Box_Model/Mastering_margin_collapsing
-            mi.width = metrics.width + metrics.marginLeft + metrics.marginRight;
-            mi.height = metrics.height + metrics.marginTop + metrics.marginBottom;
+            mi.width = metrics.width + (metrics.marginLeft || 0) + (metrics.marginRight || 0);
+            mi.height = metrics.height + (metrics.marginTop || 0) + (metrics.marginBottom || 0);
 
             const size = mi[this._sizeDim];
             const item = this._getPhysicalItem(Number(key));
@@ -49,18 +49,19 @@ export default class Layout extends Layout1dBase {
                     }    
                 }
                 this._tMeasured = this._tMeasured + delta;
+            } else {
+                console.warn(`Could not find physical item for key ${key}`);
             }
-		});
-
-        this._updateItemSize();
-        this._scheduleReflow();
+        });
+        if (!this._nMeasured) {
+            console.warn(`No items measured yet.`);
+        } else {
+            this._updateItemSize();
+            this._scheduleReflow();
+        }
 	}
 
     _updateItemSize() {
-        if (!this._nMeasured) {
-            console.error('_updateItemSize: divide by 0, skipping.');
-            return;
-        }
         this._itemSize[this._axis] = this._tMeasured / this._nMeasured;
     }
 
