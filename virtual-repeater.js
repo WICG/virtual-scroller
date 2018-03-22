@@ -14,9 +14,8 @@ export const Repeats = Superclass => class extends Superclass {
         this._manageDom = true;
         // used to check if it is more perf if you don't care of dom order?
         this._maintainDomOrder = true;
-        
+
         this._container = null;
-        this._measureCallback = null;
         this._keyFn = item => item.key;
         this._newChildFn = null;
         this._updateChildFn = null;
@@ -24,7 +23,7 @@ export const Repeats = Superclass => class extends Superclass {
         // in a pool to be reused later, and mark node as
         // not needing any more layout updates.
         this._recycleChildFn = null;
-        
+
         this._last = 0;
         this._prevFirst = 0;
         this._prevLast = 0;
@@ -40,7 +39,7 @@ export const Repeats = Superclass => class extends Superclass {
         // Both used for recycling purposes.
         this._keyToChild = new Map();
         this._childToKey = new WeakMap();
-  
+
         this._items = null;
     }
 
@@ -63,7 +62,7 @@ export const Repeats = Superclass => class extends Superclass {
             if (newFirst !== this._first) {
                 this._first = newFirst;
                 this._scheduleRender();
-            }    
+            }
         }
     }
 
@@ -73,7 +72,7 @@ export const Repeats = Superclass => class extends Superclass {
                 this._num = n;
                 this.first = this._first;
                 this._scheduleRender();
-            }    
+            }
         }
     }
 
@@ -133,47 +132,8 @@ export const Repeats = Superclass => class extends Superclass {
             this._needsReset = this._needsReset || Boolean(needsReset);
             if (!this._pendingRender) {
                 this._pendingRender = Promise.resolve().then(() => this._render());
-            }    
-        }
-    }
-
-    /**
-     * Returns those children that are about to be displayed and that
-     * require to be positioned. If reset or remeasure has been triggered,
-     * all children are returned.
-     * @return {{indices:Array<number>,children:Array<Element>}}
-     */
-    get _toMeasure() {
-        return this._ordered.reduce((toMeasure, c, i) => {
-            const idx = this._first + i;
-            if (this._needsReset || this._needsRemeasure || idx < this._prevFirst || idx > this._prevLast) {
-                toMeasure.indices.push(idx);
-                toMeasure.children.push(c);
             }
-            return toMeasure;
-        }, {indices: [], children: []});
-    }
-
-    /**
-     * Measures each child bounds and builds a map of index/bounds to be passed to the `_measureCallback`
-     */
-    async _measureChildren() {
-        if (this._ordered.length > 0) {
-            const {indices, children} = this._toMeasure;
-            await Promise.resolve();
-            const pm = await Promise.all(children.map(c => this._measureChild(c)));
-            const mm = /** @type {{ number: { width: number, height: number } }} */
-                (pm.reduce((out, cur, i) => {
-                    out[indices[i]] = cur;
-                    return out;
-                }, {}));
-            this._measureCallback(mm);
         }
-    }
-
-    requestRemeasure() {
-        this._needsRemeasure = true;
-        this._scheduleRender();
     }
 
     _render() {
@@ -186,33 +146,25 @@ export const Repeats = Superclass => class extends Superclass {
             if (this._num || this._prevNum) {
                 if (this._needsReset) {
                     this._reset(this._first, this._last);
-                }
-                else {
+                } else {
                     this._discardHead();
                     this._discardTail();
                     this._addHead();
                     this._addTail();
                 }
             }
-
-        }
-        const shouldMeasure = this._num > 0 && this._measureCallback && (rangeChanged || this._needsRemeasure || this._needsReset);
-        // console.debug(`#${this._container.id} _render: ${this._num}/${this._items.length} ${this._first} -> ${this._last} (${this._prevNum}/${this._items.length} ${this._prevFirst} -> ${this._prevLast}) stable=${this._stable} measure=${shouldMeasure}`);
-        if (shouldMeasure) {
-            this._measureChildren();
         }
 
         // Cleanup
         if (!this._incremental) {
             this._prevActive.forEach((idx, child) => this._recycleChild(child, idx));
-            this._prevActive.clear();    
+            this._prevActive.clear();
         }
 
         this._prevFirst = this._first;
         this._prevLast = this._last;
         this._prevNum = this._num;
         this._needsReset = false;
-        this._needsRemeasure = false;
         this._pendingRender = null;
     }
 
@@ -239,7 +191,7 @@ export const Repeats = Superclass => class extends Superclass {
             if (this._manageDom) {
                 if (this._maintainDomOrder || !this._childIsAttached(child)) {
                     this._insertBefore(child, this._firstChild);
-                }    
+                }
             }
             this._updateChild(child, item, idx);
             this._ordered.unshift(child);
@@ -255,7 +207,7 @@ export const Repeats = Superclass => class extends Superclass {
             if (this._manageDom) {
                 if (this._maintainDomOrder || !this._childIsAttached(child)) {
                     this._insertBefore(child, null);
-                }    
+                }
             }
             this._updateChild(child, item, idx);
             this._ordered.push(child);
@@ -279,14 +231,12 @@ export const Repeats = Superclass => class extends Superclass {
                 if (currentMarker && this._maintainDomOrder) {
                     if (currentMarker === this._node(child)) {
                         currentMarker = this._nextSibling(child);
-                    }
-                    else {
+                    } else {
                         this._insertBefore(child, currentMarker);
                     }
-                }
-                else if (!this._childIsAttached(child)) {
+                } else if (!this._childIsAttached(child)) {
                     this._insertBefore(child, null);
-                }    
+                }
             }
             this._updateChild(child, item, idx);
         }
@@ -298,8 +248,7 @@ export const Repeats = Superclass => class extends Superclass {
         let child;
         if (child = this._keyToChild.get(key)) {
             this._prevActive.delete(child);
-        }
-        else {
+        } else {
             child = /*this._pool.pop() ||*/ this._getNewChild(item, idx);
             this._keyToChild.set(key, child);
             this._childToKey.set(child, key);
@@ -314,8 +263,7 @@ export const Repeats = Superclass => class extends Superclass {
         if (this._incremental) {
             this._active.delete(child);
             this._prevActive.set(child, idx);
-        }
-        else {
+        } else {
             this._recycleChild(child, idx);
         }
     }
@@ -330,8 +278,7 @@ export const Repeats = Superclass => class extends Superclass {
         this._active.delete(child);
         if (typeof this._recycleChildFn === 'function') {
             this._recycleChildFn(child, this._items[idx], idx);
-        }
-        else {
+        } else {
             this.__removeChild(child);
         }
         // this._pool.push(child);
@@ -370,22 +317,6 @@ export const Repeats = Superclass => class extends Superclass {
         child.style.display = null;
     }
 
-    /**
-     * 
-     * @param {!Element} child
-     * @return {{width: number, height: number, marginTop: number, marginBottom: number, marginLeft: number, marginRight: number}} childMeasures
-     */
-    _measureChild(child) {
-        // offsetWidth doesn't take transforms in consideration,
-        // so we use getBoundingClientRect which does.
-        const {width, height} = child.getBoundingClientRect();
-        // console.debug(`_measureChild #${this._container.id} > #${child.id}: height: ${height}px`);
-        return Object.assign({
-            width,
-            height,
-        }, getMargins(child));
-    }
-
     // TODO: Fix name
     __removeChild(child) {
         this._container.removeChild(child);
@@ -401,22 +332,6 @@ export const Repeats = Superclass => class extends Superclass {
         this._updateChildFn(child, item, idx);
     }
 
-}
-
-function getMargins(el) {
-    const style = window.getComputedStyle(el);
-    // console.log(el.id, style.position);
-    return {
-        marginLeft: getMarginValue(style.marginLeft),
-        marginRight: getMarginValue(style.marginRight),
-        marginTop: getMarginValue(style.marginTop),
-        marginBottom: getMarginValue(style.marginBottom),
-    };
-}
-
-function getMarginValue(value) {
-    value = value ? parseFloat(value) : NaN;
-    return value !== value ? 0 : value;
 }
 
 export const VirtualRepeater = Repeats(class {});
