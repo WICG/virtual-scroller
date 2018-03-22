@@ -159,7 +159,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _handleContainerResize(entries) {
-        const {width, height} = entries[0].contentRect;
+        // Include also padding.
+        const cr = entries[0].contentRect;
+        const width = cr.left + cr.right;
+        const height = cr.top + cr.bottom;
 
         // console.debug('container changed size', {width, height});
 
