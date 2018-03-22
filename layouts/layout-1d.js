@@ -19,8 +19,6 @@ export default class Layout extends Layout1dBase {
         this._tMeasured = 0;
 
         this._estimate = true;
-        // this._first = 0;
-        // this._last = 1;
     }
         
 	updateChildSizes(indexedMetrics) {

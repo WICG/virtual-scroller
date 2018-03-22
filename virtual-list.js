@@ -8,9 +8,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._last = -1;
         this._prevFirst = -1;
         this._prevLast = -1;
-        // this._num = 1;
-        // this._first = 0;
-        // this._last = 1;
         this._sizeCallback = null;
         this._adjustRange = this._adjustRange.bind(this);
         this._correctScrollError = this._correctScrollError.bind(this);
@@ -119,8 +116,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     _attachLayout(layout) {
         this._detachLayout();
         this._layout = layout;
-        // For easier debugging.
-        this._layout._list = this;
         layout.addListener('size', this._sizeContainer);
         layout.addListener('position', this._positionChildren);
         layout.addListener('range', this._adjustRange);
@@ -134,8 +129,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
 
     _detachLayout() {
         if (this._layout) {
-            // For easier debugging.
-            this._layout._list = null;
             this._layout.removeListener('size', this._sizeContainer);
             this._layout.removeListener('position', this._positionChildren);
             this._layout.removeListener('range', this._adjustRange);
