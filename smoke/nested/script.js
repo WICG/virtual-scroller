@@ -1,6 +1,7 @@
 import {
-  VirtualVerticalList
+  VirtualList
 } from '../../virtual-list.js';
+import Layout from '../../layouts/layout-1d.js';
 import {
   list
 } from '../../lit-html/lit-list.js';
@@ -11,83 +12,67 @@ import {
 
 const items = new Array(40).fill({
   name: 'item',
-  items: new Array(1).fill({
+  items: new Array(2).fill({
     name: 'inner item',
+    // items: new Array(4).fill({
+    //   name: 'inner inner item',
+    // })
   })
 });
-const container = document.getElementById('container');
+const container = document.getElementById('root');
+listForContainer(container, items);
 
-// const ro = new ResizeObserver(entries => {
-//   for (let entry of entries) {
-//     const cr = entry.contentRect;
-//     console.log('Element:', entry.target);
-//     console.log(`Element size: ${cr.width}px x ${cr.height}px`);
-//     console.log(`Element padding: ${cr.top}px ; ${cr.left}px`);
-//   }
-// });
-// ro.observe(container);
 
-/* ------------- raw js ------------- */
+function listForContainer(container, items) {
+  
+  container.classList.add('list');
 
-let listsCount = 0;
-window.vlist = new VirtualVerticalList();
-vlist._recycledChildren = [];
-vlist.layout._itemSize.y = 250;
-Object.assign(window.vlist, {
-  id: 'vlist',
-  items,
-  container,
-  newChildFn: (item, idx) => {
-    let section = vlist._recycledChildren.pop();
-    if (!section) {
-      section = document.createElement('section');
-      section.innerHTML = `<div class="title"></div><div class="innerContainer"></div>`;
-      section.$ = {
-        title: section.querySelector('.title'),
-        container: section.querySelector('.innerContainer')
-      };
-      section.id = `section_${idx}`;
-      section.$.container.id = `innerContainer_${idx}`;
-      section._list = new VirtualVerticalList();
-      section._list._recycledChildren = [];
-      section._list.layout._itemSize.y = 200;
-      Object.assign(section._list, {
-        id: 'nested_' + listsCount++,
-        container: section.$.container,
-        newChildFn: (innerItem, innerIdx) => {
-          let child = section._list._recycledChildren.pop();
-          if (!child) {
-            child = document.createElement('div');
-          } else {
-            console.debug(section._list.id + ' used recycled #' + child.id);
-          }
-          return child;
-        },
-        updateChildFn: (child, innerItem, innerIdx) => {
-          child.id = `innerContent_${idx}.${innerIdx}`;
-          child.innerHTML = `${idx}.${innerIdx} - ${innerItem.name}`;
-        },
-        recycleChildFn: (child, innerItem, innerIdx) => {
-          section._list._recycledChildren.push(child);
-          console.debug(section._list.id + ' recycled #' + child.id);
+  const recycledChildren = [];
+  const list = Object.assign(new VirtualList(), {
+    items,
+    recycledChildren: [],
+    layout: new Layout({
+      itemSize: {
+        x: innerWidth,
+        y: innerHeight
+      }
+    }),
+    container,
+    newChildFn: (item, idx) => {
+      let child = recycledChildren.pop();
+      if (!child) {
+        child = document.createElement('div');
+        child.classList.add('row');
+        child.innerHTML = `<div class="title"></div><div class="innerContainer"></div>`;
+        child._title = child.querySelector('.title');
+        child._container = child.querySelector('.innerContainer');
+
+        // child.id = `section_${idx}`;
+        // child._container.id = `innerContainer_${idx}`;
+        
+        if (item.items) {
+          child._container.classList.remove('innerContainer');
+          listForContainer(child._container, item.items);
         }
-      });
-    } else {
-      console.debug(vlist.id + ' used recycled #' + section.id);
+      }
+      return child;
+    },
+    updateChildFn: (child, item, idx) => {
+      
+      // child.id = `section_${idx}`;
+      // child._container.id = `innerContainer_${idx}`;
+
+      child._title.textContent = `${idx} - ${item.name}`;
+      if (child._container._list) {
+        child._container._list.items = item.items;
+      }
+    },
+    recycleChildFn: (child, item, idx) => {
+      recycledChildren.push(child);
     }
-    return section;
-  },
-  updateChildFn: (section, item, idx) => {
-    section.id = `section_${idx}`;
-    section.$.container.id = `innerContainer_${idx}`;
-    section.$.title.textContent = `${idx} - ${item.name}`;
-    section._list.items = item.items;
-  },
-  recycleChildFn: (section, item, idx) => {
-    vlist._recycledChildren.push(section);
-    console.debug(vlist.id + ' recycled #' + section.id);
-  }
-});
+  });
+  container._list = list;
+}
 
 
 /* ------------- lit-html ------------- */

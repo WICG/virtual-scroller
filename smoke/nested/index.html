@@ -2,48 +2,30 @@
 <html>
 <body>
   <style>
-    my-container {
+    .list {
       position: relative;
       display: block;
-      outline: 1px solid;
       overflow: hidden;
+      background-color: rgba(255, 255, 255, 0.2);
     }
 
-    section {
+    .row {
       width: 100%;
-      outline: 1px solid;
-      background-color: lime;
+      background-color: rgba(0, 0, 0, 0.2);
     }
 
     .title {
       height: 50px;
-      background-color: yellow;
+      background-color: rgba(0, 255, 0, 0.2);
     }
 
-    .innerContainer>div {
+    .innerContainer {
       height: 200px;
       width: 100%;
-      outline: 1px solid orange;
     }
   </style>
-  <!-- <my-container>
-    <section>
-      <div class="title">test</div>
-      <div class="innerContainer">
-        <div>test.test</div>
-        <div>test.test</div>
-      </div>
-    </section>
-    <section>
-      <div class="title">test</div>
-      <div class="innerContainer">
-        <div>test.test</div>
-        <div>test.test</div>
-      </div>
-    </section>
-  </my-container> -->
 
-  <my-container id="container"></my-container>
+  <div id="root"></div>
   <script type="module" src="script.js"></script>
 </body>
 

@@ -51,10 +51,12 @@ export default class Layout extends Layout1dBase {
                     }    
                 }
                 this._tMeasured = this._tMeasured + delta;
+            } else {
+                console.warn(`Could not find physical item for key ${key}`);
             }
         });
         if (!this._nMeasured) {
-            console.warn(`#${this._list._container.id} no items measured yet.`);
+            console.warn(`No items measured yet.`);
         } else {
             this._updateItemSize();
             this._scheduleReflow();
@@ -66,7 +68,8 @@ export default class Layout extends Layout1dBase {
     }
 
     _updateScrollSize() {
-        this._scrollSize = this._totalItems * this._delta;
+        // Ensure we have at least 1px - this allows getting at least 1 item to be rendered.
+        this._scrollSize = Math.max(1, this._totalItems * this._delta);
     }
     
     //
@@ -302,8 +305,6 @@ export default class Layout extends Layout1dBase {
 
         this._updateScrollSize();
         this._getActiveItems();
-
-        // console.debug(`#${this._list._container.id} _reflow: ${1+this._last-this._first}/${this._totalItems} ${this._first} -> ${this._last} (${1+_last-_first}/${this._totalItems} ${_first} -> ${_last})`);
 
         if (this._scrollSize !== _scrollSize) {
             this._emitScrollSize();

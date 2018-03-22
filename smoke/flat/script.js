@@ -12,7 +12,7 @@ const container = document.getElementById('container');
 const layout = new Layout({
   itemSize: {
     x: window.innerWidth,
-    y: window.innerHeight
+    y: 50
   }
 });
 window.vlist = new VirtualList();
@@ -30,10 +30,6 @@ Object.assign(window.vlist, {
       section._title = section.querySelector('.title');
       // Update it immediately.
       vlist._updateChildFn(section, item, idx);
-
-      // setTimeout(() => {
-      //   section.appendChild(section._title.cloneNode(true));
-      // }, 1000);
     }
     return section;
   },
@@ -46,8 +42,15 @@ Object.assign(window.vlist, {
   }
 });
 
+// document.body.style.minHeight = (innerHeight * 100) + 'px'
+
 // container.style.display = 'none';
 // setTimeout(() => {
 //   container.style.display = '';
-//   vlist.requestUpdateView();
 // }, 1000);
+
+// setInterval(() => {
+//   Array.from(container.children).forEach(section => {
+//     section.appendChild(document.createElement('input'));
+//   })
+// }, 2000);
