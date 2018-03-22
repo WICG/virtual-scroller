@@ -181,7 +181,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             if (idx === -1) {
                 throw Error('Resized element not found.');
             }
-            const {width, height} = entry.contentRect;
+            // Use right/bottom as they include also padding.
+            const cr = entry.contentRect;
+            const width = cr.right;
+            const height = cr.bottom;
             const measure = Object.assign({width, height}, this._getMargins(entry.target));
 
             mm[this._first + idx] = measure;
