@@ -8,7 +8,7 @@ const scrollMethod =
 
 export const strip = str => str.replace(/^\s*/, '').replace(/\s*$/, '');
 
-const itemType = item => item.image ? 'contact' : 'header';
+export const itemType = item => item.image ? 'contact' : 'header';
 
 export class Sample {
     constructor() {
@@ -86,7 +86,7 @@ export class Sample {
             updateChildFn: (child, item, idx) => {
                 if (itemType(item) === 'contact') {
                     child._idx = idx;
-                    child.querySelector('b').textContent = `${item.first} ${item.last}`;
+                    child.querySelector('b').textContent = `#${item.index} - ${item.first} ${item.last}`;
                     child.querySelector('p').textContent = item.longText;    
                 }
                 else {
