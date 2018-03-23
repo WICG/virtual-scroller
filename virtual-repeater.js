@@ -47,11 +47,14 @@ export const Repeats = Superclass => class extends Superclass {
     // API
 
     push(item) {
-        const newIndex = this._items.length
-        this._items.push(item);
-        if (newIndex >= this._first && newIndex <= this._first + this._num) {
-            this._scheduleRender();
+        this.splice(this._items.length, 0, item);
+    }
+
+    splice(start, deleteCount, ...replace) {
+        if (start <= this._first + this._num && (start >= this._first || start + deleteCount >= this._first || start + replace.length >= this._first)) {
+            this._scheduleRender(true);
         }
+        return this._items.splice(start, deleteCount, ...replace);
     }
 
     set first(idx) {

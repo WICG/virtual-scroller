@@ -4,7 +4,7 @@ import {
 
 import Layout from '../../layouts/layout-1d.js';
 
-const items = new Array(400).fill({
+const items = new Array(20).fill({
   name: 'item'
 });
 const container = document.getElementById('container');
@@ -54,3 +54,7 @@ Object.assign(window.vlist, {
 //     section.appendChild(document.createElement('input'));
 //   })
 // }, 2000);
+
+setTimeout(() => {
+  vlist.splice(0, 0, {name: 'new'});
+}, 1000);

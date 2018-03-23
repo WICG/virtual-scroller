@@ -79,8 +79,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._updateItemsCount();
     }
 
-    push(item) {
-        super.push(item);
+    splice(start, deleteCount, ...replace) {
+        super.splice(start, deleteCount, ...replace);
         this._updateItemsCount();
     }
 
