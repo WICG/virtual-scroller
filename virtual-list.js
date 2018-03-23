@@ -24,7 +24,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._parentListChild = null;
 
         this._pendingUpdateView = null;
-        this._isViewReady = false;
+        // Used to block rendering until layout viewport is setup.
+        this._canRender = false;
     }
 
     set container(node) {
@@ -63,6 +64,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             node.dispatchEvent(event);
         });
         */
+        this._updateItemsCount();
         this._scheduleUpdateView();
     }
 
@@ -73,10 +75,13 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     set items(arr) {
-        if (arr !== this._items) {
-            super.items = arr;
-            this._scheduleUpdateView();
-        }
+        super.items = arr;
+        this._updateItemsCount();
+    }
+
+    push(item) {
+        super.push(item);
+        this._updateItemsCount();
     }
 
     requestUpdateView() {
@@ -87,6 +92,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     // Rename _ordered to _kids?
     get _kids() {
         return this._ordered;
+    }
+
+    _updateItemsCount() {
+        // Wait to have both container and layout, so that size updates
+        // can be correctly managed.
+        if (this._container && this._layout) {
+            this._layout.totalItems = this._items ? this._items.length : 0;
+        }
     }
 
     _onListConnected(event) {
@@ -126,6 +139,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             // Invoked by `Repeats` mixin, `m` is a map of `{ idx : {width: height:} }`
             this._measureCallback = m => layout.updateChildSizes(m);
         }
+        this._updateItemsCount();
         this._scheduleUpdateView();
     }
 
@@ -141,14 +155,13 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _scheduleUpdateView() {
-        if (!this._pendingUpdateView && this._shouldUpdateView()) {
+        if (!this._pendingUpdateView && this._container && this._layout) {
             this._pendingUpdateView = Promise.resolve().then(() => this._updateView());
             // window.requestAnimationFrame(() => this._updateView());
         }
     }
 
     _updateView() {
-        this._layout.totalItems = this._items.length;
         Object.assign(this._layoutItemSize, this._layout._itemSize);
         // Containers can be shadowRoots, so get the host.
         const listBounds = (this._container.host || this._container).getBoundingClientRect();
@@ -169,7 +182,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             y
         });
         this._pendingUpdateView = null;
-        this._isViewReady = true;
+        this._canRender = true;
     }
 
     _sizeContainer(size) {
@@ -240,12 +253,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         }
     }
 
-    _shouldUpdateView() {
-        return Boolean(super._shouldRender() && this._layout);
-    }
-
     _shouldRender() {
-        return Boolean(super._shouldRender() && this._isViewReady);
+        return Boolean(super._shouldRender() && this._canRender);
     }
 
     _render() {
