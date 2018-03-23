@@ -16,6 +16,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._scheduleUpdateView = this._scheduleUpdateView.bind(this);
 
         this._pendingUpdateView = null;
+        this._isViewReady = false;
 
         this._isContainerVisible = false;
         this._containerRO = new ResizeObserver(this._handleContainerResize.bind(this));
@@ -23,11 +24,21 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     set container(node) {
+        if (node === this._container) {
+            return;
+        }
         if (this._container) {
             console.warn('container can be set only once.');
             return;
         }
-        super.container = node;
+
+        this._container = node;
+
+        // Ensure container is a positioned element.
+        const position = getComputedStyle(node).position;
+        if (!position || position === 'static') {
+            node.style.position = 'relative';
+        }
 
         this._containerRO.observe(this._container);
 
@@ -74,7 +85,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _scheduleUpdateView() {
-        if (!this._pendingUpdateView && this._shouldRender()) {
+        if (!this._pendingUpdateView && this._shouldUpdateView()) {
             this._pendingUpdateView = Promise.resolve().then(() => this._updateView());
         }
     }
@@ -100,6 +111,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             y
         });
         this._pendingUpdateView = null;
+        this._isViewReady = true;
     }
 
     _sizeContainer(size) {
@@ -113,6 +125,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     async _positionChildren(pos) {
         await Promise.resolve();
         const kids = this._kids;
+        const maxWidth = this._layout.direction === 'horizontal' ? null : '100%';
+        const maxHeight = this._layout.direction === 'vertical' ? null : '100%';
         Object.keys(pos).forEach(key => {
             const idx = key - this._first;
             const child = kids[idx];
@@ -124,6 +138,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
                 // console.debug(`_positionChild #${this._container.id} > #${child.id}: top ${y}`);
                 child.style.position = 'absolute';
                 child.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                child.style.maxWidth = maxWidth;
+                child.style.maxHeight = maxHeight;
             }
         });
     }
@@ -138,8 +154,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         }
     }
 
-    _shouldRender() {
+    _shouldUpdateView() {
         return Boolean(super._shouldRender() && this._layout && this._isContainerVisible);
+    }
+
+    _shouldRender() {
+        return Boolean(super._shouldRender() && this._isViewReady);
     }
 
     _render() {
