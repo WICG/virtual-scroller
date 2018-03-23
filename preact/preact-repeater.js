@@ -90,10 +90,6 @@ export const PreactMixin = Superclass => class extends Superclass {
     __removeChild(child) {
         super.__removeChild(child.instance.base);
     }
-
-    _measureChild(child) {
-        return super._measureChild(child.instance.base);
-    }
 }
 
 export const PreactRepeater = PreactMixin(VirtualRepeater);

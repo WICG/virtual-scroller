@@ -110,11 +110,6 @@ export const LitMixin = Superclass => class extends Superclass {
         }
     }
 
-    _measureChild(part) {
-        // Currently, we assume there's only one node in the part (between start and end nodes)
-        return super._measureChild(part.startNode.nextElementSibling);
-    }
-
     __removeChild(part) {
         if (this._recycle) {
             this._recycledParts.push(part);

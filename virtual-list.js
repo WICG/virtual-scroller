@@ -13,18 +13,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._correctScrollError = this._correctScrollError.bind(this);
         this._sizeContainer = this._sizeContainer.bind(this);
         this._positionChildren = this._positionChildren.bind(this);
-        this._notifyStable = this._notifyStable.bind(this);
         this._scheduleUpdateView = this._scheduleUpdateView.bind(this);
-        this._onListConnected = this._onListConnected.bind(this);
-
-        this._layoutItemSize = {};
-
-        this._childLists = new Map();
-        this._parentList = null;
-        this._parentListChild = null;
 
         this._pendingUpdateView = null;
         this._isViewReady = false;
+
+        this._isContainerVisible = false;
+        this._containerRO = new ResizeObserver(this._handleContainerResize.bind(this));
+        this._childRO = new ResizeObserver(this._handleChildResize.bind(this));
     }
 
     set container(node) {
@@ -44,26 +40,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             node.style.position = 'relative';
         }
 
+        this._containerRO.observe(this._container);
+
         // TODO: Listen on actual container
         window.addEventListener('scroll', this._scheduleUpdateView);
-        window.addEventListener('resize', this._scheduleUpdateView);
-        /*
-        node._list = this;
-        node.addEventListener('listConnected', this._onListConnected);
-        const whenReady = node.isConnected ?
-            cb => cb() :
-            cb => Promise.resolve().then(cb);
-        whenReady(() => {
-            // console.debug(`#${node.id} connected`);
-            const event = new Event('listConnected', {
-                bubbles: true,
-                cancelable: true,
-                composed: true,
-            });
-            node.dispatchEvent(event);
-        });
-        */
-        this._scheduleUpdateView();
     }
 
     set layout(layout) {
@@ -79,40 +59,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         }
     }
 
-    requestUpdateView() {
-        Object.assign(this._layout._itemSize, this._layoutItemSize);
-        this._scheduleUpdateView();
-    }
-
     // Rename _ordered to _kids?
     get _kids() {
         return this._ordered;
-    }
-
-    _onListConnected(event) {
-        const path = event.composedPath();
-        const childList = path[0]._list;
-        if (childList === this) {
-            return;
-        }
-        event.stopPropagation();
-
-        // This list has nested lists, so disable estimation.
-        this._layout._estimate = false;
-
-        const idx = path.findIndex(el => el._list === this);
-        const child = path[idx - 1];
-
-        // console.debug(`#${this._container.id} > #${child.id} > #${childList._container.id}`);
-
-        let childLists = this._childLists.get(child);
-        if (!childLists) {
-            childLists = [];
-            this._childLists.set(child, childLists);
-        }
-        childLists.push(childList);
-        childList._parentList = this;
-        childList._parentListChild = child;
     }
 
     _attachLayout(layout) {
@@ -122,10 +71,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         layout.addListener('position', this._positionChildren);
         layout.addListener('range', this._adjustRange);
         layout.addListener('scrollError', this._correctScrollError);
-        if (typeof layout.updateChildSizes === 'function') {
-            // Invoked by `Repeats` mixin, `m` is a map of `{ idx : {width: height:} }`
-            this._measureCallback = m => layout.updateChildSizes(m);
-        }
         this._scheduleUpdateView();
     }
 
@@ -135,7 +80,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             this._layout.removeListener('position', this._positionChildren);
             this._layout.removeListener('range', this._adjustRange);
             this._layout.removeListener('scrollError', this._correctScrollError);
-            this._measureCallback = null;
             this._layout = null;
         }
     }
@@ -143,13 +87,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     _scheduleUpdateView() {
         if (!this._pendingUpdateView && this._shouldUpdateView()) {
             this._pendingUpdateView = Promise.resolve().then(() => this._updateView());
-            // window.requestAnimationFrame(() => this._updateView());
         }
     }
 
     _updateView() {
         this._layout.totalItems = this._items.length;
-        Object.assign(this._layoutItemSize, this._layout._itemSize);
         // Containers can be shadowRoots, so get the host.
         const listBounds = (this._container.host || this._container).getBoundingClientRect();
         const scrollerWidth = window.innerWidth;
@@ -180,31 +122,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         });
     }
 
-    _notifyStable() {
-        if (typeof this._sizeCallback === 'function') {
-            // console.debug(`#${this._container.id} stable, invoke sizeCallback`);
-            this._sizeCallback();
-            this._sizeCallback = null;
-        } else if (this._parentList) {
-            this._parentList._updateChildSize(this._parentListChild);
-        }
-    }
-
-    async _updateChildSize(child) {
-        // TODO: Should be able to remove the _active check when we
-        // stop hiding children
-        if ('function' !== typeof this._layout.updateChildSizes ||
-            false === this._active.has(child)) {
-            return;
-        }
-        const item = this._active.get(child);
-        return Promise.resolve()
-            .then(() => this._measureChild(child))
-            .then((size) => this._layout.updateChildSizes({
-                [item]: size
-            }));
-    }
-
     async _positionChildren(pos) {
         await Promise.resolve();
         const kids = this._kids;
@@ -230,18 +147,15 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     _adjustRange(range) {
         this.num = range.num;
         this.first = range.first;
-        if (range.remeasure) {
-            this.requestRemeasure();
-        }
         this._stable = range.stable;
         this._incremental = !(range.stable);
-        if (!this._pendingRender && this._stable) {
-            this._notifyStable();
+        if (range.remeasure) {
+            this._scheduleRender();
         }
     }
 
     _shouldUpdateView() {
-        return Boolean(super._shouldRender() && this._layout);
+        return Boolean(super._shouldRender() && this._layout && this._isContainerVisible);
     }
 
     _shouldRender() {
@@ -249,9 +163,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _render() {
+        // Unobserve old children.
+        this._childRO.disconnect();
+
         super._render();
-        if (this._stable) {
-            this._notifyStable();
+
+        // Observe new children.
+        if (this._layout.updateChildSizes) {
+            this._kids.forEach((child) => this._childRO.observe(child));
         }
     }
 
@@ -259,18 +178,59 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         window.scroll(window.scrollX - err.x, window.scrollY - err.y);
     }
 
-    _measureChild(child) {
-        const childLists = this._childLists.get(child);
-        if (childLists) {
-            // console.debug(`_measureChild #${this._container.id} > #${child.id}: pending... #${childLists[0]._container.id}`);
-            const listSizes = childLists.map(list => new Promise(resolve => {
-                list._sizeCallback = resolve;
-            }));
-            return Promise.all(listSizes)
-                // .then(() => console.debug(`_measureChild #${this._container.id} > #${child.id}: ready!!! #${childLists[0]._container.id}`))
-                .then(() => super._measureChild(child));
+    _handleContainerResize(entries) {
+        // Include also padding.
+        const cr = entries[0].contentRect;
+        const width = cr.left + cr.right;
+        const height = cr.top + cr.bottom;
+
+        // console.debug('container changed size', {width, height});
+
+        const wasVisible = this._isContainerVisible;
+        this._isContainerVisible = width > 0 || height > 0;
+
+        if (!wasVisible) {
+            // console.debug('container became visible', this._layout.itemSize);
+            this._scheduleUpdateView();
+        } else if (!this._isContainerVisible) {
+            this._childRO.disconnect();
         }
-        return super._measureChild(child);
+    }
+
+    _handleChildResize(entries) {
+        const mm = {};
+        for (let entry of entries) {
+            const idx = this._kids.indexOf(entry.target);
+            if (idx === -1) {
+                throw Error('Resized element not found.');
+            }
+            // Include also padding.
+            const cr = entry.contentRect;
+            const width = cr.left + cr.right;
+            const height = cr.top + cr.bottom;
+            const measure = Object.assign({width, height}, this._getMargins(entry.target));
+
+            mm[this._first + idx] = measure;
+
+            // console.debug(`#${this._container.id} > #${entry.target.id} height: ${measure.height}`);
+        }
+        this._layout.updateChildSizes(mm);
+    }
+
+    _getMargins(el) {
+        const style = window.getComputedStyle(el);
+        // console.log(el.id, style.position);
+        return {
+            marginLeft: this._getMarginValue(style.marginLeft),
+            marginRight: this._getMarginValue(style.marginRight),
+            marginTop: this._getMarginValue(style.marginTop),
+            marginBottom: this._getMarginValue(style.marginBottom),
+        };
+    }
+    
+    _getMarginValue(value) {
+        value = value ? parseFloat(value) : NaN;
+        return value !== value ? 0 : value;
     }
 };
 
