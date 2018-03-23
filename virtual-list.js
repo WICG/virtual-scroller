@@ -38,6 +38,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
 
         this._container = node;
 
+        // Ensure container is a positioned element.
+        const position = getComputedStyle(node).position;
+        if (!position || position === 'static') {
+            node.style.position = 'relative';
+        }
+
         // TODO: Listen on actual container
         window.addEventListener('scroll', this._scheduleUpdateView);
         window.addEventListener('resize', this._scheduleUpdateView);
@@ -202,6 +208,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     async _positionChildren(pos) {
         await Promise.resolve();
         const kids = this._kids;
+        const maxWidth = this._layout.direction === 'horizontal' ? null : '100%';
+        const maxHeight = this._layout.direction === 'vertical' ? null : '100%';
         Object.keys(pos).forEach(key => {
             const idx = key - this._first;
             const child = kids[idx];
@@ -213,6 +221,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
                 // console.debug(`_positionChild #${this._container.id} > #${child.id}: top ${y}`);
                 child.style.position = 'absolute';
                 child.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                child.style.maxWidth = maxWidth;
+                child.style.maxHeight = maxHeight;
             }
         });
     }
