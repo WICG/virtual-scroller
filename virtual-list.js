@@ -24,33 +24,37 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._parentListChild = null;
 
         this._pendingUpdateView = null;
+        this._isViewReady = false;
     }
 
     set container(node) {
+        if (node === this._container) {
+            return;
+        }
         if (this._container) {
             console.warn('container can be set only once.');
             return;
         }
-        super.container = node;
 
-        this._container._list = this;
+        this._container = node;
 
         // TODO: Listen on actual container
         window.addEventListener('scroll', this._scheduleUpdateView);
         window.addEventListener('resize', this._scheduleUpdateView);
         /*
-        this._container.addEventListener('listConnected', this._onListConnected);
-        const whenReady = this._container.isConnected ?
+        node._list = this;
+        node.addEventListener('listConnected', this._onListConnected);
+        const whenReady = node.isConnected ?
             cb => cb() :
             cb => Promise.resolve().then(cb);
         whenReady(() => {
-            // console.debug(`#${this._container.id} connected`);
+            // console.debug(`#${node.id} connected`);
             const event = new Event('listConnected', {
                 bubbles: true,
                 cancelable: true,
                 composed: true,
             });
-            this._container.dispatchEvent(event);
+            node.dispatchEvent(event);
         });
         */
         this._scheduleUpdateView();
@@ -131,7 +135,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _scheduleUpdateView() {
-        if (!this._pendingUpdateView && this._shouldRender()) {
+        if (!this._pendingUpdateView && this._shouldUpdateView()) {
             this._pendingUpdateView = Promise.resolve().then(() => this._updateView());
             // window.requestAnimationFrame(() => this._updateView());
         }
@@ -159,6 +163,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             y
         });
         this._pendingUpdateView = null;
+        this._isViewReady = true;
     }
 
     _sizeContainer(size) {
@@ -225,8 +230,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         }
     }
 
-    _shouldRender() {
+    _shouldUpdateView() {
         return Boolean(super._shouldRender() && this._layout);
+    }
+
+    _shouldRender() {
+        return Boolean(super._shouldRender() && this._isViewReady);
     }
 
     _render() {
