@@ -13,15 +13,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._correctScrollError = this._correctScrollError.bind(this);
         this._sizeContainer = this._sizeContainer.bind(this);
         this._positionChildren = this._positionChildren.bind(this);
-        this._notifyStable = this._notifyStable.bind(this);
         this._scheduleUpdateView = this._scheduleUpdateView.bind(this);
-        this._onListConnected = this._onListConnected.bind(this);
 
         this._layoutItemSize = {};
-
-        this._childLists = new Map();
-        this._parentList = null;
-        this._parentListChild = null;
 
         this._pendingUpdateView = null;
         // Used to block rendering until layout viewport is setup.
@@ -48,22 +42,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         // TODO: Listen on actual container
         window.addEventListener('scroll', this._scheduleUpdateView);
         window.addEventListener('resize', this._scheduleUpdateView);
-        /*
-        node._list = this;
-        node.addEventListener('listConnected', this._onListConnected);
-        const whenReady = node.isConnected ?
-            cb => cb() :
-            cb => Promise.resolve().then(cb);
-        whenReady(() => {
-            // console.debug(`#${node.id} connected`);
-            const event = new Event('listConnected', {
-                bubbles: true,
-                cancelable: true,
-                composed: true,
-            });
-            node.dispatchEvent(event);
-        });
-        */
+        
         this._updateItemsCount();
         this._scheduleUpdateView();
     }
@@ -100,32 +79,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         if (this._container && this._layout) {
             this._layout.totalItems = this._items ? this._items.length : 0;
         }
-    }
-
-    _onListConnected(event) {
-        const path = event.composedPath();
-        const childList = path[0]._list;
-        if (childList === this) {
-            return;
-        }
-        event.stopPropagation();
-
-        // This list has nested lists, so disable estimation.
-        this._layout._estimate = false;
-
-        const idx = path.findIndex(el => el._list === this);
-        const child = path[idx - 1];
-
-        // console.debug(`#${this._container.id} > #${child.id} > #${childList._container.id}`);
-
-        let childLists = this._childLists.get(child);
-        if (!childLists) {
-            childLists = [];
-            this._childLists.set(child, childLists);
-        }
-        childLists.push(childList);
-        childList._parentList = this;
-        childList._parentListChild = child;
     }
 
     _attachLayout(layout) {
@@ -193,31 +146,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         });
     }
 
-    _notifyStable() {
-        if (typeof this._sizeCallback === 'function') {
-            // console.debug(`#${this._container.id} stable, invoke sizeCallback`);
-            this._sizeCallback();
-            this._sizeCallback = null;
-        } else if (this._parentList) {
-            this._parentList._updateChildSize(this._parentListChild);
-        }
-    }
-
-    async _updateChildSize(child) {
-        // TODO: Should be able to remove the _active check when we
-        // stop hiding children
-        if ('function' !== typeof this._layout.updateChildSizes ||
-            false === this._active.has(child)) {
-            return;
-        }
-        const item = this._active.get(child);
-        return Promise.resolve()
-            .then(() => this._measureChild(child))
-            .then((size) => this._layout.updateChildSizes({
-                [item]: size
-            }));
-    }
-
     async _positionChildren(pos) {
         await Promise.resolve();
         const kids = this._kids;
@@ -248,38 +176,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         }
         this._stable = range.stable;
         this._incremental = !(range.stable);
-        if (!this._pendingRender && this._stable) {
-            this._notifyStable();
-        }
     }
 
     _shouldRender() {
         return Boolean(super._shouldRender() && this._canRender);
     }
 
-    _render() {
-        super._render();
-        if (this._stable) {
-            this._notifyStable();
-        }
-    }
-
     _correctScrollError(err) {
         window.scroll(window.scrollX - err.x, window.scrollY - err.y);
-    }
-
-    _measureChild(child) {
-        const childLists = this._childLists.get(child);
-        if (childLists) {
-            // console.debug(`_measureChild #${this._container.id} > #${child.id}: pending... #${childLists[0]._container.id}`);
-            const listSizes = childLists.map(list => new Promise(resolve => {
-                list._sizeCallback = resolve;
-            }));
-            return Promise.all(listSizes)
-                // .then(() => console.debug(`_measureChild #${this._container.id} > #${child.id}: ready!!! #${childLists[0]._container.id}`))
-                .then(() => super._measureChild(child));
-        }
-        return super._measureChild(child);
     }
 };
 
