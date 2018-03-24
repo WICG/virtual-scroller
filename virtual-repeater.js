@@ -205,7 +205,10 @@ export const Repeats = Superclass => class extends Superclass {
 
         // Cleanup
         if (!this._incremental) {
-            this._prevActive.forEach((idx, child) => this._recycleChild(child, idx));
+            this._prevActive.forEach((idx, child) => {
+                this._hideChild(child);
+                this._recycleChild(child, idx);
+            });
             this._prevActive.clear();    
         }
 
