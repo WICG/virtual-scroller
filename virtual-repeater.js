@@ -403,7 +403,9 @@ export const Repeats = Superclass => class extends Superclass {
     }
 
     _updateChild(child, item, idx) {
-        this._updateChildFn(child, item, idx);
+        if (this._updateChildFn) {
+            this._updateChildFn(child, item, idx);
+        }
     }
 
 }

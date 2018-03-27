@@ -5,31 +5,53 @@ import {iterateStream} from '../../../streaming-spec/iterateStream.js';
 
 class HTMLSpecViewer extends RepeatsAndScrolls(HTMLElement) {
 
-  connectedCallback() {
-    if (this._firstConnected) return;
-    this._firstConnected = true;
-    this._setup();
-  }
+  constructor() {
+    super();
 
-  async _setup() {
     this.style.display = 'block';
     this.style.minHeight = '100000px';
 
-    this.layout = new Layout();
-    this.container = this;
-    this.newChildFn = item => item;
-    this.updateChildFn = this.recycleChildFn = () => {};
-
     const htmlSpec = new HtmlSpec();
-    this.parentElement.append(htmlSpec.head);
+    htmlSpec.head.style.display = 'none';
+    this.appendChild(htmlSpec.head);
+    this._htmlSpec = htmlSpec;
 
-    // A stream of elements that yields as soon as the
-    // element is created. As in, content may yet be appended
-    // due to parsing.
-    const stream = htmlSpec.advance();
     this.items = [];
+    this.container = this;
+    this.layout = new Layout({
+      itemSize: {
+        y: 10000,
+      },
+      _overhang: 800,
+    });
+
+    this.newChildFn = (item) => item;
+    this.recycleChildFn = () => {};
+  }
+
+  _render() {
+    super._render();
+    if (this._stable && this._last >= this._items.length - 4) {
+      this._addNextChunk();
+    }
+  }
+
+  async _addNextChunk(chunk = 10) {
+    if (this._adding) return;
+    this._adding = true;
+    let i = 0;
+    const stream = this._htmlSpec.advance(this._items[this._items.length - 1]);
     for await (const el of iterateStream(stream)) {
-      this.push(el);
+      if (/^(style|link|script)$/.test(el.localName)) {
+        this._htmlSpec.head.appendChild(el);
+      } else {
+        this.push(el);
+        i++;
+      }
+      if (i === chunk) {
+        this._adding = false;
+        break;
+      }
     }
   }
 }

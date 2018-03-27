@@ -8,7 +8,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._last = -1;
         this._prevFirst = -1;
         this._prevLast = -1;
-        this._sizeCallback = null;
         this._adjustRange = this._adjustRange.bind(this);
         this._correctScrollError = this._correctScrollError.bind(this);
         this._sizeContainer = this._sizeContainer.bind(this);
