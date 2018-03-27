@@ -8,18 +8,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
         this._last = -1;
         this._prevFirst = -1;
         this._prevLast = -1;
-        this._sizeCallback = null;
         this._adjustRange = this._adjustRange.bind(this);
         this._correctScrollError = this._correctScrollError.bind(this);
         this._sizeContainer = this._sizeContainer.bind(this);
         this._positionChildren = this._positionChildren.bind(this);
         this._scheduleUpdateView = this._scheduleUpdateView.bind(this);
-        
-        this._layoutItemSize = {};
 
         this._pendingUpdateView = null;
-        // Used to block rendering until layout viewport is setup.
-        this._canRender = false;
+        this._isContainerVisible = false;
 
         this._notifyStable = this._notifyStable.bind(this);
         this._onListConnected = this._onListConnected.bind(this);
@@ -85,7 +81,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     requestUpdateView() {
-        Object.assign(this._layout._itemSize, this._layoutItemSize);
         this._scheduleUpdateView();
     }
 
@@ -136,9 +131,17 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _updateView() {
-        Object.assign(this._layoutItemSize, this._layout._itemSize);
+        this._pendingUpdateView = null;
+
         // Containers can be shadowRoots, so get the host.
         const listBounds = (this._container.host || this._container).getBoundingClientRect();
+
+        // Avoid updating viewport if container is not visible.
+        this._isContainerVisible = listBounds.width || listBounds.height || listBounds.top || listBounds.left;
+        if (!this._isContainerVisible) {
+            return;
+        }
+
         const scrollerWidth = window.innerWidth;
         const scrollerHeight = window.innerHeight;
         const x = Math.max(0, -listBounds.x);
@@ -155,8 +158,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
             x,
             y
         });
-        this._pendingUpdateView = null;
-        this._canRender = true;
     }
 
     _sizeContainer(size) {
@@ -275,7 +276,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats(Superclass)
     }
 
     _shouldRender() {
-        return Boolean(super._shouldRender() && this._canRender);
+        return Boolean(super._shouldRender() && this._isContainerVisible);
     }
 
     _correctScrollError(err) {

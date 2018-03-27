@@ -44,10 +44,11 @@ Object.assign(window.vlist, {
 
 // document.body.style.minHeight = (innerHeight * 100) + 'px'
 
-// container.style.display = 'none';
-// setTimeout(() => {
-//   container.style.display = '';
-// }, 1000);
+container.style.display = 'none';
+setTimeout(() => {
+  container.style.display = '';
+  vlist.requestUpdateView();
+}, 1000);
 
 // setInterval(() => {
 //   Array.from(container.children).forEach(section => {
@@ -55,6 +56,6 @@ Object.assign(window.vlist, {
 //   })
 // }, 2000);
 
-setTimeout(() => {
-  vlist.splice(0, 0, {name: 'new'});
-}, 1000);
+// setTimeout(() => {
+//   vlist.splice(0, 0, {name: 'new'});
+// }, 1000);
