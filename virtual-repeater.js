@@ -161,8 +161,7 @@ export const Repeats = Superclass => class extends Superclass {
     async _measureChildren() {
         if (this._ordered.length > 0) {
             const {indices, children} = this._toMeasure;
-            // We wait a RAF to give time to async rendering (e.g. lit-html `repeat`)
-            await new Promise(resolve => requestAnimationFrame(resolve));
+            await Promise.resolve();
             const pm = await Promise.all(children.map(c => this._measureChild(c)));
             const mm = /** @type {{ number: { width: number, height: number } }} */
                 (pm.reduce((out, cur, i) => {
