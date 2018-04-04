@@ -1,10 +1,10 @@
-import {RepeatsAndScrolls} from '../../virtual-list.js';
-import Layout from '../../layouts/layout-1d.js';
 import {HtmlSpec} from '../../../streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../../streaming-spec/iterateStream.js';
+import Layout from '../../layouts/layout-1d.js';
+import {RepeatsAndScrolls} from '../../virtual-list.js';
 
-class HTMLSpecViewer extends RepeatsAndScrolls(HTMLElement) {
-
+class HTMLSpecViewer extends RepeatsAndScrolls
+(HTMLElement) {
   constructor() {
     super();
 
@@ -37,7 +37,8 @@ class HTMLSpecViewer extends RepeatsAndScrolls(HTMLElement) {
   }
 
   async _addNextChunk(chunk = 10) {
-    if (this._adding) return;
+    if (this._adding)
+      return;
     this._adding = true;
     let i = 0;
     const stream = this._htmlSpec.advance(this._items[this._items.length - 1]);

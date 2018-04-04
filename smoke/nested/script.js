@@ -1,14 +1,7 @@
-import {
-  VirtualList
-} from '../../virtual-list.js';
+import {html, render} from '../../../lit-html/lit-html.js';
 import Layout from '../../layouts/layout-1d.js';
-import {
-  list
-} from '../../lit-html/lit-list.js';
-import {
-  html,
-  render
-} from '../../../lit-html/lit-html.js';
+import {list} from '../../lit-html/lit-list.js';
+import {VirtualList} from '../../virtual-list.js';
 
 const items = new Array(40).fill({
   name: 'item',
@@ -24,32 +17,27 @@ listForContainer(container, items);
 
 
 function listForContainer(container, items) {
-  
   container.classList.add('list');
 
   const recycledChildren = [];
   const list = Object.assign(new VirtualList(), {
     items,
     recycledChildren: [],
-    layout: new Layout({
-      itemSize: {
-        x: innerWidth,
-        y: innerHeight
-      }
-    }),
+    layout: new Layout({itemSize: {x: innerWidth, y: innerHeight}}),
     container,
     newChildFn: (item, idx) => {
       let child = recycledChildren.pop();
       if (!child) {
         child = document.createElement('div');
         child.classList.add('row');
-        child.innerHTML = `<div class="title"></div><div class="innerContainer"></div>`;
+        child.innerHTML =
+            `<div class="title"></div><div class="innerContainer"></div>`;
         child._title = child.querySelector('.title');
         child._container = child.querySelector('.innerContainer');
 
         // child.id = `section_${idx}`;
         // child._container.id = `innerContainer_${idx}`;
-        
+
         if (item.items) {
           child._container.classList.remove('innerContainer');
           listForContainer(child._container, item.items);
@@ -58,7 +46,6 @@ function listForContainer(container, items) {
       return child;
     },
     updateChildFn: (child, item, idx) => {
-      
       // child.id = `section_${idx}`;
       // child._container.id = `innerContainer_${idx}`;
 

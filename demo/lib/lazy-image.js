@@ -11,34 +11,34 @@ template.innerHTML = `
 `;
 
 class LazyImage extends HTMLElement {
-    constructor() {
-        super();
-        this._src = null;
-        this._pendingLoad = null;
-        this._load = this._load.bind(this);
-        this._root = this.attachShadow({mode: 'open'});
-        this._root.appendChild(document.importNode(template.content, true));
-        this._img = this._root.querySelector('img');
-        this._img.addEventListener('load', e => this._loaded());
-    }
+  constructor() {
+    super();
+    this._src = null;
+    this._pendingLoad = null;
+    this._load = this._load.bind(this);
+    this._root = this.attachShadow({mode: 'open'});
+    this._root.appendChild(document.importNode(template.content, true));
+    this._img = this._root.querySelector('img');
+    this._img.addEventListener('load', e => this._loaded());
+  }
 
-    set src(url) {
-        this._src = url;
-        if (this._pendingLoad) {
-            clearTimeout(this._pendingLoad);
-        }
-        this._img.classList = '';
-        this._pendingLoad = setTimeout(this._load, 500);
+  set src(url) {
+    this._src = url;
+    if (this._pendingLoad) {
+      clearTimeout(this._pendingLoad);
     }
+    this._img.classList = '';
+    this._pendingLoad = setTimeout(this._load, 500);
+  }
 
-    _load() {
-        this._img.classList = '';
-        this._img.src = this._src;
-    }
+  _load() {
+    this._img.classList = '';
+    this._img.src = this._src;
+  }
 
-    _loaded() {
-        this._img.classList = 'loaded';
-    }
+  _loaded() {
+    this._img.classList = 'loaded';
+  }
 }
 
 customElements.define('lazy-image', LazyImage);

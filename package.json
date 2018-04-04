@@ -7,13 +7,15 @@
   "flat": true,
   "directories": {},
   "devDependencies": {
+    "clang-format": "^1.2",
     "lit-html": "latest",
     "preact": "^8.2.6",
     "streaming-spec": "github:jakearchibald/streaming-html-spec#master"
   },
   "scripts": {
     "gh-pages": "./deploy-to-gh-pages.sh",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "find . -name '*.js' | grep -v node_modules | xargs clang-format --style=file -i"
   },
   "repository": {
     "type": "git",

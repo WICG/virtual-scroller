@@ -1,20 +1,10 @@
-import {
-  VirtualList
-} from '../../virtual-list.js';
-
 import Layout from '../../layouts/layout-1d.js';
+import {VirtualList} from '../../virtual-list.js';
 
-const items = new Array(20).fill({
-  name: 'item'
-});
+const items = new Array(20).fill({name: 'item'});
 const container = document.getElementById('container');
 
-const layout = new Layout({
-  itemSize: {
-    x: window.innerWidth,
-    y: 50
-  }
-});
+const layout = new Layout({itemSize: {x: window.innerWidth, y: 50}});
 window.vlist = new VirtualList();
 vlist._recycledChildren = [];
 Object.assign(window.vlist, {
