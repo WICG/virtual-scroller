@@ -188,8 +188,8 @@ el.addEventListener('scroll', () => {
 
 # VirtualList (RepeatsAndScrolls mixin)
 
-- Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance.
-- Exposes a `layout` property, updates the `layout.viewportSize` on window resize, and the scroll position (`layout.scrollTo()`) on document scroll
+- Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance
+- Exposes a `layout` property, updates the `layout.totalItems`, `layout.viewportSize`, and the scroll position (`layout.scrollTo()`)
 - Subscribes to `layout` updates on range (`first, num`), children position, scrolling position and scrolling size
 - Updates the container size (`min-width/height`) and children positions (`position: absolute`)
 
