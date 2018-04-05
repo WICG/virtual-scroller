@@ -108,9 +108,9 @@ repeater.splice(1, 0, {name: 'inserted with splice'});
 
 ### _incremental
 
-Set to true to keep the current dom.
+Set to true to disable DOM additions/removals done by VirtualRepeater.
 
-### _measureCallback
+### _measureCallback()
 
 You can receive child layout information through `_measureCallback`,
 which will get invoked after each rendering.
@@ -126,16 +126,72 @@ repeater._measureCallback = (measuresInfo) => {
 
 # Layout
 
-- Computes scroll size, average item size, first/last visible indexes.
-- Supports 2 scroll directions: horizontal or vertical
-- Notifies of size, position, range, scroll error changes to subscribers
+Given a viewport size and total items count, it computes children position, container size, range of visible items, and scroll error.
 
+```js
+const layout = new Layout({
+  viewportSize: {y: 1000},
+  totalItems: 20,
+  /**
+   * Layout direction, vertical (default) or horizontal.
+   */
+  direction: 'vertical',
+  /**
+   * Average item size (default).
+   */
+  itemSize: {y: 100},
+});
+```
+
+It notifies subscribers about changes on children position, container size, range (e.g. `first, num`), scroll error. It's up to the subscribers to take action on these.
+
+```js
+
+layout.addListener('position', (positionInfo) => {
+  for (const itemIndex in positionInfo) {
+    const itemPosition = positionInfo[itemIndex];
+    console.log(`item at index ${itemIndex}`);
+    console.log(`update position to ${itemPosition.y}`);
+  }
+});
+
+layout.addListener('size', (size) => {
+  console.log(`update container size to ${size.height}`);
+});
+
+layout.addListener('range', (range) => {
+  console.log(`update first to ${range.first}`);
+  console.log(`update num to ${range.num}`);
+});
+
+layout.addListener('scrollError', (error) => {
+  console.log(`account for scroll error of ${error.y}`);
+});
+```
+
+Use `layout.updateChildSizes()` to give layout more information regarding child sizes.
+```js
+// Pass an object with key = item index, value = bounds.
+layout.updateChildSizes({
+  0: {height: 300},
+  4: {height: 100},
+});
+```
+
+Use `layout.scrollTo()` to move the range across the container size.
+```js
+const el = document.scrollingElement;
+el.addEventListener('scroll', () => {
+  layout.scrollTo({y: el.scrollTop});
+});
+```
 
 # VirtualList (RepeatsAndScrolls mixin)
 
-- Extends `VirtualRepeater` by updating `first, num` on window resize and document scroll.
-- Provides to the `Layout` instance updates on the viewport size and children size.
-- Delegates to a `Layout` instance the computation of `first, num`, children position, scrolling position and scrolling size.
+- Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance.
+- Exposes a `layout` property, updates the `layout.viewportSize` on window resize, and the scroll position (`layout.scrollTo()`) on document scroll
+- Subscribes to `layout` updates on range (`first, num`), children position, scrolling position and scrolling size
+- Updates the container size (`min-width/height`) and children positions (`position: absolute`)
 
 ```js
 const list = Object.assign(new VirtualList(), {
