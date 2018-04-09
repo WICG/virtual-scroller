@@ -32,9 +32,10 @@ export class Sample {
   }
 
   _setUp() {
-    this.list = Object.assign(new VirtualList(), {
+    this.list = new VirtualList({
+      layout: this.layout,
       container: document.body,
-      newChildFn: () => {
+      newChild: () => {
         const img = document.createElement('lazy-image');
         img.style = 'position: absolute;';
         const h = document.createElement('h2');
@@ -43,7 +44,7 @@ export class Sample {
         img.appendChild(h);
         return img;
       },
-      updateChildFn: (child, item, idx) => {
+      updateChild: (child, item, idx) => {
         const dim = getDims(item, this.constraint);
         child.src = getUrl(item);
         Object.assign(child.style, {
@@ -57,7 +58,6 @@ export class Sample {
   }
 
   render() {
-    this.list.layout = this.layout;
     this.list.items = this.items;
   }
 

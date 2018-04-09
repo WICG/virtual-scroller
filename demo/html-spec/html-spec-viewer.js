@@ -6,7 +6,17 @@ import {RepeatsAndScrolls} from '../../virtual-list.js';
 class HTMLSpecViewer extends RepeatsAndScrolls
 (HTMLElement) {
   constructor() {
-    super();
+    super({
+      items: [],
+      layout: new Layout({
+        itemSize: {
+          y: 10000,
+        },
+        _overhang: 800,
+      }),
+      newChild: (item) => item,
+      recycleChild: () => {},
+    });
 
     this.style.display = 'block';
     this.style.minHeight = '100000px';
@@ -16,32 +26,26 @@ class HTMLSpecViewer extends RepeatsAndScrolls
     this.appendChild(htmlSpec.head);
     this._htmlSpec = htmlSpec;
 
-    this.items = [];
-    this.container = this;
-    this.layout = new Layout({
-      itemSize: {
-        y: 10000,
-      },
-      _overhang: 800,
-    });
-
-    this.newChildFn = (item) => item;
-    this.recycleChildFn = () => {};
+    this._addNextChunk();
   }
 
-  _render() {
-    super._render();
-    if (this._stable && this._last >= this._items.length - 4) {
+  get container() {
+    return this;
+  }
+
+  _notifyStable() {
+    if (this._last >= this.items.length - 4) {
       this._addNextChunk();
     }
   }
 
   async _addNextChunk(chunk = 10) {
-    if (this._adding)
+    if (this._adding) {
       return;
+    }
     this._adding = true;
     let i = 0;
-    const stream = this._htmlSpec.advance(this._items[this._items.length - 1]);
+    const stream = this._htmlSpec.advance(this.items[this.items.length - 1]);
     for await (const el of iterateStream(stream)) {
       if (/^(style|link|script)$/.test(el.localName)) {
         this._htmlSpec.head.appendChild(el);

@@ -2,49 +2,23 @@ import {directive, NodePart} from '../../lit-html/lit-html.js';
 import {VirtualRepeater} from '../virtual-repeater.js';
 
 export const LitMixin = Superclass => class extends Superclass {
-  constructor() {
-    super();
-
-    this._template = null;
-    this._hostPart = null;
-    this._recycle = false;
-    this._recycledParts = [];
-  }
-
-  set part(part) {
-    this._hostPart = part;
-    this._computeContainer(true);
-  }
-
-  set template(template) {
-    if (template !== this._template) {
-      this._template = template;
-      this._needsReset = true;
-      this._needsRender = true;
-    }
-  }
-
-  set recycle(recycle) {
-    recycle = Boolean(recycle);
-    if (recycle !== this._recycle) {
-      this._recycle = recycle;
-      this._needsReset = true;
-      this._needsRender = true;
-    }
-  }
-
-  _computeContainer(canRetry) {
-    const container = this._hostPart.startNode.parentNode;
-    // If not attached yet, wait a tick to allow
-    // DOM to be attached in the document.
-    if (container.parentNode || container.host) {
-      this.container = container;
-    } else if (canRetry) {
-      // Retry only once.
-      Promise.resolve().then(() => this._computeContainer(false));
+  constructor(config) {
+    const {
+      part,
+      template,
+      recycle,
+    } = config;
+    if (recycle) {
+      const recycledParts = [];
+      config.newChild = () =>
+          recycledParts.pop() || new NodePart(part.instance, null, null);
+      config.recycleChild = (part) => recycledParts.push(part);
     } else {
-      throw Error`container not connected to the main document`;
+      config.newChild = () => new NodePart(part.instance, null, null);
+      config.updateChild = (part, item, idx) =>
+          part.setValue(template(item, idx));
     }
+    super(config);
   }
 
   // Lit-specific overrides for node manipulation
@@ -62,15 +36,14 @@ export const LitMixin = Superclass => class extends Superclass {
 
   _insertBefore(part, referenceNode) {
     if (referenceNode === null) {
-      referenceNode = this._hostPart.endNode;
+      referenceNode = part.endNode;
     }
-    const container = this._container;
     if (!this._childIsAttached(part)) {
       // Inserting new part
       part.startNode = document.createTextNode('');
       part.endNode = document.createTextNode('');
-      container.insertBefore(part.startNode, referenceNode);
-      container.insertBefore(part.endNode, referenceNode);
+      super._insertBefore(part.startNode, referenceNode);
+      super._insertBefore(part.endNode, referenceNode);
     } else {
       // Inserting existing part
       const boundary = part.endNode.nextSibling;
@@ -78,7 +51,7 @@ export const LitMixin = Superclass => class extends Superclass {
         // Part is not already in the right place
         for (let node = part.startNode; node !== boundary;) {
           const n = node.nextSibling;
-          container.insertBefore(node, referenceNode);
+          super._insertBefore(node, referenceNode);
           node = n;
         }
       }
@@ -90,7 +63,8 @@ export const LitMixin = Superclass => class extends Superclass {
   }
 
   _hideChild(part) {
-    for (let node = part.startNode.nextSibling; node !== part.endNode;) {
+    let node = part.startNode.nextSibling;
+    while (node && node !== part.endNode) {
       if (node.style) {
         node.style.display = 'none';
       }
@@ -99,13 +73,15 @@ export const LitMixin = Superclass => class extends Superclass {
   }
 
   _showChild(part) {
-    if (this._childIsAttached(part)) {
-      for (let node = part.startNode.nextSibling; node !== part.endNode;) {
-        if (node.style) {
-          node.style.display = null;
-        }
-        node = node.nextSibling;
+    if (!this._childIsAttached(part)) {
+      return;
+    }
+    let node = part.startNode.nextSibling;
+    while (node && node !== part.endNode) {
+      if (node.style) {
+        node.style.display = null;
       }
+      node = node.nextSibling;
     }
   }
 
@@ -116,43 +92,45 @@ export const LitMixin = Superclass => class extends Superclass {
   }
 
   __removeChild(part) {
-    if (this._recycle) {
-      this._recycledParts.push(part);
-      return;
-    }
     let node = part.startNode.nextSibling;
     while (node !== part.endNode) {
       const next = node.nextSibling;
-      this._container.removeChild(node);
+      super.__removeChild(node);
       node = next;
     }
   }
-
-  //
-
-  _getNewChild() {
-    const recycled = this._recycle ? this._recycledParts.pop() : null;
-    return recycled || new NodePart(this._hostPart.instance, null, null);
-  }
-
-  _updateChild(part, item, idx) {
-    part.setValue(this._template(item, idx));
-  }
-}
+};
 
 export const LitRepeater = LitMixin(VirtualRepeater);
 
+export const containerFromPart = async (part) => {
+  /**
+   * Handle the case where the part is rendered in the top container, e.g.
+   *
+   *    const myList = html`${list({items, template, layout})}`;
+   *    render(myList, document.body);
+   *
+   * We wait a microtask to give time to the part to be rendered.
+   */
+  while (!part.startNode.isConnected) {
+    await Promise.resolve();
+  }
+  return part.startNode.parentNode;
+};
+
 const partToRepeater = new WeakMap();
-export const repeat = (config = {}) => directive(part => {
+export const repeat = (config = {}) => directive(async part => {
   let repeater = partToRepeater.get(part);
   if (!repeater) {
-    repeater = new LitRepeater();
+    const container = await containerFromPart(part);
+    repeater = new LitRepeater({
+      part,
+      container,
+      template: config.template,
+      recycle: config.recycle,
+    });
     partToRepeater.set(part, repeater);
   }
-  Object.assign(config, {
-    part,
-    // Assign template only once.
-    template: repeater.template || config.template,
-  });
-  Object.assign(repeater, config);
+  const {first, num, items} = config;
+  Object.assign(repeater, {first, num, items});
 });

@@ -63,10 +63,10 @@ export const Sample = RepeaterControl(Stateful(class {
       this.ul = document.createElement('ul');
       document.body.appendChild(this.ul);
 
-      this._repeater = Object.assign(new VirtualRepeater(), {
+      this._repeater = new VirtualRepeater({
         container: this.ul,
-        newChildFn: () => document.createElement('li'),
-        updateChildFn: (child, item, idx) => {
+        newChild: () => document.createElement('li'),
+        updateChild: (child, item, idx) => {
           child.textContent = `${idx}: ${item}`;
           child.onclick = () => console.log(item)
         }

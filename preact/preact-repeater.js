@@ -56,7 +56,7 @@ export const PreactMixin = Superclass => class extends Superclass {
 
   _updateChild(child, item, idx) {
     child.vNode.attributes = {item, idx};
-    render(child.vNode, this._container, child.instance.base);
+    render(child.vNode, this.container, child.instance.base);
   }
 
   _node(child) {
