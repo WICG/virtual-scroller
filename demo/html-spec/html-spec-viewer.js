@@ -6,12 +6,8 @@ import {RepeatsAndScrolls} from '../../virtual-list.js';
 class HTMLSpecViewer extends RepeatsAndScrolls
 (HTMLElement) {
   constructor() {
-    super({
-      items: [],
-      layout: new Layout({itemSize: {y: 10000}, _overhang: 800}),
-      newChild: (item) => item
-    });
-
+    super();
+    this.items = [];
     this.style.display = 'block';
     this.style.minHeight = '100000px';
 
@@ -23,8 +19,26 @@ class HTMLSpecViewer extends RepeatsAndScrolls
     this._addNextChunk();
   }
 
-  get container() {
-    return this;
+  get _layout() {
+    return super._layout;
+  }
+
+  set _layout(_) {
+    if (!this._layout) {
+      super._layout = new Layout({itemSize: {y: 10000}, _overhang: 800});
+    }
+  }
+
+  get _container() {
+    return super._container;
+  }
+
+  set _container(_) {
+    super._container = this;
+  }
+
+  _newChild(item) {
+    return item;
   }
 
   _notifyStable() {

@@ -2,25 +2,22 @@ import {IncrementalRepeats} from '../../incremental-repeater.js';
 
 class IncrementalListElement extends IncrementalRepeats
 (HTMLElement) {
-  connectedCallback() {
-    this.container = this;
-    this.newChildFn = this.getNewChild.bind(this);
-    this.updateChildFn = this.updateChild.bind(this);
-    // Wait for distribution.
-    Promise.resolve().then(() => {
-      this._template =
-          this.querySelector('template').content.querySelector('*');
-    });
+  get _container() {
+    return super._container;
   }
 
-  getNewChild() {
-    return this._template.cloneNode(true);
+  set _container(_) {
+    super._container = this;
   }
 
-  updateChild(child, item, idx) {
+  _newChild(item, idx) {
+    this._template = this._template ||
+        this.querySelector('template').content.querySelector('*');
+    const child = this._template.cloneNode(true);
     child.querySelector('.idx').textContent = idx;
     child.querySelector('.value').textContent = item;
-    child.onclick = () => console.log(item)
+    child.onclick = () => console.log(item);
+    return child;
   }
 
   static get observedAttributes() {

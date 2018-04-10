@@ -48,13 +48,7 @@ export const Repeats = Superclass => class extends Superclass {
     this._keyToChild = new Map();
     this._childToKey = new WeakMap();
 
-    // For debug.
-    this.container._repeater = this;
     this._scheduleRender();
-  }
-
-  get container() {
-    return this._container;
   }
 
   get first() {
@@ -134,7 +128,7 @@ export const Repeats = Superclass => class extends Superclass {
   // Core functionality
 
   _shouldRender() {
-    return Boolean(this.items && this.container);
+    return Boolean(this._items && this._container);
   }
 
   _scheduleRender() {
@@ -201,9 +195,9 @@ export const Repeats = Superclass => class extends Superclass {
     }
     const shouldMeasure = this._num > 0 && this._measureCallback &&
         (rangeChanged || this._needsRemeasure || this._needsReset);
-    // console.debug(`#${this.container.id} _render: ${this._num}/${
-    //     this.items.length} ${this._first} -> ${this._last}
-    //     (${this._prevNum}/${this.items.length} ${this._prevFirst} ->
+    // console.debug(`#${this._container.id} _render: ${this._num}/${
+    //     this._items.length} ${this._first} -> ${this._last}
+    //     (${this._prevNum}/${this._items.length} ${this._prevFirst} ->
     //     ${this._prevLast}) measure=${shouldMeasure}`);
     if (shouldMeasure) {
       this._measureChildren();
@@ -347,11 +341,11 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   _insertBefore(child, referenceNode) {
-    this.container.insertBefore(child, referenceNode);
+    this._container.insertBefore(child, referenceNode);
   }
 
   _childIsAttached(child) {
-    return child.parentNode === this.container;
+    return child.parentNode === this._container;
   }
 
   _hideChild(child) {
@@ -371,7 +365,7 @@ export const Repeats = Superclass => class extends Superclass {
     // offsetWidth doesn't take transforms in consideration,
     // so we use getBoundingClientRect which does.
     const {width, height} = child.getBoundingClientRect();
-    // console.debug(`_measureChild #${this.container.id} > #${
+    // console.debug(`_measureChild #${this._container.id} > #${
     //     child.id}: height: ${height}px`);
     return Object.assign(
         {
@@ -392,7 +386,7 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   _removeChild(child) {
-    this.container.removeChild(child);
+    this._container.removeChild(child);
   }
 }
 

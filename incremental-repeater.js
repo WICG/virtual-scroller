@@ -2,10 +2,14 @@ import {Repeats} from './virtual-repeater.js';
 
 export const IncrementalRepeats = Superclass => class extends Repeats
 (Superclass) {
-  constructor() {
-    super();
+  constructor(config = {}) {
+    super(config);
     // Default.
-    this._chunk = 1;
+    this.chunk = config.chunk || 1;
+  }
+
+  get items() {
+    return super.items;
   }
 
   set items(items) {
@@ -13,6 +17,10 @@ export const IncrementalRepeats = Superclass => class extends Repeats
       super.items = items;
       this.num = this._chunk;
     }
+  }
+
+  get chunk() {
+    return this._chunk;
   }
 
   set chunk(chunk) {

@@ -15,9 +15,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._isContainerVisible = false;
 
     // Ensure container is a positioned element.
-    const position = getComputedStyle(this.container).position;
+    const position = getComputedStyle(this._container).position;
     if (!position || position === 'static') {
-      this.container.style.position = 'relative';
+      this._container.style.position = 'relative';
     }
     if (typeof this._layout.updateChildSizes === 'function') {
       this._measureCallback = m => this._layout.updateChildSizes(m);
@@ -77,7 +77,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     // Containers can be shadowRoots, so get the host.
     const listBounds =
-        (this.container.host || this.container).getBoundingClientRect();
+        (this._container.host || this._container).getBoundingClientRect();
 
     // Avoid updating viewport if container is not visible.
     this._isContainerVisible = listBounds.width || listBounds.height ||
@@ -104,7 +104,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     Object.keys(size).forEach(key => {
       const prop = (key === 'width') ? 'minWidth' : 'minHeight';
       // Containers can be shadowRoots, so get the host.
-      (this.container.host || this.container).style[prop] = size[key] + 'px';
+      (this._container.host || this._container).style[prop] = size[key] + 'px';
     });
   }
 
@@ -118,7 +118,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       const child = kids[idx];
       if (child) {
         const {x, y} = pos[key];
-        // console.debug(`_positionChild #${this.container.id} > #${child.id}:
+        // console.debug(`_positionChild #${this._container.id} > #${child.id}:
         // top ${y}`);
         child.style.position = 'absolute';
         child.style.transform = `translate3d(${x}px, ${y}px, 0)`;

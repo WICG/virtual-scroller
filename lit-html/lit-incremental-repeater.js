@@ -9,13 +9,9 @@ const partToRepeater = new WeakMap();
 export const repeat = (config = {}) => directive(part => {
   let repeater = partToRepeater.get(part);
   if (!repeater) {
-    repeater = new LitIncrementalRepeater();
+    repeater = new LitIncrementalRepeater({part, template: config.template});
     partToRepeater.set(part, repeater);
   }
-  Object.assign(config, {
-    part,
-    // Assign template only once.
-    template: repeater.template || config.template,
-  });
-  Object.assign(repeater, config);
+  const {first, num, chunk, items} = config;
+  Object.assign(repeater, {first, num, chunk, items});
 });
