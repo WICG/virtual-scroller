@@ -3,45 +3,44 @@ import Layout from '../../layouts/layout-1d.js';
 import {list} from '../../lit-html/lit-list.js';
 import {VirtualList} from '../../virtual-list.js';
 
-const items = new Array(2).fill({name: 'item'});
+const items = new Array(200).fill({name: 'item'});
 const container = document.getElementById('container');
 
-const layout = new Layout({itemSize: {x: window.innerWidth, y: 50}});
-render(
-    html`${list({
-      template: (item, idx) => html`
-        <section><div class="title">${idx} - ${item.name}</div></section>
-      `,
-      container,
-      layout,
-      items
-    })}`,
-    container);
-// window.vlist = new VirtualList({
-//   id: 'vlist',
-//   items,
-//   container,
-//   layout,
-//   newChild: (item, idx) => {
-//     let section = vlist._recycledChildren.pop();
-//     if (!section) {
-//       section = document.createElement('section');
-//       section.innerHTML = `<div class="title"></div>`;
-//       section._title = section.querySelector('.title');
-//       // Update it immediately.
-//       vlist._updateChildFn(section, item, idx);
-//     }
-//     return section;
-//   },
-//   updateChild: (section, item, idx) => {
-//     section.id = `section_${idx}`;
-//     section._title.textContent = `${idx} - ${item.name}`;
-//   },
-//   recycleChild: (section, item, idx) => {
-//     vlist._recycledChildren.push(section);
-//   }
-// });
-// vlist._recycledChildren = [];
+const layout = new Layout({itemSize: {y: 50}});
+// render(
+//     html`${list({
+//       items,
+//       template: (item, idx) => html`
+//         <section><div class="title">${idx} - ${item.name}</div></section>
+//       `,
+//       layout,
+//     })}`,
+//     container);
+const pool = [];
+const config = {
+  items,
+  container,
+  layout,
+  newChild: (item, idx) => {
+    let section = pool.pop();
+    if (!section) {
+      section = document.createElement('section');
+      section.innerHTML = `<div class="title"></div>`;
+      section._title = section.querySelector('.title');
+      // Update it immediately.
+      config.updateChild(section, item, idx);
+    }
+    return section;
+  },
+  updateChild: (section, item, idx) => {
+    section.id = `section_${idx}`;
+    section._title.textContent = `${idx} - ${item.name}`;
+  },
+  recycleChild: (section, item, idx) => {
+    pool.push(section);
+  }
+};
+window.vlist = new VirtualList(config);
 
 // document.body.style.minHeight = (innerHeight * 100) + 'px'
 

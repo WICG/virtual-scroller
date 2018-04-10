@@ -8,14 +8,8 @@ class HTMLSpecViewer extends RepeatsAndScrolls
   constructor() {
     super({
       items: [],
-      layout: new Layout({
-        itemSize: {
-          y: 10000,
-        },
-        _overhang: 800,
-      }),
-      newChild: (item) => item,
-      recycleChild: () => {},
+      layout: new Layout({itemSize: {y: 10000}, _overhang: 800}),
+      newChild: (item) => item
     });
 
     this.style.display = 'block';

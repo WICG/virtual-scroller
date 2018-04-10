@@ -2,7 +2,7 @@ import {directive} from '../../lit-html/lit-html.js';
 import Layout from '../layouts/layout-1d.js';
 import {VirtualList} from '../virtual-list.js';
 
-import {containerFromPart, LitMixin} from './lit-repeater.js';
+import {LitMixin} from './lit-repeater.js';
 
 export const LitList = LitMixin(VirtualList);
 
@@ -10,15 +10,11 @@ const partToList = new WeakMap();
 export const list = (config = {}) => directive(async part => {
   let list = partToList.get(part);
   if (!list) {
-    const container = await containerFromPart(part);
-    list = new LitList({
-      part,
-      container,
-      template: config.template,
-      layout: config.layout,
-      // Recycle by default.
-      recycle: Boolean(!config.hasOwnProperty('recycle') || config.recycle),
-    });
+    while (!part.startNode.isConnected) {
+      await Promise.resolve();
+    }
+    const {template, layout} = config;
+    list = new LitList({part, template, layout});
     partToList.set(part, list);
   }
   list.items = config.items;

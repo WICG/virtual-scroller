@@ -3,22 +3,16 @@ import {VirtualRepeater} from '../virtual-repeater.js';
 
 export const LitMixin = Superclass => class extends Superclass {
   constructor(config) {
-    const {
-      part,
-      template,
-      recycle,
-    } = config;
-    if (recycle) {
-      const recycledParts = [];
-      config.newChild = () =>
-          recycledParts.pop() || new NodePart(part.instance, null, null);
-      config.recycleChild = (part) => recycledParts.push(part);
-    } else {
-      config.newChild = () => new NodePart(part.instance, null, null);
-      config.updateChild = (part, item, idx) =>
-          part.setValue(template(item, idx));
-    }
+    const pool = [];
+    const {part, template} = config;
+    Object.assign(config, {
+      container: part.startNode.parentNode,
+      newChild: () => pool.pop() || new NodePart(part.instance, null, null),
+      updateChild: (part, item, idx) => part.setValue(template(item, idx)),
+      recycleChild: (part) => pool.push(part),
+    });
     super(config);
+    this._hostPart = part;
   }
 
   // Lit-specific overrides for node manipulation
@@ -36,7 +30,7 @@ export const LitMixin = Superclass => class extends Superclass {
 
   _insertBefore(part, referenceNode) {
     if (referenceNode === null) {
-      referenceNode = part.endNode;
+      referenceNode = this._hostPart.endNode;
     }
     if (!this._childIsAttached(part)) {
       // Inserting new part
@@ -90,44 +84,20 @@ export const LitMixin = Superclass => class extends Superclass {
     // end nodes)
     return super._measureChild(part.startNode.nextElementSibling);
   }
-
-  __removeChild(part) {
-    let node = part.startNode.nextSibling;
-    while (node !== part.endNode) {
-      const next = node.nextSibling;
-      super.__removeChild(node);
-      node = next;
-    }
-  }
 };
 
 export const LitRepeater = LitMixin(VirtualRepeater);
-
-export const containerFromPart = async (part) => {
-  /**
-   * Handle the case where the part is rendered in the top container, e.g.
-   *
-   *    const myList = html`${list({items, template, layout})}`;
-   *    render(myList, document.body);
-   *
-   * We wait a microtask to give time to the part to be rendered.
-   */
-  while (!part.startNode.isConnected) {
-    await Promise.resolve();
-  }
-  return part.startNode.parentNode;
-};
 
 const partToRepeater = new WeakMap();
 export const repeat = (config = {}) => directive(async part => {
   let repeater = partToRepeater.get(part);
   if (!repeater) {
-    const container = await containerFromPart(part);
+    while (!part.startNode.isConnected) {
+      await Promise.resolve();
+    }
     repeater = new LitRepeater({
       part,
-      container,
       template: config.template,
-      recycle: config.recycle,
     });
     partToRepeater.set(part, repeater);
   }

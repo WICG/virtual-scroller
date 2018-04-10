@@ -46,33 +46,28 @@ Some implementations append DOM incrementally, others recycle the DOM.
 import Layout from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
 
-(async () => {
+const pool = [];
+const list = new VirtualList({
+  layout: new Layout({direction: 'vertical'}),
+  container: document.body,
+  // Creates DOM that is about to be connected.
+  newChild: (item, idx) => {
+    return (pool.pop() || document.createElement('section'));
+  },
+  // Updates the DOM with data.
+  updateChild: (child, item, idx) => {
+    child.innerHTML = `<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`;
+    // or update with lit-html, e.g.
+    // render(html`<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`, child);
+  },
+  // Collects DOM that is offscreen instead of disconnecting & trashing it.
+  recycleChild: (child, item, idx) => {
+    pool.push(child);
+  }
+});
 
-  const layout = new Layout({direction: 'vertical'});
-  const items = await fetch('./demo/contacts/contacts.json').then(response => response.json());
-  const recycledChildren = [];
-  
-  const list = Object.assign(new VirtualList(), {
-    items,
-    layout,
-    container: document.body,
-    // Creates DOM that is about to be connected.
-    newChildFn: (item, idx) => {
-      return (recycledChildren.pop() || document.createElement('section'));
-    },
-    // Updates the DOM with data.
-    updateChildFn: (child, item, idx) => {
-      child.innerHTML = `<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`;
-      // or update with lit-html, e.g.
-      // render(html`<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`, child);
-    },
-    // Collects DOM that is offscreen instead of disconnecting & trashing it.
-    recycleChildFn: (child, item, idx) => {
-      recycledChildren.push(child);
-    }
-  });
-
-})();
+fetch('./demo/contacts/contacts.json')
+  .then(response => list.items = response.json());
 
 ```
 

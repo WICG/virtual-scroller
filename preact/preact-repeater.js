@@ -2,18 +2,17 @@ import {Component, h, render} from '../../preact/dist/preact.esm.js';
 import {VirtualRepeater} from '../virtual-repeater.js';
 
 export class Repeat extends Component {
-  componentWillMount() {
-    this._repeater = new PreactRepeater();
-  }
   componentDidMount() {
-    this._repeater.container = this._wrapper.base;
+    this._repeater = new PreactRepeater({
+      container: this._wrapper.base,
+      component: this.props.component,
+    });
     this._updateRepeater(this.props);
   }
 
   _updateRepeater(props) {
-    const {first, num, items, component} = props;
-    Object.assign(this._repeater, {first, num, items, component});
-    // this._repeater.render();
+    const {first, num, items} = props;
+    Object.assign(this._repeater, {first, num, items});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -30,33 +29,30 @@ export class Repeat extends Component {
 }
 
 export const PreactMixin = Superclass => class extends Superclass {
-  constructor() {
-    super();
-    this._component = null;
-    this._offscreen = document.createElement('div');
-  }
-
-  set component(component) {
-    if (component !== this._component) {
-      this._component = component;
-      this._needsRender = true;
-      this._needsReset = true;
-    }
+  constructor(config) {
+    const offscreen = document.createElement('div');
+    const component = config.component;
+    const pool = [];
+    Object.assign(config, {
+      newChild: () => {
+        let child = pool.pop();
+        if (!child) {
+          child = {vNode: h(component, {ref: n => child.instance = n})};
+          render(child.vNode, offscreen);
+        }
+        return child;
+      },
+      updateChild: (child, item, idx) => {
+        child.vNode.attributes = {item, idx};
+        render(child.vNode, this.container, child.instance.base);
+      },
+      recycleChild: (child) => pool.push(child),
+    });
+    super(config);
   }
 
   get _kids() {
     return this._ordered.map(c => c.instance.base);
-  }
-
-  _getNewChild() {
-    const child = {vNode: h(this._component, {ref: n => child.instance = n})};
-    render(child.vNode, this._offscreen);
-    return child;
-  }
-
-  _updateChild(child, item, idx) {
-    child.vNode.attributes = {item, idx};
-    render(child.vNode, this.container, child.instance.base);
   }
 
   _node(child) {
@@ -83,10 +79,6 @@ export const PreactMixin = Superclass => class extends Superclass {
     if (this._childIsAttached(child)) {
       super._showChild(child.instance.base);
     }
-  }
-
-  __removeChild(child) {
-    super.__removeChild(child.instance.base);
   }
 
   _measureChild(child) {
