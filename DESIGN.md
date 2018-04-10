@@ -2,17 +2,13 @@
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
 - Given an `items` array, it displays `num` elements starting from `first` index.
-- Delegates DOM creation, update and recycling via `newChildFn, updateChildFn, recycleChildFn`.
+- Delegates DOM creation, update and recycling via `newChild, updateChild, recycleChild`.
 - Delegates DOM layout via `_measureCallback`.
 
 ## Basic setup
 
 ```js
-const repeater = Object.assign(new VirtualRepeater(), {
-  /**
-   * Where to render the list items.
-   */
-  container: document.body,
+const repeater = new VirtualRepeater({
   /**
    * The data model.
    */
@@ -26,9 +22,13 @@ const repeater = Object.assign(new VirtualRepeater(), {
    */
   num: 5,
   /**
+   * Where to render the list items.
+   */
+  container: document.body,
+  /**
    * The DOM representing data.
    */
-  newChildFn: (item, index) => {
+  newChild: (item, index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + item.name;
     return child;
@@ -38,40 +38,37 @@ const repeater = Object.assign(new VirtualRepeater(), {
 
 ## Recycling
 
-You can recycle DOM through the `recycleChildFn`, and use the recycled DOM
-in `newChildFn`.
+You can recycle DOM through the `recycleChild`, and use the recycled DOM
+in `newChild`.
 
 If you decide to keep the recycled DOM attached in the main document, perform
-DOM updates in `updateChildFn`.
+DOM updates in `updateChild`.
 
 ```js
-Object.assign(repeater, {
-  /**
-   * Used to collect and recycle DOM.
-   */
-  _recycledChildren: [],
+/**
+ * Used to collect and recycle DOM.
+ */
+const pool = [];
+const repeater = new VirtualRepeater({
+  container: document.body,
   /**
    * The DOM representing data.
    */
-  newChildFn: (item, index) => {
-    let child = repeater._recycledChildren.pop();
-    if (!child) {
-      child = document.createElement('section');
-    }
-    return child;
+  newChild: (item, index) => {
+    return pool.pop() || document.createElement('section');
   },
   /**
    * Updates the DOM with data.
    */
-  updateChildFn: (child, item, index) => {
+  updateChild: (child, item, index) => {
     child.textContent = index + ' - ' + item.name;
   },
   /**
    * Invoked when the DOM is about to be removed.
    * Here we keep the child in the main document.
    */
-  recycleChildFn: (child, item, index) => {
-    repeater._recycledChildren.push(child);
+  recycleChild: (child, item, index) => {
+    pool.push(child);
   }
 });
 
@@ -79,9 +76,10 @@ Object.assign(repeater, {
  * Now, when we manipulate `items, first, num` properties,
  * the DOM will be recycled.
  */
-repeater.num = 2;
+repeater.items = new Array(20).fill({name: 'item'});
+repeater.num = 5;
 setTimeout(() => {
-  repeater.num = 10;
+  repeater.num = 2;
 }, 1000);
 
 ```
@@ -194,7 +192,7 @@ el.addEventListener('scroll', () => {
 - Updates the container size (`min-width/height`) and children positions (`position: absolute`)
 
 ```js
-const list = Object.assign(new VirtualList(), {
+const list = new VirtualList({
   /**
    * The layout in charge of computing `first, num`,
    * children position, scrolling position and scrolling size.
@@ -211,7 +209,7 @@ const list = Object.assign(new VirtualList(), {
   /**
    * The DOM representing data.
    */
-  newChildFn: (item, index) => {
+  newChild: (item, index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + item.name;
     return child;
