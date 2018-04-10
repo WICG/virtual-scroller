@@ -54,16 +54,24 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   // Rename _ordered to _kids?
+  /**
+   * @protected
+   */
   get _kids() {
     return this._ordered;
   }
 
+  /**
+   * @private
+   */
   _updateItemsCount() {
     if (this._layout) {
       this._layout.totalItems = this._items ? this._items.length : 0;
     }
   }
-
+  /**
+   * @private
+   */
   _scheduleUpdateView() {
     if (!this._pendingUpdateView) {
       this._pendingUpdateView =
@@ -71,7 +79,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       // window.requestAnimationFrame(() => this._updateView());
     }
   }
-
+  /**
+   * @private
+   */
   _updateView() {
     this._pendingUpdateView = null;
 
@@ -99,7 +109,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout.viewportSize = {x: xMax - xMin, y: yMax - yMin};
     this._layout.scrollTo({x, y});
   }
-
+  /**
+   * @private
+   */
   _sizeContainer(size) {
     Object.keys(size).forEach(key => {
       const prop = (key === 'width') ? 'minWidth' : 'minHeight';
@@ -107,7 +119,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       (this._container.host || this._container).style[prop] = size[key] + 'px';
     });
   }
-
+  /**
+   * @private
+   */
   async _positionChildren(pos) {
     await Promise.resolve();
     const kids = this._kids;
@@ -127,7 +141,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       }
     });
   }
-
+  /**
+   * @private
+   */
   _adjustRange(range) {
     this.num = range.num;
     this.first = range.first;
@@ -138,15 +154,21 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._notifyStable();
     }
   }
-
+  /**
+   * @protected
+   */
   _shouldRender() {
     return Boolean(this._isContainerVisible && super._shouldRender());
   }
-
+  /**
+   * @private
+   */
   _correctScrollError(err) {
     window.scroll(window.scrollX - err.x, window.scrollY - err.y);
   }
-
+  /**
+   * @protected
+   */
   _notifyStable() {
     // override.
   }
