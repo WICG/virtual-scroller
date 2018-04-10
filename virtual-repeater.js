@@ -127,10 +127,16 @@ export const Repeats = Superclass => class extends Superclass {
 
   // Core functionality
 
+  /**
+   * @protected
+   */
   _shouldRender() {
     return Boolean(this._items && this._container);
   }
 
+  /**
+   * @private
+   */
   _scheduleRender() {
     if (!this._pendingRender && this._shouldRender()) {
       this._pendingRender = Promise.resolve().then(() => this._render());
@@ -142,6 +148,7 @@ export const Repeats = Superclass => class extends Superclass {
    * require to be positioned. If reset or remeasure has been triggered,
    * all children are returned.
    * @return {{indices:Array<number>,children:Array<Element>}}
+   * @private
    */
   get _toMeasure() {
     return this._ordered.reduce((toMeasure, c, i) => {
@@ -158,6 +165,7 @@ export const Repeats = Superclass => class extends Superclass {
   /**
    * Measures each child bounds and builds a map of index/bounds to be passed to
    * the `_measureCallback`
+   * @private
    */
   async _measureChildren() {
     if (this._ordered.length > 0) {
@@ -173,6 +181,9 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
+  /**
+   * @protected
+   */
   _render() {
     // 1. create DOM
     // 2. measure DOM
@@ -217,6 +228,9 @@ export const Repeats = Superclass => class extends Superclass {
     this._pendingRender = null;
   }
 
+  /**
+   * @private
+   */
   _discardHead() {
     const o = this._ordered;
     for (let idx = this._prevFirst; o.length && idx < this._first; idx++) {
@@ -224,6 +238,9 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
+  /**
+   * @private
+   */
   _discardTail() {
     const o = this._ordered;
     for (let idx = this._prevLast; o.length && idx > this._last; idx--) {
@@ -231,6 +248,9 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
+  /**
+   * @private
+   */
   _addHead() {
     const start = this._first;
     const end = Math.min(this._last, this._prevFirst - 1);
@@ -247,6 +267,9 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
+  /**
+   * @private
+   */
   _addTail() {
     const start = Math.max(this._first, this._prevLast + 1);
     const end = this._last;
@@ -263,6 +286,11 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
+  /**
+   * @param {number} first
+   * @param {number} last
+   * @private
+   */
   _reset(first, last) {
     const len = last - first + 1;
     // Explain why swap prevActive with active - affects _assignChild.
@@ -291,6 +319,10 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
+  /**
+   * @param {number} idx
+   * @private
+   */
   _assignChild(idx) {
     const item = this._items[idx];
     const key = this._itemKeyFn ? this._itemKeyFn(item) : idx;
@@ -307,6 +339,11 @@ export const Repeats = Superclass => class extends Superclass {
     return child;
   }
 
+  /**
+   * @param {*} child
+   * @param {number} idx
+   * @private
+   */
   _unassignChild(child, idx) {
     this._hideChild(child);
     if (this._incremental) {
@@ -326,32 +363,47 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   // TODO: Is this the right name?
+  /**
+   * @private
+   */
   get _firstChild() {
     return this._ordered.length ? this._node(this._ordered[0]) : null;
   }
 
   // Overridable abstractions for child manipulation
-
+  /**
+   * @protected
+   */
   _node(child) {
     return child;
   }
-
+  /**
+   * @protected
+   */
   _nextSibling(child) {
     return child.nextSibling;
   }
-
+  /**
+   * @protected
+   */
   _insertBefore(child, referenceNode) {
     this._container.insertBefore(child, referenceNode);
   }
-
+  /**
+   * @protected
+   */
   _childIsAttached(child) {
     return child.parentNode === this._container;
   }
-
+  /**
+   * @protected
+   */
   _hideChild(child) {
     child.style.display = 'none';
   }
-
+  /**
+   * @protected
+   */
   _showChild(child) {
     child.style.display = null;
   }
@@ -360,6 +412,7 @@ export const Repeats = Superclass => class extends Superclass {
    *
    * @param {!Element} child
    * @return {{width: number, height: number, marginTop: number, marginBottom: number, marginLeft: number, marginRight: number}} childMeasures
+   * @protected
    */
   _measureChild(child) {
     // offsetWidth doesn't take transforms in consideration,
@@ -375,16 +428,40 @@ export const Repeats = Superclass => class extends Superclass {
         getMargins(child));
   }
 
+  /**
+   * Create a new child instance for the give data.
+   * Override to control child creation behavior.
+   *
+   * @param {*} item
+   * @param {number} idx
+   * @protected
+   */
   _newChild(item, idx) {
     return this._newChildFn(item, idx);
   }
 
+  /**
+   * Update child with data.
+   * Override to control child update behavior.
+   *
+   * @param {*} child
+   * @param {*} item
+   * @param {number} idx
+   * @protected
+   */
   _updateChild(child, item, idx) {
     if (this._updateChildFn) {
       this._updateChildFn(child, item, idx);
     }
   }
 
+  /**
+   * Remove child.
+   * Override to control child removal.
+   *
+   * @param {*} child
+   * @protected
+   */
   _removeChild(child) {
     this._container.removeChild(child);
   }
