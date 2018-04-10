@@ -9,7 +9,7 @@ export const Repeats = Superclass => class extends Superclass {
       itemKey,
       newChild,
       updateChild,
-      removeChild,
+      recycleChild,
     } = config;
 
     this._container = container;
@@ -17,8 +17,7 @@ export const Repeats = Superclass => class extends Superclass {
     this._itemKeyFn = itemKey;
     this._newChildFn = newChild;
     this._updateChildFn = updateChild;
-    this._removeChildFn =
-        removeChild || (child => child.parentNode.removeChild(child));
+    this._recycleChildFn = recycleChild;
     this._measureCallback = null;
     // Consider renaming this. firstVisibleIndex?
     this._first = first || 0;
@@ -324,7 +323,11 @@ export const Repeats = Superclass => class extends Superclass {
       this._childToKey.delete(child);
       this._keyToChild.delete(key);
       this._active.delete(child);
-      this._removeChild(child, this._items[idx], idx);
+      if (this._recycleChildFn) {
+        this._recycleChildFn(child, this._items[idx], idx);
+      } else {
+        this._removeChild(child);
+      }
     }
   }
 
@@ -388,8 +391,8 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
-  _removeChild(child, item, idx) {
-    this._removeChildFn(child, item, idx);
+  _removeChild(child) {
+    this.container.removeChild(child);
   }
 }
 
