@@ -89,7 +89,7 @@ export const LitMixin = Superclass => class extends Superclass {
 export const LitRepeater = LitMixin(VirtualRepeater);
 
 const partToRepeater = new WeakMap();
-export const repeat = (config = {}) => directive(async part => {
+export const repeat = (config = {}) => directive(part => {
   let repeater = partToRepeater.get(part);
   if (!repeater) {
     repeater = new LitRepeater({part, template: config.template});
