@@ -53,7 +53,7 @@ function listForContainer(container, items) {
         child._container._list.items = item.items;
       }
     },
-    recycleChild: (child, item, idx) => {
+    removeChild: (child, item, idx) => {
       pool.push(child);
     }
   });

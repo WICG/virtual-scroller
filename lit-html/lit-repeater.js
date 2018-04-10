@@ -9,7 +9,7 @@ export const LitMixin = Superclass => class extends Superclass {
       container: part.startNode.parentNode,
       newChild: () => pool.pop() || new NodePart(part.instance, null, null),
       updateChild: (part, item, idx) => part.setValue(template(item, idx)),
-      recycleChild: (part) => pool.push(part),
+      removeChild: (part) => pool.push(part),
     });
     super(config);
     this._hostPart = part;

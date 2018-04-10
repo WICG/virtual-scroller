@@ -21,7 +21,7 @@ Some implementations append DOM incrementally, others recycle the DOM.
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
 - Given an `items` array, it displays `num` elements starting from `first` index.
-- Delegates DOM creation, update and recycling via `newChildFn, updateChildFn, recycleChildFn`.
+- Delegates DOM creation, update and recycling via `newChildFn, updateChildFn, removeChildFn`.
 - Delegates DOM layout via `_measureCallback`.
 
 
@@ -61,7 +61,7 @@ const list = new VirtualList({
     // render(html`<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`, child);
   },
   // Collects DOM that is offscreen instead of disconnecting & trashing it.
-  recycleChild: (child, item, idx) => {
+  removeChild: (child, item, idx) => {
     pool.push(child);
   }
 });

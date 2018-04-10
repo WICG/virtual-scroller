@@ -6,18 +6,19 @@ export const Repeats = Superclass => class extends Superclass {
       items,
       first,
       num,
-      keyForItem,
+      itemKey,
       newChild,
       updateChild,
-      recycleChild,
+      removeChild,
     } = config;
 
     this._container = container;
     this._items = items;
-    this._keyFn = keyForItem || (item => item.key);
+    this._itemKeyFn = itemKey;
     this._newChildFn = newChild;
     this._updateChildFn = updateChild;
-    this._recycleChildFn = recycleChild;
+    this._removeChildFn =
+        removeChild || (child => child.parentNode.removeChild(child));
     this._measureCallback = null;
     // Consider renaming this. firstVisibleIndex?
     this._first = first || 0;
@@ -211,10 +212,7 @@ export const Repeats = Superclass => class extends Superclass {
 
     // Cleanup
     if (!this._incremental) {
-      this._prevActive.forEach((idx, child) => {
-        this._hideChild(child);
-        this._recycleChild(child, idx);
-      });
+      this._prevActive.forEach((idx, child) => this._unassignChild(child, idx));
       this._prevActive.clear();
     }
 
@@ -229,14 +227,14 @@ export const Repeats = Superclass => class extends Superclass {
   _discardHead() {
     const o = this._ordered;
     for (let idx = this._prevFirst; o.length && idx < this._first; idx++) {
-      this._removeChild(o.shift(), idx);
+      this._unassignChild(o.shift(), idx);
     }
   }
 
   _discardTail() {
     const o = this._ordered;
     for (let idx = this._prevLast; o.length && idx > this._last; idx--) {
-      this._removeChild(o.pop(), idx);
+      this._unassignChild(o.pop(), idx);
     }
   }
 
@@ -302,12 +300,12 @@ export const Repeats = Superclass => class extends Superclass {
 
   _assignChild(idx) {
     const item = this._items[idx];
-    const key = this._keyFn(item) || idx;
+    const key = this._itemKeyFn ? this._itemKeyFn(item) : idx;
     let child;
     if (child = this._keyToChild.get(key)) {
       this._prevActive.delete(child);
     } else {
-      child = /*this._pool.pop() ||*/ this._getNewChild(item, idx);
+      child = this._newChild(item, idx);
       this._keyToChild.set(key, child);
       this._childToKey.set(child, key);
     }
@@ -316,30 +314,18 @@ export const Repeats = Superclass => class extends Superclass {
     return child;
   }
 
-  _removeChild(child, idx) {
+  _unassignChild(child, idx) {
     this._hideChild(child);
     if (this._incremental) {
       this._active.delete(child);
       this._prevActive.set(child, idx);
     } else {
-      this._recycleChild(child, idx);
+      const key = this._childToKey.get(child);
+      this._childToKey.delete(child);
+      this._keyToChild.delete(key);
+      this._active.delete(child);
+      this._removeChild(child, this._items[idx], idx);
     }
-  }
-
-  _recycleChild(child, idx) {
-    // if (this.resetValue) {
-    //     this._updateChild(child, this.resetValue, -1);
-    // }
-    const key = this._childToKey.get(child);
-    this._childToKey.delete(child);
-    this._keyToChild.delete(key);
-    this._active.delete(child);
-    if (typeof this._recycleChildFn === 'function') {
-      this._recycleChildFn(child, this._items[idx], idx);
-    } else {
-      this.__removeChild(child);
-    }
-    // this._pool.push(child);
   }
 
   // TODO: Is this the right name?
@@ -392,14 +378,7 @@ export const Repeats = Superclass => class extends Superclass {
         getMargins(child));
   }
 
-  // TODO: Fix name
-  __removeChild(child) {
-    this.container.removeChild(child);
-  }
-
-  //
-
-  _getNewChild(item, idx) {
+  _newChild(item, idx) {
     return this._newChildFn(item, idx);
   }
 
@@ -407,6 +386,10 @@ export const Repeats = Superclass => class extends Superclass {
     if (this._updateChildFn) {
       this._updateChildFn(child, item, idx);
     }
+  }
+
+  _removeChild(child, item, idx) {
+    this._removeChildFn(child, item, idx);
   }
 }
 

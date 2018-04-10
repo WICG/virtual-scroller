@@ -90,7 +90,7 @@ export class Sample {
           child.textContent = item.title;
         }
       },
-      recycleChild: (child, item, idx) => {
+      removeChild: (child, item, idx) => {
         const type = itemType(item);
         if (type === 'contact') {
           listProps.updateChild(child, this.resetValue, -1);

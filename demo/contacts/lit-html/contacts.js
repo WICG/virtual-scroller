@@ -31,7 +31,7 @@ export class Sample extends BaseSample {
   }
 
   render() {
-    const {layout, items, template, resetValue, container} = this;
+    const {layout, items, template, container} = this;
     render(html`${list({layout, items, template})}`, container);
   }
 }
