@@ -19,23 +19,20 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (!position || position === 'static') {
       this.container.style.position = 'relative';
     }
-    if (typeof this.layout.updateChildSizes === 'function') {
-      this._measureCallback = m => this.layout.updateChildSizes(m);
+    if (typeof this._layout.updateChildSizes === 'function') {
+      this._measureCallback = m => this._layout.updateChildSizes(m);
     }
-    this.layout.addListener('position', this._positionChildren.bind(this));
-    this.layout.addListener('size', this._sizeContainer.bind(this));
-    this.layout.addListener('range', this._adjustRange.bind(this));
-    this.layout.addListener('scrollError', this._correctScrollError.bind(this));
+    this._layout.addListener('position', this._positionChildren.bind(this));
+    this._layout.addListener('size', this._sizeContainer.bind(this));
+    this._layout.addListener('range', this._adjustRange.bind(this));
+    this._layout.addListener(
+        'scrollError', this._correctScrollError.bind(this));
 
     // TODO: Listen on actual container
     addEventListener('scroll', this._scheduleUpdateView.bind(this));
     addEventListener('resize', this._scheduleUpdateView.bind(this));
     this._updateItemsCount();
     this._scheduleUpdateView();
-  }
-
-  get layout() {
-    return this._layout;
   }
 
   get items() {
@@ -62,8 +59,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   _updateItemsCount() {
-    if (this.layout) {
-      this.layout.totalItems = this._items ? this._items.length : 0;
+    if (this._layout) {
+      this._layout.totalItems = this._items ? this._items.length : 0;
     }
   }
 
@@ -99,8 +96,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         Math.max(0, Math.min(scrollerWidth, Infinity /*listBounds.right*/));
     const yMax =
         Math.max(0, Math.min(scrollerHeight, Infinity /*listBounds.bottom*/));
-    this.layout.viewportSize = {x: xMax - xMin, y: yMax - yMin};
-    this.layout.scrollTo({x, y});
+    this._layout.viewportSize = {x: xMax - xMin, y: yMax - yMin};
+    this._layout.scrollTo({x, y});
   }
 
   _sizeContainer(size) {
@@ -114,8 +111,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   async _positionChildren(pos) {
     await Promise.resolve();
     const kids = this._kids;
-    const maxWidth = this.layout.direction === 'horizontal' ? null : '100%';
-    const maxHeight = this.layout.direction === 'vertical' ? null : '100%';
+    const maxWidth = this._layout.direction === 'horizontal' ? null : '100%';
+    const maxHeight = this._layout.direction === 'vertical' ? null : '100%';
     Object.keys(pos).forEach(key => {
       const idx = key - this._first;
       const child = kids[idx];
