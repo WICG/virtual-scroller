@@ -141,11 +141,17 @@ const layout = new Layout({
 });
 ```
 
-It notifies subscribers about changes on children position, container size, range (e.g. `first, num`), scroll error. It's up to the subscribers to take action on these.
+It notifies subscribers about changes on range (e.g. `first, num`), item position, scroll size, scroll error. It's up to the listeners to take action on these.
 
 ```js
+layout.addEventListener('rangechange', (event) => {
+  const range = event.detail;
+  console.log(`update first to ${range.first}`);
+  console.log(`update num to ${range.num}`);
+});
 
-layout.addListener('position', (positionInfo) => {
+layout.addEventListener('itempositionchange', (event) => {
+  const positionInfo = event.detail;
   for (const itemIndex in positionInfo) {
     const itemPosition = positionInfo[itemIndex];
     console.log(`item at index ${itemIndex}`);
@@ -153,16 +159,13 @@ layout.addListener('position', (positionInfo) => {
   }
 });
 
-layout.addListener('size', (size) => {
+layout.addEventListener('scrollsizechange', (event) => {
+  const size = event.detail;
   console.log(`update container size to ${size.height}`);
 });
 
-layout.addListener('range', (range) => {
-  console.log(`update first to ${range.first}`);
-  console.log(`update num to ${range.num}`);
-});
-
-layout.addListener('scrollError', (error) => {
+layout.addEventListener('scrollerrorchange', (event) => {
+  const error = event.detail;
   console.log(`account for scroll error of ${error.y}`);
 });
 ```
