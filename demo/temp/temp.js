@@ -10,8 +10,23 @@ class ListElement extends HTMLElement {
     this._updateList();
   }
 
-  set newChild(newChild) {
-    this._newChild = this._newChild || newChild;
+  static get observedAttributes() {
+    return ['direction'];
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    this[name] = newVal;
+  }
+
+  set template(template) {
+    if (!this._template) {
+      this._template = template;
+      this._updateList();
+    }
+  }
+
+  set direction(dir) {
+    this._direction = dir;
     this._updateList();
   }
 
@@ -21,51 +36,46 @@ class ListElement extends HTMLElement {
   }
 
   _updateList() {
-    if (!this._list && !this.isConnected) {
-      return;
-    }
-    if (!this._newChild) {
+    // Delay init to first connected as list needs to measure
+    // sizes of container and children.
+    if (!this._template && !this.isConnected) {
       return;
     }
     if (!this._list) {
-      const layout = new Layout();
-      layout._overhang = 800;
-      layout._list = this;
-      layout._itemSize.y = 1000000;
-
-      this._list =
-          new VirtualList({container: this, layout, newChild: this._newChild});
+      const {newChild, updateChild, recycleChild} = this._template;
+      this._layout = new Layout();
+      this._layout._overhang = 800;
+      this._layout._itemSize.y = 1000000;
+      this._list = new VirtualList({
+        container: this,
+        layout: this._layout,
+        newChild,
+        updateChild,
+        recycleChild,
+      });
+      this._layout._list = this._list;
     }
     this._list.items = this._items;
+    this._layout.direction = this._direction;
   }
 }
 
 customElements.define('virtual-list', ListElement);
 
 class RepeaterElement extends HTMLElement {
-  connectedCallback() {
-    this._updateRepeater();
+  static get observedAttributes() {
+    return ['num', 'first'];
   }
 
-  _updateRepeater() {
-    if (!this._repeater && !this.isConnected) {
-      return;
-    }
-    if (!this._newChild) {
-      return;
-    }
-    if (!this._repeater) {
-      this._repeater =
-          new VirtualRepeater({container: this, newChild: this._newChild});
-    }
-    this._repeater.first = this._first;
-    this._repeater.num = this._num;
-    this._repeater.items = this._items;
+  attributeChangedCallback(name, oldVal, newVal) {
+    this[name] = Number(newVal);
   }
 
-  set newChild(newChild) {
-    this._newChild = this._newChild || newChild;
-    this._updateList();
+  set template(template) {
+    if (!this._template) {
+      this._template = template;
+      this._updateRepeater();
+    }
   }
 
   set items(items) {
@@ -83,13 +93,22 @@ class RepeaterElement extends HTMLElement {
     this._updateRepeater();
   }
 
-  static get observedAttributes() {
-    return ['num', 'first'];
-  }
-
-  attributeChangedCallback(name, oldVal, newVal) {
-    this[name] = Number(newVal);
-    this._updateRepeater();
+  _updateRepeater() {
+    if (!this._template) {
+      return;
+    }
+    if (!this._repeater) {
+      const {newChild, updateChild, recycleChild} = this._template;
+      this._repeater = new VirtualRepeater({
+        container: this,
+        newChild,
+        updateChild,
+        recycleChild,
+      });
+    }
+    this._repeater.first = this._first;
+    this._repeater.num = this._num;
+    this._repeater.items = this._items;
   }
 }
 

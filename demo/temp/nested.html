@@ -33,24 +33,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     async function go() {
       await customElements.whenDefined('virtual-list');
       window.list = document.body.querySelector('virtual-list');
-      window.list.newChild = (item, idx) => {
-        const category = document.createElement('div');
-        category.style = 'width: 100%; box-sizing: border-box;';
-        const header = document.createElement('h2');
-        category.appendChild(header);
-        const list = document.createElement('virtual-list');
-        category.appendChild(list);
-        list.newChild = (item, idx) => {
-          const child = document.createElement('div');
-          child.style = 'padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;';
-          child.textContent = item.text;
-          return child;
-        };
-        list.items = item.items;
-        list.id = idx;
-        header.textContent = item.name;
-        return category;
-      }
+      window.list.template = {
+        newChild: (item, idx) => {
+          const category = document.createElement('div');
+          category.style = 'width: 100%; box-sizing: border-box;';
+          const header = document.createElement('h2');
+          category.appendChild(header);
+          const list = document.createElement('virtual-list');
+          category.appendChild(list);
+          list.template = {
+            newChild: (item, idx) => {
+              const child = document.createElement('div');
+              child.style =
+                'padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;';
+              child.textContent = item.text;
+              return child;
+            }
+          };
+          list.items = item.items;
+          list.id = idx;
+          header.textContent = item.name;
+          return category;
+        }
+      };
       window.list.items = window.categories;
       document.body.style.display = null;
     }

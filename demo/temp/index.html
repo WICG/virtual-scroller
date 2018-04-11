@@ -26,11 +26,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       await customElements.whenDefined('virtual-list');
       window.lists = document.body.querySelectorAll('virtual-list');
       window.lists.forEach(l => {
-        l.newChild = (item, idx) => {
-          const child = document.createElement('div');
-          child.style = 'padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;';
-          child.textContent = item.text;
-          return child;
+        l.template = {
+          newChild: () => {
+            const child = document.createElement('div');
+            child.style = 'padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;';
+            return child;
+          },
+          updateChild: (child, item, idx) => {
+            child.textContent = item.text;
+          }
         };
         l.items = window.items;
       });

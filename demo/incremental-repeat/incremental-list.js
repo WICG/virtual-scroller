@@ -5,6 +5,14 @@ class IncrementalListElement extends HTMLElement {
     this._updateRepeater();
   }
 
+  static get observedAttributes() {
+    return ['chunk'];
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    this[name] = Number(newVal);
+  }
+
   set items(items) {
     this._items = items;
     this._updateRepeater();
@@ -16,9 +24,6 @@ class IncrementalListElement extends HTMLElement {
   }
 
   _updateRepeater() {
-    if (!this._repeater && !this.isConnected) {
-      return;
-    }
     this._template = this._template ||
         this.querySelector('template').content.querySelector('*');
     if (!this._template) {
@@ -38,14 +43,6 @@ class IncrementalListElement extends HTMLElement {
     }
     this._repeater.chunk = this._chunk;
     this._repeater.items = this._items;
-  }
-
-  static get observedAttributes() {
-    return ['chunk'];
-  }
-
-  attributeChangedCallback(name, oldVal, newVal) {
-    this[name] = Number(newVal);
   }
 }
 
