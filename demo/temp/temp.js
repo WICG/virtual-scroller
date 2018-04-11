@@ -36,12 +36,15 @@ class ListElement extends HTMLElement {
   }
 
   _updateList() {
-    // Delay init to first connected as list needs to measure
-    // sizes of container and children.
-    if (!this._template && !this.isConnected) {
+    if (!this._template) {
       return;
     }
     if (!this._list) {
+      // Delay init to first connected as list needs to measure
+      // sizes of container and children.
+      if (!this.isConnected) {
+        return;
+      }
       const {newChild, updateChild, recycleChild} = this._template;
       this._layout = new Layout();
       this._layout._overhang = 800;
