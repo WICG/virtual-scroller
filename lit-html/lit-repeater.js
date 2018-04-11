@@ -89,9 +89,12 @@ export const LitMixin = Superclass => class extends Superclass {
 export const LitRepeater = LitMixin(VirtualRepeater);
 
 const partToRepeater = new WeakMap();
-export const repeat = (config = {}) => directive(part => {
+export const repeat = (config = {}) => directive(async part => {
   let repeater = partToRepeater.get(part);
   if (!repeater) {
+    while (!part.startNode.isConnected) {
+      await Promise.resolve();
+    }
     repeater = new LitRepeater({part, template: config.template});
     partToRepeater.set(part, repeater);
   }

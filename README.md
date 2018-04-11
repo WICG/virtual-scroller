@@ -17,7 +17,7 @@ An infinite list optimizes the rendering of DOM according to the visible area an
 
 Some implementations append DOM incrementally, others recycle the DOM.
 
-### Repeats mixin - VirtualRepeater class
+### VirtualRepeater
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
 - Given an `items` array, it displays `num` elements starting from `first` index.
@@ -25,14 +25,14 @@ Some implementations append DOM incrementally, others recycle the DOM.
 - Delegates DOM layout via `_measureCallback`.
 
 
-### RepeatsAndScrolls mixin - VirtualList class
+### VirtualList
 
-- Extends `Repeats` mixin by updating the layout of container and items on scroll/resize.
+- Extends `VirtualRepeater` by updating the layout of container and items on scroll/resize.
 - Delegates computation of range, container size, scroll position/size to a `Layout` instance.
 - Handles the update of the range, container size, scroll position/size when notified by the `Layout` instance.
 - Provides the `Layout` instance the layout information of the children via `_measureCallback`.
 
-### Layout class
+### Layout
 
 - Computes viewport, scroll size, average item size, first/last visible indexes.
 - Supports 2 scroll directions: horizontal or vertical

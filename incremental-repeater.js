@@ -1,15 +1,11 @@
-import {Repeats} from './virtual-repeater.js';
+import {VirtualRepeater} from './virtual-repeater.js';
 
-export const IncrementalRepeats = Superclass => class extends Repeats
-(Superclass) {
+export class IncrementalRepeater extends VirtualRepeater {
   constructor(config = {}) {
     super(config);
     // Default.
     this.chunk = config.chunk || 1;
-  }
-
-  get items() {
-    return super.items;
+    this._asyncRenderChunkId = null;
   }
 
   set items(items) {

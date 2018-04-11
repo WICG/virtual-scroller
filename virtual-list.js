@@ -170,7 +170,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _notifyStable() {
-    // override.
+    this._container.dispatchEvent(new Event('stable'));
   }
 };
 

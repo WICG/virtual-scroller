@@ -1,48 +1,32 @@
 import {HtmlSpec} from '../../../streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../../streaming-spec/iterateStream.js';
 import Layout from '../../layouts/layout-1d.js';
-import {RepeatsAndScrolls} from '../../virtual-list.js';
+import {VirtualList} from '../../virtual-list.js';
 
-class HTMLSpecViewer extends RepeatsAndScrolls
-(HTMLElement) {
-  constructor() {
-    super();
-    this.items = [];
+class HTMLSpecViewer extends HTMLElement {
+  connectedCallback() {
+    if (this._htmlSpec) {
+      return;
+    }
     this.style.display = 'block';
     this.style.minHeight = '100000px';
 
-    const htmlSpec = new HtmlSpec();
-    htmlSpec.head.style.display = 'none';
-    this.appendChild(htmlSpec.head);
-    this._htmlSpec = htmlSpec;
+    this._htmlSpec = new HtmlSpec();
+    this._htmlSpec.head.style.display = 'none';
+    this.appendChild(this._htmlSpec.head);
 
-    this._addNextChunk();
+    const winHeight = innerHeight;
+    this._list = new VirtualList({
+      container: this,
+      layout: new Layout({itemSize: {y: winHeight}, _overhang: winHeight}),
+      newChild: (item) => item
+    });
+    this.items = this._list.items = [];
+    this.addEventListener('stable', this._onStable.bind(this));
   }
 
-  get _layout() {
-    return super._layout;
-  }
-
-  set _layout(_) {
-    if (!this._layout) {
-      super._layout = new Layout({itemSize: {y: 10000}, _overhang: 800});
-    }
-  }
-
-  get _container() {
-    return super._container;
-  }
-
-  set _container(_) {
-    super._container = this;
-  }
-
-  _newChild(item) {
-    return item;
-  }
-
-  _notifyStable() {
-    if (this._last >= this.items.length - 4) {
+  _onStable() {
+    if (this._list.first + this._list.num >= this.items.length - 4) {
       this._addNextChunk();
     }
   }
@@ -58,7 +42,7 @@ class HTMLSpecViewer extends RepeatsAndScrolls
       if (/^(style|link|script)$/.test(el.localName)) {
         this._htmlSpec.head.appendChild(el);
       } else {
-        this.push(el);
+        this._list.push(el);
         i++;
       }
       if (i === chunk) {
