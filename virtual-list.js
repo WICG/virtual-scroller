@@ -22,15 +22,18 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (typeof this._layout.updateChildSizes === 'function') {
       this._measureCallback = m => this._layout.updateChildSizes(m);
     }
-    this._layout.addListener('position', this._positionChildren.bind(this));
-    this._layout.addListener('size', this._sizeContainer.bind(this));
-    this._layout.addListener('range', this._adjustRange.bind(this));
-    this._layout.addListener(
-        'scrollError', this._correctScrollError.bind(this));
+    this._layout.addEventListener(
+        'scrollsizechange', (event) => this._sizeContainer(event.detail));
+    this._layout.addEventListener(
+        'scrollerrorchange', (event) => this._correctScrollError(event.detail));
+    this._layout.addEventListener(
+        'itempositionchange', (event) => this._positionChildren(event.detail));
+    this._layout.addEventListener(
+        'rangechange', (event) => this._adjustRange(event.detail));
 
     // TODO: Listen on actual container
-    addEventListener('scroll', this._scheduleUpdateView.bind(this));
-    addEventListener('resize', this._scheduleUpdateView.bind(this));
+    addEventListener('scroll', () => this._scheduleUpdateView());
+    addEventListener('resize', () => this._scheduleUpdateView());
     this._updateItemsCount();
     this._scheduleUpdateView();
   }

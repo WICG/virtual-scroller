@@ -1,8 +1,8 @@
 import Layout1dBase from './layout-1d-base.js';
 
 export default class Layout extends Layout1dBase {
-  constructor(inConfig) {
-    super(inConfig);
+  constructor(config) {
+    super(config);
     this._physicalItems = new Map();
     this._newPhysicalItems = new Map();
 
