@@ -26,7 +26,7 @@ export default class Layout extends Layout1dBase {
     this._physicalMax = this._delta * (lastCow + 1);
   }
 
-  _getChildPosition(idx) {
+  _getItemPosition(idx) {
     return {
       [this._axis]: Math.floor(idx / this._rolumns) * this._delta,
           [this._secondaryAxis]: this._spacing +

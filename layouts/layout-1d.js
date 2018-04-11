@@ -1,8 +1,8 @@
 import Layout1dBase from './layout-1d-base.js';
 
 export default class Layout extends Layout1dBase {
-  constructor(inConfig) {
-    super(inConfig);
+  constructor(config) {
+    super(config);
     this._physicalItems = new Map();
     this._newPhysicalItems = new Map();
 
@@ -21,9 +21,9 @@ export default class Layout extends Layout1dBase {
     this._estimate = true;
   }
 
-  updateChildSizes(indexedMetrics) {
-    Object.keys(indexedMetrics).forEach((key) => {
-      const metrics = indexedMetrics[key], mi = this._getMetrics(key),
+  updateItemSizes(sizes) {
+    Object.keys(sizes).forEach((key) => {
+      const metrics = sizes[key], mi = this._getMetrics(key),
             prevSize = mi[this._sizeDim];
 
       // TODO(valdrin) Handle margin collapsing.
@@ -314,7 +314,7 @@ export default class Layout extends Layout1dBase {
     this._stable = true;
   }
 
-  _getChildPosition(idx) {
+  _getItemPosition(idx) {
     return {
       [this._axis]: this._getPosition(idx), [this._secondaryAxis]: 0
     }

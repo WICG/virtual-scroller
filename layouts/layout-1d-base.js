@@ -1,9 +1,6 @@
-export default class Layout {
-  constructor(inConfig) {
-    this._posSub = [];
-    this._rangeSub = [];
-    this._sizeSub = [];
-    this._errSub = [];
+export default class Layout extends EventTarget {
+  constructor(config) {
+    super();
 
     this._physicalMin = 0;
     this._physicalMax = 0;
@@ -31,7 +28,7 @@ export default class Layout {
 
     this._overhang = 150;
 
-    Object.assign(this, inConfig);
+    Object.assign(this, config);
   }
 
   // public properties
@@ -217,66 +214,45 @@ export default class Layout {
 
   ///
 
+  _emitRange(inProps) {
+    const detail = Object.assign(
+        {
+          first: this._first,
+          last: this._last,
+          num: this._num,
+          stable: true,
+        },
+        inProps);
+    this.dispatchEvent(new CustomEvent('rangechange', {detail}));
+  }
+
   _emitScrollSize() {
-    this._sizeSub.forEach(l => l({[this._sizeDim]: this._scrollSize}));
-  }
-
-  _emitChildPositions() {
-    const offset = this._virtualScroll ? this._scrollPosition : 0;
-    const positions = {};
-    for (let idx = this._first; idx <= this._last; idx++) {
-      positions[idx] = this._getChildPosition(idx);
-    }
-    this._posSub.forEach(l => l(positions));
-  }
-
-  _getChildPosition(idx) {
-    // Override
+    const detail = {
+      [this._sizeDim]: this._scrollSize,
+    };
+    this.dispatchEvent(new CustomEvent('scrollsizechange', {detail}));
   }
 
   _emitScrollError() {
     if (this._scrollError) {
-      this._errSub.forEach(
-          l => l({[this._axis]: this._scrollError, [this._secondaryAxis]: 0}));
+      const detail = {
+        [this._axis]: this._scrollError,
+        [this._secondaryAxis]: 0,
+      };
+      this.dispatchEvent(new CustomEvent('scrollerrorchange', {detail}));
       this._scrollError = 0;
     }
   }
 
-  _emitRange(inProps) {
-    this._rangeSub.forEach(
-        l => l(Object.assign(
-            {
-              first: this._first,
-              last: this._last,
-              num: this._num,
-              stable: true
-            },
-            inProps)));
-  }
-
-  //
-
-  _listeners(evt) {
-    return (evt === 'position') ?
-        this._posSub :
-        (evt === 'range') ?
-        this._rangeSub :
-        (evt === 'scrollError') ? this._errSub :
-                                  (evt === 'size') ? this._sizeSub : null;
-  }
-
-  addListener(evt, handler) {
-    const l = this._listeners(evt);
-    if (l)
-      l.push(handler);
-  }
-
-  removeListener(evt, handler) {
-    const l = this._listeners(evt);
-    if (l) {
-      const idx = l.indexOf(handler);
-      if (idx >= 0)
-        l.splice(idx, 1);
+  _emitChildPositions() {
+    const detail = {};
+    for (let idx = this._first; idx <= this._last; idx++) {
+      detail[idx] = this._getItemPosition(idx);
     }
+    this.dispatchEvent(new CustomEvent('itempositionchange', {detail}));
+  }
+
+  _getItemPosition(idx) {
+    // Override.
   }
 }
