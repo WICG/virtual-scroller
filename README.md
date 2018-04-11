@@ -17,7 +17,7 @@ An infinite list optimizes the rendering of DOM according to the visible area an
 
 Some implementations append DOM incrementally, others recycle the DOM.
 
-### Repeats mixin - VirtualRepeater class
+### VirtualRepeater
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
 - Given an `items` array, it displays `num` elements starting from `first` index.
@@ -25,14 +25,14 @@ Some implementations append DOM incrementally, others recycle the DOM.
 - Delegates DOM layout via `_measureCallback`.
 
 
-### RepeatsAndScrolls mixin - VirtualList class
+### VirtualList
 
-- Extends `Repeats` mixin by updating the layout of container and items on scroll/resize.
+- Extends `VirtualRepeater` by updating the layout of container and items on scroll/resize.
 - Delegates computation of range, container size, scroll position/size to a `Layout` instance.
 - Handles the update of the range, container size, scroll position/size when notified by the `Layout` instance.
 - Provides the `Layout` instance the layout information of the children via `_measureCallback`.
 
-### Layout class
+### Layout
 
 - Computes viewport, scroll size, average item size, first/last visible indexes.
 - Supports 2 scroll directions: horizontal or vertical
@@ -46,33 +46,28 @@ Some implementations append DOM incrementally, others recycle the DOM.
 import Layout from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
 
-(async () => {
+const pool = [];
+const list = new VirtualList({
+  layout: new Layout({direction: 'vertical'}),
+  container: document.body,
+  // Creates DOM that is about to be connected.
+  newChild: (item, idx) => {
+    return (pool.pop() || document.createElement('section'));
+  },
+  // Updates the DOM with data.
+  updateChild: (child, item, idx) => {
+    child.innerHTML = `<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`;
+    // or update with lit-html, e.g.
+    // render(html`<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`, child);
+  },
+  // Collects DOM that is offscreen instead of disconnecting & trashing it.
+  recycleChild: (child, item, idx) => {
+    pool.push(child);
+  }
+});
 
-  const layout = new Layout({direction: 'vertical'});
-  const items = await fetch('./demo/contacts/contacts.json').then(response => response.json());
-  const recycledChildren = [];
-  
-  const list = Object.assign(new VirtualList(), {
-    items,
-    layout,
-    container: document.body,
-    // Creates DOM that is about to be connected.
-    newChildFn: (item, idx) => {
-      return (recycledChildren.pop() || document.createElement('section'));
-    },
-    // Updates the DOM with data.
-    updateChildFn: (child, item, idx) => {
-      child.innerHTML = `<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`;
-      // or update with lit-html, e.g.
-      // render(html`<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`, child);
-    },
-    // Collects DOM that is offscreen instead of disconnecting & trashing it.
-    recycleChildFn: (child, item, idx) => {
-      recycledChildren.push(child);
-    }
-  });
-
-})();
+fetch('./demo/contacts/contacts.json')
+  .then(response => list.items = response.json());
 
 ```
 

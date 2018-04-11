@@ -9,65 +9,67 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 <!doctype html>
 <html>
-  <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="stylesheet" href="./shell.css" />
-      <script type="module">
-        import './temp.js';
 
-        window.categories = [];
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./shell.css" />
+  <script src="temp.js" type="module"></script>
+  <script>
+    window.categories = [];
 
-        for (let i = 0; i < 50; i++) {
-            const category = {
-                name: `Category ${i}`,
-                items: []
+    for (let i = 0; i < 50; i++) {
+      const category = {
+        name: `Category ${i}`,
+        items: []
+      }
+      for (let j = 0; j < Math.ceil(40 * Math.random()); j++) {
+        category.items.push({
+          text: `Category ${i}, Item ${j}`
+        });
+      }
+      window.categories.push(category);
+    }
+
+    async function go() {
+      await customElements.whenDefined('virtual-list');
+      window.list = document.body.querySelector('virtual-list');
+      window.list.template = {
+        newChild: (item, idx) => {
+          const category = document.createElement('div');
+          category.style = 'width: 100%; box-sizing: border-box;';
+          const header = document.createElement('h2');
+          category.appendChild(header);
+          const list = document.createElement('virtual-list');
+          category.appendChild(list);
+          list.template = {
+            newChild: (item, idx) => {
+              const child = document.createElement('div');
+              child.style =
+                'padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;';
+              child.textContent = item.text;
+              return child;
             }
-            for (let j = 0; j < Math.ceil(40 * Math.random()); j++) {
-                category.items.push({
-                    text: `Category ${i}, Item ${j}`
-                });
-            }
-            window.categories.push(category);
+          };
+          list.items = item.items;
+          list.id = idx;
+          header.textContent = item.name;
+          return category;
         }
+      };
+      window.list.items = window.categories;
+      document.body.style.display = null;
+    }
 
-        async function go() {
-            await customElements.whenDefined('virtual-list');
-            window.list = document.body.querySelector('virtual-list');
-            window.list.newChildFn = () => {
-                const category = document.createElement('div');
-                category.style = 'width: 100%; box-sizing: border-box;';
-                const header = document.createElement('h2');
-                category.appendChild(header);
-                const list = document.createElement('virtual-list');
-                category.appendChild(list);
-                list.newChildFn = () => {
-                    const child = document.createElement('div');
-                    child.style = 'padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;';
-                    return child;
-                };
-                list.updateChildFn = (child, item, idx) => {
-                    child.textContent = item.text;
-                };
-                category.$ = {header, list};
-                return category;
-            }
-            window.list.updateChildFn = (child, item, idx) => {
-                child.$.list.items = item.items;
-                child.$.list.id = idx;
-                child.$.header.textContent = item.name;
-            }
-            window.list.items = window.categories;
-            document.body.style.display = null;
-        }
+    go();
+  </script>
+</head>
 
-        go();
-      </script>
-  </head>
-  <body style="display: none;">
-        <header>My App</header>
-        <section>
-            <virtual-list id="main"></virtual-list>      
-        </section>
-        <footer>&copy; 2017</footer>
-  </body>
+<body style="display: none;">
+  <header>My App</header>
+  <section>
+    <virtual-list id="main"></virtual-list>
+  </section>
+  <footer>&copy; 2017</footer>
+</body>
+
 </html>

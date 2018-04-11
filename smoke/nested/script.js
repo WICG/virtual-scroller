@@ -19,14 +19,13 @@ listForContainer(container, items);
 function listForContainer(container, items) {
   container.classList.add('list');
 
-  const recycledChildren = [];
-  const list = Object.assign(new VirtualList(), {
+  const pool = [];
+  const list = new VirtualList({
     items,
-    recycledChildren: [],
     layout: new Layout({itemSize: {x: innerWidth, y: innerHeight}}),
     container,
-    newChildFn: (item, idx) => {
-      let child = recycledChildren.pop();
+    newChild: (item, idx) => {
+      let child = pool.pop();
       if (!child) {
         child = document.createElement('div');
         child.classList.add('row');
@@ -45,7 +44,7 @@ function listForContainer(container, items) {
       }
       return child;
     },
-    updateChildFn: (child, item, idx) => {
+    updateChild: (child, item, idx) => {
       // child.id = `section_${idx}`;
       // child._container.id = `innerContainer_${idx}`;
 
@@ -54,8 +53,8 @@ function listForContainer(container, items) {
         child._container._list.items = item.items;
       }
     },
-    recycleChildFn: (child, item, idx) => {
-      recycledChildren.push(child);
+    recycleChild: (child, item, idx) => {
+      pool.push(child);
     }
   });
   container._list = list;

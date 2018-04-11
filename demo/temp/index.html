@@ -9,45 +9,47 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 <!doctype html>
 <html>
-  <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="stylesheet" href="./shell.css" />
-      <script type="module">
-        import './temp.js';
 
-        window.items = [];
-        for (let i = 0; i < 10; i++) {
-            window.items.push({text: `Item ${i}`});
-        }
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./shell.css" />
+  <script src="temp.js" type="module"></script>
+  <script>
+    window.items = [];
+    for (let i = 0; i < 40; i++) {
+      window.items.push({
+        text: `Item ${i}`
+      });
+    }
 
-        async function go() {
-            await customElements.whenDefined('virtual-list');
-            window.lists = document.body.querySelectorAll('virtual-list');
-            window.lists.forEach(l => {
-                l.newChildFn = () => {
-                    const child = document.createElement('div');
-                    child.style = 'padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;';
-                    return child;
-                };
-                l.updateChildFn = (child, item, idx) => {
-                    child.textContent = item.text;
-                };
-                l.items = window.items;
-            });
-            document.body.style.display = null;
-        }
+    async function go() {
+      await customElements.whenDefined('virtual-list');
+      window.lists = document.body.querySelectorAll('virtual-list');
+      window.lists.forEach(l => {
+        l.template = (item, idx) => {
+          const child = document.createElement('div');
+          child.style = 'padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;';
+          child.textContent = item.text;
+          return child;
+        };
+        l.items = window.items;
+      });
+      document.body.style.display = null;
+    }
 
-        go();
-      </script>
-  </head>
-  <body style="display: none;">
-        <header>My App</header>
-        <section>
-                <h2>First list</h2>
-                <virtual-list id="first"></virtual-list>
-                <h2>Second list</h2>
-                <virtual-list id="second"></virtual-list>        
-        </section>
-        <footer>&copy; 2017</footer>
-  </body>
+    go();
+  </script>
+</head>
+
+<body style="display: none;">
+  <header>My App</header>
+  <section>
+    <h2>First list</h2>
+    <virtual-list id="first"></virtual-list>
+    <h2>Second list</h2>
+    <virtual-list id="second"></virtual-list>
+  </section>
+  <footer>&copy; 2017</footer>
+</body>
+
 </html>

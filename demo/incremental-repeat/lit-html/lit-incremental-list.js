@@ -5,9 +5,18 @@ class LitIncrementalListElement extends HTMLElement {
   constructor() {
     super();
     this.style.display = 'block';
-    this.chunk = 1;
-    this.template = (item, idx) =>
+    this._chunk = 1;
+    this._template = (item, idx) =>
         html`<li on-click=${() => console.log(item)}>${idx}: ${item}</li>`;
+  }
+
+  get chunk() {
+    return this._chunk;
+  }
+
+  set chunk(c) {
+    this._chunk = c;
+    this._scheduleRender();
   }
 
   get items() {
@@ -19,13 +28,21 @@ class LitIncrementalListElement extends HTMLElement {
     this._scheduleRender();
   }
 
+  get template() {
+    return this._template;
+  }
+
+  set template(t) {
+    this._template = t;
+    this._scheduleRender();
+  }
+
   static get observedAttributes() {
     return ['chunk'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
     this[name] = Number(newVal);
-    this._scheduleRender();
   }
 
   _scheduleRender() {
