@@ -247,12 +247,12 @@ export default class Layout extends EventTarget {
   _emitChildPositions() {
     const detail = {};
     for (let idx = this._first; idx <= this._last; idx++) {
-      detail[idx] = this._getChildPosition(idx);
+      detail[idx] = this._getItemPosition(idx);
     }
     this.dispatchEvent(new CustomEvent('itempositionchange', {detail}));
   }
 
-  _getChildPosition(idx) {
+  _getItemPosition(idx) {
     // Override.
   }
 }

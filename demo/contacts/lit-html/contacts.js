@@ -10,7 +10,7 @@ export class Sample extends BaseSample {
         return html`
                     <div
                         style="padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;"
-                        on-input="${e => this._updateChildSize(idx, e)}"
+                        on-input="${e => this._updateItemSize(idx, e)}"
                     >
                         <b>#${item.index} - ${item.first} ${item.last}</b>
                         <p
