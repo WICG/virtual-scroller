@@ -1,4 +1,4 @@
-import Layout from '../../layouts/layout-1d.js';
+import Layout from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
 
 export class VirtualListElement extends HTMLElement {
