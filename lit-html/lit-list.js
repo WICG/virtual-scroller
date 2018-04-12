@@ -13,6 +13,9 @@ export const list = (config = {}) => directive(async part => {
     while (!part.startNode.isConnected) {
       await Promise.resolve();
     }
+    if (!config.layout && config.direction) {
+      config.layout = new Layout({direction: config.direction});
+    }
     const {template, layout} = config;
     list = new LitList({part, template, layout});
     partToList.set(part, list);
@@ -20,5 +23,5 @@ export const list = (config = {}) => directive(async part => {
   list.items = config.items;
 });
 
-export const verticalList = (items, template, layout = new Layout()) =>
-    list({items, template, layout});
+export const virtualList = (items, template, direction = 'vertical') =>
+    list({items, template, direction});
