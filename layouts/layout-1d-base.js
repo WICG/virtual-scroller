@@ -25,7 +25,7 @@ export default class Layout extends EventTarget {
     this._viewportSize = {width: 0, height: 0};
     this._totalItems = 0;
 
-    this._scrollSize = 0;
+    this._scrollSize = 1;
 
     this._overhang = 150;
 
@@ -197,7 +197,9 @@ export default class Layout extends EventTarget {
   }
 
   _updateScrollSize() {
-    this._scrollSize = this._totalItems * this._delta;
+    // Ensure we have at least 1px - this allows getting at least 1 item to be
+    // rendered.
+    this._scrollSize = Math.max(1, this._totalItems * this._delta);
   }
 
   _checkThresholds() {

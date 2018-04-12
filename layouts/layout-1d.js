@@ -64,12 +64,6 @@ export default class Layout extends Layout1dBase {
     this._itemSize[this._sizeDim] = this._tMeasured / this._nMeasured;
   }
 
-  _updateScrollSize() {
-    // Ensure we have at least 1px - this allows getting at least 1 item to be
-    // rendered.
-    this._scrollSize = Math.max(1, this._totalItems * this._delta);
-  }
-
   //
 
   _getMetrics(idx) {
