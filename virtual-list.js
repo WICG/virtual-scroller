@@ -101,16 +101,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     const scrollerWidth = window.innerWidth;
     const scrollerHeight = window.innerHeight;
-    const x = Math.max(0, -listBounds.x);
-    const y = Math.max(0, -listBounds.y);
     const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
     const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
-    const xMax =
-        Math.max(0, Math.min(scrollerWidth, Infinity /*listBounds.right*/));
-    const yMax =
-        Math.max(0, Math.min(scrollerHeight, Infinity /*listBounds.bottom*/));
-    this._layout.viewportSize = {x: xMax - xMin, y: yMax - yMin};
-    this._layout.scrollTo({x, y});
+    const xMax = Math.max(0, scrollerWidth);
+    const yMax = Math.max(0, scrollerHeight);
+    this._layout.viewportSize = {width: xMax - xMin, height: yMax - yMin};
+    const left = Math.max(0, -listBounds.x);
+    const top = Math.max(0, -listBounds.y);
+    this._layout.scrollTo({top, left});
   }
   /**
    * @private
@@ -134,11 +132,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       const idx = key - this._first;
       const child = kids[idx];
       if (child) {
-        const {x, y} = pos[key];
+        const {top, left} = pos[key];
         // console.debug(`_positionChild #${this._container.id} > #${child.id}:
-        // top ${y}`);
+        // top ${top}`);
         child.style.position = 'absolute';
-        child.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        child.style.transform = `translate3d(${left}px, ${top}px, 0)`;
         child.style.maxWidth = maxWidth;
         child.style.maxHeight = maxHeight;
       }

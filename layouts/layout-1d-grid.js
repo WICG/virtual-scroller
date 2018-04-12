@@ -28,8 +28,8 @@ export default class Layout extends Layout1dBase {
 
   _getItemPosition(idx) {
     return {
-      [this._axis]: Math.floor(idx / this._rolumns) * this._delta,
-          [this._secondaryAxis]: this._spacing +
+      [this._positionDim]: Math.floor(idx / this._rolumns) * this._delta,
+          [this._secondaryPositionDim]: this._spacing +
           ((idx % this._rolumns) * (this._spacing + this._itemDim2))
     }
   }

@@ -18,7 +18,7 @@ class HTMLSpecViewer extends HTMLElement {
     const winHeight = innerHeight;
     this._list = new VirtualList({
       container: this,
-      layout: new Layout({itemSize: {y: winHeight}, _overhang: winHeight}),
+      layout: new Layout({itemSize: {height: winHeight}, _overhang: winHeight}),
       newChild: (item) => item
     });
     this.items = this._list.items = [];

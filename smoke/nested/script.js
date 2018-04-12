@@ -22,7 +22,7 @@ function listForContainer(container, items) {
   const pool = [];
   const list = new VirtualList({
     items,
-    layout: new Layout({itemSize: {x: innerWidth, y: innerHeight}}),
+    layout: new Layout({itemSize: {width: innerWidth, height: innerHeight}}),
     container,
     newChild: (item, idx) => {
       let child = pool.pop();
