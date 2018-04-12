@@ -47,6 +47,8 @@ export const Repeats = Superclass => class extends Superclass {
     // Both used for recycling purposes.
     this._keyToChild = new Map();
     this._childToKey = new WeakMap();
+    // Used to keep track of measures by index.
+    this._indexToMeasure = {};
 
     this._scheduleRender();
   }
@@ -162,10 +164,11 @@ export const Repeats = Superclass => class extends Superclass {
     if (this._ordered.length > 0) {
       const {indices, children} = this._toMeasure;
       await Promise.resolve();
-      const pm = await Promise.all(children.map(c => this._measureChild(c)));
+      const pm = await Promise.all(children.map(
+          (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c)));
       const mm = /** @type {{ number: { width: number, height: number } }} */
           (pm.reduce((out, cur, i) => {
-            out[indices[i]] = cur;
+            out[indices[i]] = this._indexToMeasure[indices[i]] = cur;
             return out;
           }, {}));
       this._measureCallback(mm);
@@ -194,6 +197,9 @@ export const Repeats = Superclass => class extends Superclass {
           this._addTail();
         }
       }
+    }
+    if (this._needsRemeasure || this._needsReset) {
+      this._indexToMeasure = {};
     }
     const shouldMeasure = this._num > 0 && this._measureCallback &&
         (rangeChanged || this._needsRemeasure || this._needsReset);
