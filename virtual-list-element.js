@@ -62,7 +62,7 @@ export class VirtualListElement extends HTMLElement {
         return;
       }
       const {newChild, updateChild, recycleChild} = this._template;
-      this._layout = new Layout({_overhang: 1000, itemSize: {y: 10000}});
+      this._layout = new Layout({itemSize: {height: 10000}, _overhang: 1000});
       this._list = new VirtualList({
         container: this,
         layout: this._layout,

@@ -61,7 +61,7 @@ export default class Layout extends Layout1dBase {
   }
 
   _updateItemSize() {
-    this._itemSize[this._axis] = this._tMeasured / this._nMeasured;
+    this._itemSize[this._sizeDim] = this._tMeasured / this._nMeasured;
   }
 
   _updateScrollSize() {
@@ -316,7 +316,8 @@ export default class Layout extends Layout1dBase {
 
   _getItemPosition(idx) {
     return {
-      [this._axis]: this._getPosition(idx), [this._secondaryAxis]: 0
+      [this._positionDim]: this._getPosition(idx),
+          [this._secondaryPositionDim]: 0
     }
   }
 

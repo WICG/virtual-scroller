@@ -8,20 +8,21 @@ export default class Layout extends EventTarget {
     this._first = -1;
     this._last = -1;
 
-    this._latestCoords = {x: 0, y: 0};
+    this._latestCoords = {left: 0, top: 0};
 
-    this._itemSize = {x: 100, y: 100};
+    this._itemSize = {width: 100, height: 100};
     this._spacing = 0;
 
     this._virtualScroll = false;
 
     this._sizeDim = 'height';
-    this._axis = 'y';
-    this._secondaryAxis = 'x';
+    this._secondarySizeDim = 'width';
+    this._positionDim = 'top';
+    this._secondaryPositionDim = 'left';
     this._direction = 'vertical';
 
     this._scrollPosition = 0;
-    this._viewportSize = {x: 0, y: 0};
+    this._viewportSize = {width: 0, height: 0};
     this._totalItems = 0;
 
     this._scrollSize = 0;
@@ -73,11 +74,11 @@ export default class Layout extends EventTarget {
   }
 
   get _itemDim1() {
-    return this._itemSize[this._axis];
+    return this._itemSize[this._sizeDim];
   }
 
   get _itemDim2() {
-    return this._itemSize[this._secondaryAxis];
+    return this._itemSize[this._secondarySizeDim];
   }
 
   get itemSize() {
@@ -88,8 +89,9 @@ export default class Layout extends EventTarget {
     if (dir !== this._direction) {
       this._direction = (dir === 'horizontal') ? dir : 'vertical';
       this._sizeDim = (dir === 'horizontal') ? 'width' : 'height';
-      this._axis = (dir === 'horizontal') ? 'x' : 'y';
-      this._secondaryAxis = (dir === 'horizontal') ? 'y' : 'x';
+      this._secondarySizeDim = (dir === 'horizontal') ? 'height' : 'width';
+      this._positionDim = (dir === 'horizontal') ? 'left' : 'top';
+      this._secondaryPositionDim = (dir === 'horizontal') ? 'top' : 'left';
       this._scheduleReflow();
     }
   }
@@ -115,11 +117,11 @@ export default class Layout extends EventTarget {
   }
 
   get _viewDim1() {
-    return this._viewportSize[this._axis];
+    return this._viewportSize[this._sizeDim];
   }
 
   get _viewDim2() {
-    return this._viewportSize[this._secondaryAxis];
+    return this._viewportSize[this._secondarySizeDim];
   }
 
   get viewportSize() {
@@ -157,7 +159,7 @@ export default class Layout extends EventTarget {
   //
 
   _scroll() {
-    this._scrollPosition = this._latestCoords[this._axis];
+    this._scrollPosition = this._latestCoords[this._positionDim];
 
     this._checkThresholds();
   }
@@ -236,8 +238,8 @@ export default class Layout extends EventTarget {
   _emitScrollError() {
     if (this._scrollError) {
       const detail = {
-        [this._axis]: this._scrollError,
-        [this._secondaryAxis]: 0,
+        [this._positionDim]: this._scrollError,
+        [this._secondaryPositionDim]: 0,
       };
       this.dispatchEvent(new CustomEvent('scrollerrorchange', {detail}));
       this._scrollError = 0;
