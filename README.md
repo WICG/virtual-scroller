@@ -80,21 +80,13 @@ list.items = list.items.concat([{name: 'new item'}]);
 `virtualList` directive can be configured with 3 properties:
 - `items (Array)`, the data model.
 - `template (Function)`, generates the DOM for each data item.
-- `direction (string)` (optional), layout direction, can be set via attribute or property to "vertical" (default) or "horizontal".
+- `direction (string)` (optional), layout direction, can be set to "vertical" (default) or "horizontal".
 
 ```js
-import {virtualList} from './lit-html/lit-list.js';
-import {html, render} from '../../lit-html/lit-html.js';
-
-const items = new Array(20).fill({name: 'item'});
-
-const template = (item, index) => 
-  html`<section>${index} - ${item.name}</section>`;
-
-const direction = 'vertical'; // optional
-
-render(html`
-  ${virtualList(items, template, direction)}
-`, document.body);
-
+const render = () => html`
+  <ul>
+    ${virtualList(items, (i, index) => html`
+      <li>${index}: ${i.name}</li>`)}
+  </ul>
+`;
 ```
