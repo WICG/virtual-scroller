@@ -17,73 +17,81 @@ An infinite list optimizes the rendering of DOM according to the visible area an
 
 Some implementations append DOM incrementally, others recycle the DOM.
 
-### VirtualRepeater
+## Design
 
-- Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
-- Given an `items` array, it displays `num` elements starting from `first` index.
-- Delegates DOM creation, update and recycling via `newChildFn, updateChildFn, recycleChildFn`.
-- Delegates DOM layout via `_measureCallback`.
+See [DESIGN.md](./DESIGN.md) for more details.
 
+## &lt;virtual-list&gt;
 
-### VirtualList
+`<virtual-list>` can be configured through 3 properties:
+- `items (Array)`, the data model.
+- `template (Function|Object)`, generates the DOM for each data item. Can be set only once.
+- `direction (string)` (optional), layout direction, can be set via attribute or property to "vertical" (default) or "horizontal".
 
-- Extends `VirtualRepeater` by updating the layout of container and items on scroll/resize.
-- Delegates computation of range, container size, scroll position/size to a `Layout` instance.
-- Handles the update of the range, container size, scroll position/size when notified by the `Layout` instance.
-- Provides the `Layout` instance the layout information of the children via `_measureCallback`.
+Minimal setup:
+```html
+<virtual-list></virtual-list>
 
-### Layout
+<script type="module">
+  import './virtual-list-element.js';
 
-- Computes viewport, scroll size, average item size, first/last visible indexes.
-- Supports 2 scroll directions: horizontal or vertical
-- Notifies of size, position, range, scroll error changes to subscribers
+  const list = document.querySelector('virtual-list');
 
-## How to use
+  list.items = new Array(20).fill({name: 'item'});
 
-### VirtualList
-
-```js 
-import Layout from './layouts/layout-1d.js';
-import {VirtualList} from './virtual-list.js';
-
-const pool = [];
-const list = new VirtualList({
-  layout: new Layout({direction: 'vertical'}),
-  container: document.body,
-  // Creates DOM that is about to be connected.
-  newChild: (item, idx) => {
-    return (pool.pop() || document.createElement('section'));
-  },
-  // Updates the DOM with data.
-  updateChild: (child, item, idx) => {
-    child.innerHTML = `<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`;
-    // or update with lit-html, e.g.
-    // render(html`<h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p>`, child);
-  },
-  // Collects DOM that is offscreen instead of disconnecting & trashing it.
-  recycleChild: (child, item, idx) => {
-    pool.push(child);
-  }
-});
-
-fetch('./demo/contacts/contacts.json')
-  .then(response => list.items = response.json());
-
+  list.template = (item, index) => {
+    const child = document.createElement('section');
+    child.textContent = index + ' - ' + item.name;
+    return child;
+  };
+  
+</script>
 ```
 
-### `verticalList` directive (lit-html)
+`template` can be also set as an `{newChild: Function, updateChild: Function, recycleChild: Function}` object.
 
-```js 
-import {verticalList} from './lit-html/lit-list.js';
+You can recycle DOM by using the `recycleChild` function to collect DOM, and reuse it in `newChild`.
+
+If you decide to keep the recycled DOM attached in the main document, perform DOM updates in `updateChild`.
+
+```js
+const recycled = [];
+
+list.template = {
+  newChild: (item, index) => {
+    return recycled.pop() || document.createElement('section');
+  },
+  updateChild: (child, item, index) => {
+    child.textContent = index + ' - ' + item.name;
+  },
+  recycleChild: (child, item, index) => {
+    recycled.push(child);
+  }
+};
+```
+
+Updates to the `items` array instance will not be captured by `<virtual-list>`. Set a new array to trigger the update.
+```js
+list.items = list.items.concat([{name: 'new item'}]);
+```
+
+### `virtualList(items, template, layout)` directive (lit-html)
+
+`virtualList` directive can be configured with 3 properties:
+- `items (Array)`, the data model.
+- `template (Function)`, generates the DOM for each data item.
+- `direction (string)` (optional), layout direction, can be set via attribute or property to "vertical" (default) or "horizontal".
+
+```js
+import {virtualList} from './lit-html/lit-list.js';
 import {html, render} from '../../lit-html/lit-html.js';
 
-(async () => {
+const items = new Array(20).fill({name: 'item'});
 
-  const items = await fetch('./demo/contacts/contacts.json').then(response => response.json());
-
-  render(html`${verticalList(items, (item, idx) => 
-      html`<section><h3>${idx} - ${item.name}</h3><p>${item.mediumText}</p></section>`)}`, document.body);
-
-})();
+render(html`
+  ${virtualList(items, (item, index) => html`
+    <section>${index} - ${item.name}</section>
+  `)}
+`, document.body);
 
 ```

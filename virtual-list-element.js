@@ -2,6 +2,13 @@ import Layout from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
 
 export class VirtualListElement extends HTMLElement {
+  constructor() {
+    super();
+    this._items = null;
+    this._template = null;
+    this._direction = 'vertical';
+  }
+
   connectedCallback() {
     if (!this.shadowRoot) {
       this.attachShadow({mode: 'open'}).innerHTML = `
@@ -38,14 +45,26 @@ export class VirtualListElement extends HTMLElement {
     }
   }
 
+  get direction() {
+    return this._direction;
+  }
+
   set direction(dir) {
-    this._direction = dir;
-    this._render();
+    if (this._direction !== dir) {
+      this._direction = dir;
+      this._render();
+    }
+  }
+
+  get items() {
+    return this._items;
   }
 
   set items(items) {
-    this._items = items;
-    this._render();
+    if (this._items !== items) {
+      this._items = items;
+      this._render();
+    }
   }
 
   /**
