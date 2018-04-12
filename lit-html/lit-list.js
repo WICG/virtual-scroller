@@ -10,7 +10,7 @@ const partToList = new WeakMap();
 export const list = (config = {}) => directive(async part => {
   let list = partToList.get(part);
   if (!list) {
-    while (!part.startNode.isConnected) {
+    if (!part.startNode.isConnected) {
       await Promise.resolve();
     }
     if (!config.layout && config.direction) {

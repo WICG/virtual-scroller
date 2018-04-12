@@ -92,7 +92,7 @@ const partToRepeater = new WeakMap();
 export const repeat = (config = {}) => directive(async part => {
   let repeater = partToRepeater.get(part);
   if (!repeater) {
-    while (!part.startNode.isConnected) {
+    if (!part.startNode.isConnected) {
       await Promise.resolve();
     }
     repeater = new LitRepeater({part, template: config.template});
