@@ -75,7 +75,7 @@ Updates to the `items` array instance will not be captured by `<virtual-list>`. 
 list.items = list.items.concat([{name: 'new item'}]);
 ```
 
-### `virtualList(items, template, layout)` directive (lit-html)
+### `virtualList(items, template, direction)` directive (lit-html)
 
 `virtualList` directive can be configured with 3 properties:
 - `items (Array)`, the data model.
@@ -88,10 +88,13 @@ import {html, render} from '../../lit-html/lit-html.js';
 
 const items = new Array(20).fill({name: 'item'});
 
+const template = (item, index) => 
+  html`<section>${index} - ${item.name}</section>`;
+
+const direction = 'vertical'; // optional
+
 render(html`
-  ${virtualList(items, (item, index) => html`
-    <section>${index} - ${item.name}</section>
-  `)}
+  ${virtualList(items, template, direction)}
 `, document.body);
 
 ```
