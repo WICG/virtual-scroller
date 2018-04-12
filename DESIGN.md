@@ -128,7 +128,7 @@ Given a viewport size and total items count, it computes children position, cont
 
 ```js
 const layout = new Layout({
-  viewportSize: {y: 1000},
+  viewportSize: {height: 1000},
   totalItems: 20,
   /**
    * Layout direction, vertical (default) or horizontal.
@@ -137,7 +137,7 @@ const layout = new Layout({
   /**
    * Average item size (default).
    */
-  itemSize: {y: 100},
+  itemSize: {height: 100},
 });
 ```
 
@@ -183,7 +183,7 @@ Use `layout.scrollTo()` to move the range across the container size.
 ```js
 const el = document.scrollingElement;
 el.addEventListener('scroll', () => {
-  layout.scrollTo({y: el.scrollTop});
+  layout.scrollTo({top: el.scrollTop});
 });
 ```
 
