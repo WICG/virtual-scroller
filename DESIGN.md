@@ -86,20 +86,20 @@ setTimeout(() => {
 
 ## Data manipulation
 
-VirtualRepeater doesn't have a getter for `items`, but allows manipulation 
-via `push` or `splice`.
+Updates to the `items` array instance will not be captured by VirtualRepeater.
+
+Either set a new array to trigger the update, or use `requestReset()` to notify of changes.
 
 ```js
 /**
  * You can set a new `items` array.
  */
-repeater.items = new Array(10).fill({name: 'new array item'});
+repeater.items = repeater.items.concat([{name: 'new item'}]);
 /**
- * You can also use `push` and `splice` methods.
+ * You can also use `requestReset()` to notify of changes.
  */
-repeater.push({name: 'inserted with push'});
-repeater.splice(0, 2);
-repeater.splice(1, 0, {name: 'inserted with splice'});
+repeater.items.push({name: 'new item'});
+repeater.requestReset();
 ```
 
 ## Protected methods/properties
@@ -155,7 +155,7 @@ layout.addEventListener('itempositionchange', (event) => {
   for (const itemIndex in positionInfo) {
     const itemPosition = positionInfo[itemIndex];
     console.log(`item at index ${itemIndex}`);
-    console.log(`update position to ${itemPosition.y}`);
+    console.log(`update position to ${itemPosition.top}`);
   }
 });
 
@@ -166,7 +166,7 @@ layout.addEventListener('scrollsizechange', (event) => {
 
 layout.addEventListener('scrollerrorchange', (event) => {
   const error = event.detail;
-  console.log(`account for scroll error of ${error.y}`);
+  console.log(`account for scroll error of ${error.top}`);
 });
 ```
 

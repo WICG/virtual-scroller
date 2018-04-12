@@ -106,18 +106,9 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
-  push(item) {
-    this.splice(this._items.length, 0, item);
-  }
-
-  splice(start, deleteCount, ...replace) {
-    if (start <= this._first + this._num &&
-        (start >= this._first || start + deleteCount >= this._first ||
-         start + replace.length >= this._first)) {
-      this._needsReset = true;
-      this._scheduleRender();
-    }
-    return this._items.splice(start, deleteCount, ...replace);
+  requestReset() {
+    this._needsReset = true;
+    this._scheduleRender();
   }
 
   requestRemeasure() {

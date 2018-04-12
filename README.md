@@ -17,10 +17,6 @@ An infinite list optimizes the rendering of DOM according to the visible area an
 
 Some implementations append DOM incrementally, others recycle the DOM.
 
-## Design
-
-See [DESIGN.md](./DESIGN.md) for more details.
-
 ## &lt;virtual-list&gt;
 
 `<virtual-list>` can be configured through 3 properties:
@@ -70,9 +66,14 @@ list.template = {
 };
 ```
 
-Updates to the `items` array instance will not be captured by `<virtual-list>`. Set a new array to trigger the update.
+Updates to the `items` array instance will not be captured by `<virtual-list>`.
+
+Either set a new array to trigger the update, or use `requestReset()` to notify of changes if you want to keep the same array instance.
 ```js
 list.items = list.items.concat([{name: 'new item'}]);
+
+list.items.push({name: 'new item'});
+list.requestReset();
 ```
 
 ### `virtualList(items, template, direction)` directive (lit-html)
@@ -90,3 +91,7 @@ const render = () => html`
   </ul>
 `;
 ```
+
+## Design
+
+See [DESIGN.md](./DESIGN.md) for more details.

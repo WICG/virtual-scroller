@@ -67,6 +67,20 @@ export class VirtualListElement extends HTMLElement {
     }
   }
 
+  get first() {
+    return this._list ? this._list.first : 0;
+  }
+
+  get num() {
+    return this._list ? this._list.num : 0;
+  }
+
+  requestReset() {
+    if (this._list) {
+      this._list.requestReset();
+    }
+  }
+
   /**
    * @protected
    */

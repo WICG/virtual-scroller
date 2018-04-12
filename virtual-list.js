@@ -47,8 +47,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._updateItemsCount();
   }
 
-  splice(start, deleteCount, ...replace) {
-    super.splice(start, deleteCount, ...replace);
+  requestReset() {
+    super.requestReset();
     this._updateItemsCount();
   }
 
@@ -165,7 +165,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _correctScrollError(err) {
-    window.scroll(window.scrollX - err.x, window.scrollY - err.y);
+    window.scroll(window.scrollX - err.left, window.scrollY - err.top);
   }
   /**
    * @protected
