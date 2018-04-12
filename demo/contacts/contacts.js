@@ -44,8 +44,9 @@ export class Sample {
 
   _setUp() {
     const listProps = {
-      container: document.body,
-      newChildFn: (item, idx) => {
+      layout: this.layout,
+      container: this.container,
+      newChild: (item, idx) => {
         const type = itemType(item);
         const pool = this._pool[type] || (this._pool[type] = []);
         const recycled = pool.pop();
@@ -63,7 +64,7 @@ export class Sample {
             card.appendChild(text);
 
             card.addEventListener(
-                'input', e => this._updateChildSize(card['_idx'], e));
+                'input', e => this._updateItemSize(card['_idx'], e));
             text.addEventListener('focus', e => this._scrollToFocused(e));
             text.addEventListener(
                 'blur',
@@ -79,7 +80,7 @@ export class Sample {
           }
         }
       },
-      updateChildFn: (child, item, idx) => {
+      updateChild: (child, item, idx) => {
         if (itemType(item) === 'contact') {
           child._idx = idx;
           child.querySelector('b').textContent =
@@ -89,20 +90,19 @@ export class Sample {
           child.textContent = item.title;
         }
       },
-      recycleChildFn: (child, item, idx) => {
+      recycleChild: (child, item, idx) => {
         const type = itemType(item);
         if (type === 'contact') {
-          listProps.updateChildFn(child, this.resetValue, -1);
+          listProps.updateChild(child, this.resetValue, -1);
         }
         this._pool[type].push(child);
       },
       // resetValue: this.resetValue
     };
-    this.list = Object.assign(new VirtualList(), listProps);
+    this.list = new VirtualList(listProps);
   }
 
   render() {
-    this.list.layout = this.layout;
     this.list.items = this.items;
   }
 
@@ -146,8 +146,8 @@ export class Sample {
     }
   }
 
-  _updateChildSize(idx, {currentTarget}) {
-    this.layout.updateChildSizes({
+  _updateItemSize(idx, {currentTarget}) {
+    this.layout.updateItemSizes({
       [idx]: {
         width: currentTarget.offsetWidth,
         height: currentTarget.offsetHeight

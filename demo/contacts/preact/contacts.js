@@ -22,7 +22,7 @@ export class Sample extends BaseSample {
                 width: '100%',
                 boxSizing: 'border-box'
               },
-              onInput: e => sample._updateChildSize(idx, e),
+              onInput: e => sample._updateItemSize(idx, e),
             },
             h('b', null, `#${item.index} - ${item.first} ${item.last}`),
             h('p',

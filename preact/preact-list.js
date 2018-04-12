@@ -3,14 +3,17 @@ import {VirtualList} from '../virtual-list.js';
 import {PreactMixin, Repeat} from './preact-repeater.js';
 
 export class List extends Repeat {
-  componentWillMount() {
-    this._repeater = new PreactList();
+  componentDidMount() {
+    this._repeater = new PreactList({
+      container: this._wrapper.base,
+      component: this.props.component,
+      layout: this.props.layout
+    });
+    this._updateRepeater(this.props);
   }
 
   _updateRepeater(props) {
-    const {items, component, layout} = props;
-    Object.assign(this._repeater, {items, component, layout});
-    // this._repeater.render();
+    this._repeater.items = props.items;
   }
 }
 

@@ -2,52 +2,44 @@ import {Repeats} from './virtual-repeater.js';
 
 export const RepeatsAndScrolls = Superclass => class extends Repeats
 (Superclass) {
-  constructor() {
-    super();
+  constructor(config = {}) {
+    super(config);
+    this._layout = config.layout;
     this._num = 0;
     this._first = -1;
     this._last = -1;
     this._prevFirst = -1;
     this._prevLast = -1;
-    this._adjustRange = this._adjustRange.bind(this);
-    this._correctScrollError = this._correctScrollError.bind(this);
-    this._sizeContainer = this._sizeContainer.bind(this);
-    this._positionChildren = this._positionChildren.bind(this);
-    this._scheduleUpdateView = this._scheduleUpdateView.bind(this);
 
     this._pendingUpdateView = null;
     this._isContainerVisible = false;
-  }
-
-  set container(node) {
-    if (node === this._container) {
-      return;
-    }
-    if (this._container) {
-      console.warn('container can be set only once.');
-      return;
-    }
-
-    this._container = node;
 
     // Ensure container is a positioned element.
-    const position = getComputedStyle(node).position;
+    const position = getComputedStyle(this._container).position;
     if (!position || position === 'static') {
-      node.style.position = 'relative';
+      this._container.style.position = 'relative';
     }
+    if (typeof this._layout.updateItemSizes === 'function') {
+      this._measureCallback = m => this._layout.updateItemSizes(m);
+    }
+    this._layout.addEventListener(
+        'scrollsizechange', (event) => this._sizeContainer(event.detail));
+    this._layout.addEventListener(
+        'scrollerrorchange', (event) => this._correctScrollError(event.detail));
+    this._layout.addEventListener(
+        'itempositionchange', (event) => this._positionChildren(event.detail));
+    this._layout.addEventListener(
+        'rangechange', (event) => this._adjustRange(event.detail));
 
     // TODO: Listen on actual container
-    window.addEventListener('scroll', this._scheduleUpdateView);
-    window.addEventListener('resize', this._scheduleUpdateView);
-
+    addEventListener('scroll', () => this._scheduleUpdateView());
+    addEventListener('resize', () => this._scheduleUpdateView());
     this._updateItemsCount();
     this._scheduleUpdateView();
   }
 
-  set layout(layout) {
-    if (layout !== this._layout) {
-      this._attachLayout(layout);
-    }
+  get items() {
+    return super.items;
   }
 
   set items(arr) {
@@ -65,53 +57,34 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   // Rename _ordered to _kids?
+  /**
+   * @protected
+   */
   get _kids() {
     return this._ordered;
   }
 
+  /**
+   * @private
+   */
   _updateItemsCount() {
-    // Wait to have both container and layout, so that size updates
-    // can be correctly managed.
-    if (this._container && this._layout) {
+    if (this._layout) {
       this._layout.totalItems = this._items ? this._items.length : 0;
     }
   }
-
-  _attachLayout(layout) {
-    this._detachLayout();
-    this._layout = layout;
-    layout.addListener('size', this._sizeContainer);
-    layout.addListener('position', this._positionChildren);
-    layout.addListener('range', this._adjustRange);
-    layout.addListener('scrollError', this._correctScrollError);
-    if (typeof layout.updateChildSizes === 'function') {
-      // Invoked by `Repeats` mixin, `m` is a map of `{ idx : {width: height:}
-      // }`
-      this._measureCallback = m => layout.updateChildSizes(m);
-    }
-    this._updateItemsCount();
-    this._scheduleUpdateView();
-  }
-
-  _detachLayout() {
-    if (this._layout) {
-      this._layout.removeListener('size', this._sizeContainer);
-      this._layout.removeListener('position', this._positionChildren);
-      this._layout.removeListener('range', this._adjustRange);
-      this._layout.removeListener('scrollError', this._correctScrollError);
-      this._measureCallback = null;
-      this._layout = null;
-    }
-  }
-
+  /**
+   * @private
+   */
   _scheduleUpdateView() {
-    if (!this._pendingUpdateView && this._container && this._layout) {
+    if (!this._pendingUpdateView) {
       this._pendingUpdateView =
           Promise.resolve().then(() => this._updateView());
       // window.requestAnimationFrame(() => this._updateView());
     }
   }
-
+  /**
+   * @private
+   */
   _updateView() {
     this._pendingUpdateView = null;
 
@@ -128,18 +101,18 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     const scrollerWidth = window.innerWidth;
     const scrollerHeight = window.innerHeight;
-    const x = Math.max(0, -listBounds.x);
-    const y = Math.max(0, -listBounds.y);
     const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
     const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
-    const xMax =
-        Math.max(0, Math.min(scrollerWidth, Infinity /*listBounds.right*/));
-    const yMax =
-        Math.max(0, Math.min(scrollerHeight, Infinity /*listBounds.bottom*/));
-    this._layout.viewportSize = {x: xMax - xMin, y: yMax - yMin};
-    this._layout.scrollTo({x, y});
+    const xMax = Math.max(0, scrollerWidth);
+    const yMax = Math.max(0, scrollerHeight);
+    this._layout.viewportSize = {width: xMax - xMin, height: yMax - yMin};
+    const left = Math.max(0, -listBounds.x);
+    const top = Math.max(0, -listBounds.y);
+    this._layout.scrollTo({top, left});
   }
-
+  /**
+   * @private
+   */
   _sizeContainer(size) {
     Object.keys(size).forEach(key => {
       const prop = (key === 'width') ? 'minWidth' : 'minHeight';
@@ -147,7 +120,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       (this._container.host || this._container).style[prop] = size[key] + 'px';
     });
   }
-
+  /**
+   * @private
+   */
   async _positionChildren(pos) {
     await Promise.resolve();
     const kids = this._kids;
@@ -157,33 +132,46 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       const idx = key - this._first;
       const child = kids[idx];
       if (child) {
-        const {x, y} = pos[key];
+        const {top, left} = pos[key];
         // console.debug(`_positionChild #${this._container.id} > #${child.id}:
-        // top ${y}`);
+        // top ${top}`);
         child.style.position = 'absolute';
-        child.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        child.style.transform = `translate3d(${left}px, ${top}px, 0)`;
         child.style.maxWidth = maxWidth;
         child.style.maxHeight = maxHeight;
       }
     });
   }
-
+  /**
+   * @private
+   */
   _adjustRange(range) {
     this.num = range.num;
     this.first = range.first;
+    this._incremental = !(range.stable);
     if (range.remeasure) {
       this.requestRemeasure();
+    } else if (range.stable) {
+      this._notifyStable();
     }
-    this._stable = range.stable;
-    this._incremental = !(range.stable);
   }
-
+  /**
+   * @protected
+   */
   _shouldRender() {
-    return Boolean(super._shouldRender() && this._isContainerVisible);
+    return Boolean(this._isContainerVisible && super._shouldRender());
   }
-
+  /**
+   * @private
+   */
   _correctScrollError(err) {
     window.scroll(window.scrollX - err.x, window.scrollY - err.y);
+  }
+  /**
+   * @protected
+   */
+  _notifyStable() {
+    this._container.dispatchEvent(new Event('stable'));
   }
 };
 

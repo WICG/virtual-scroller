@@ -1,44 +1,54 @@
+import {html, render} from '../../../lit-html/lib/lit-extended.js';
 import Layout from '../../layouts/layout-1d.js';
+import {list} from '../../lit-html/lit-list.js';
 import {VirtualList} from '../../virtual-list.js';
 
-const items = new Array(20).fill({name: 'item'});
+const items = new Array(200).fill({name: 'item'});
 const container = document.getElementById('container');
 
-const layout = new Layout({itemSize: {x: window.innerWidth, y: 50}});
-window.vlist = new VirtualList();
-vlist._recycledChildren = [];
-Object.assign(window.vlist, {
-  id: 'vlist',
+const layout = new Layout({itemSize: {height: 50}});
+// render(
+//     html`${list({
+//       items,
+//       template: (item, idx) => html`
+//         <section><div class="title">${idx} - ${item.name}</div></section>
+//       `,
+//       layout,
+//     })}`,
+//     container);
+const pool = [];
+const config = {
   items,
   container,
   layout,
-  newChildFn: (item, idx) => {
-    let section = vlist._recycledChildren.pop();
+  newChild: (item, idx) => {
+    let section = pool.pop();
     if (!section) {
       section = document.createElement('section');
       section.innerHTML = `<div class="title"></div>`;
       section._title = section.querySelector('.title');
       // Update it immediately.
-      vlist._updateChildFn(section, item, idx);
+      config.updateChild(section, item, idx);
     }
     return section;
   },
-  updateChildFn: (section, item, idx) => {
+  updateChild: (section, item, idx) => {
     section.id = `section_${idx}`;
     section._title.textContent = `${idx} - ${item.name}`;
   },
-  recycleChildFn: (section, item, idx) => {
-    vlist._recycledChildren.push(section);
+  recycleChild: (section, item, idx) => {
+    pool.push(section);
   }
-});
+};
+window.vlist = new VirtualList(config);
 
 // document.body.style.minHeight = (innerHeight * 100) + 'px'
 
-container.style.display = 'none';
-setTimeout(() => {
-  container.style.display = '';
-  vlist.requestUpdateView();
-}, 1000);
+// container.style.display = 'none';
+// setTimeout(() => {
+//   container.style.display = '';
+//   vlist.requestUpdateView();
+// }, 1000);
 
 // setInterval(() => {
 //   Array.from(container.children).forEach(section => {

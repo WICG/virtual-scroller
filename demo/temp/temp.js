@@ -1,37 +1,53 @@
-import Layout from '../../layouts/layout-1d.js';
-import {RepeatsAndScrolls} from '../../virtual-list.js';
-import {Repeats} from '../../virtual-repeater.js';
+import '../../virtual-list-element.js';
+import {VirtualRepeater} from '../../virtual-repeater.js';
 
-class ListElement extends RepeatsAndScrolls
-(HTMLElement) {
-  connectedCallback() {
-    this.container = this;
-    this.layout = new Layout();
-
-    this._layout._overhang = 800;
-    this._layout._list = this;
-    this._layout._itemSize.y = 1000000;
-
-    this.style.display = 'block';
-    this.style.position = 'relative';
-    this.style.contain = 'strict';
-  }
-}
-
-customElements.define('virtual-list', ListElement);
-
-class RepeaterElement extends Repeats
-(HTMLElement) {
-  connectedCallback() {
-    this.container = this;
-  }
-
+class RepeaterElement extends HTMLElement {
   static get observedAttributes() {
     return ['num', 'first'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
     this[name] = Number(newVal);
+  }
+
+  set template(template) {
+    if (!this._template) {
+      this._template = template;
+      this._updateRepeater();
+    }
+  }
+
+  set items(items) {
+    this._items = items;
+    this._updateRepeater();
+  }
+
+  set first(first) {
+    this._first = first;
+    this._updateRepeater();
+  }
+
+  set num(num) {
+    this._num = num;
+    this._updateRepeater();
+  }
+
+  _updateRepeater() {
+    if (!this._template) {
+      return;
+    }
+    if (!this._repeater) {
+      const {newChild, updateChild, recycleChild} = this._template;
+      this._repeater = new VirtualRepeater({
+        container: this,
+        newChild,
+        updateChild,
+        recycleChild,
+      });
+    }
+    this._repeater.first = this._first;
+    this._repeater.num = this._num;
+    this._repeater.items = this._items;
   }
 }
 

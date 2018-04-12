@@ -1,9 +1,6 @@
-export default class Layout {
-  constructor(inConfig) {
-    this._posSub = [];
-    this._rangeSub = [];
-    this._sizeSub = [];
-    this._errSub = [];
+export default class Layout extends EventTarget {
+  constructor(config) {
+    super();
 
     this._physicalMin = 0;
     this._physicalMax = 0;
@@ -11,27 +8,28 @@ export default class Layout {
     this._first = -1;
     this._last = -1;
 
-    this._latestCoords = {x: 0, y: 0};
+    this._latestCoords = {left: 0, top: 0};
 
-    this._itemSize = {x: 100, y: 100};
+    this._itemSize = {width: 100, height: 100};
     this._spacing = 0;
 
     this._virtualScroll = false;
 
     this._sizeDim = 'height';
-    this._axis = 'y';
-    this._secondaryAxis = 'x';
+    this._secondarySizeDim = 'width';
+    this._positionDim = 'top';
+    this._secondaryPositionDim = 'left';
     this._direction = 'vertical';
 
     this._scrollPosition = 0;
-    this._viewportSize = {x: 0, y: 0};
+    this._viewportSize = {width: 0, height: 0};
     this._totalItems = 0;
 
     this._scrollSize = 0;
 
     this._overhang = 150;
 
-    Object.assign(this, inConfig);
+    Object.assign(this, config);
   }
 
   // public properties
@@ -76,11 +74,11 @@ export default class Layout {
   }
 
   get _itemDim1() {
-    return this._itemSize[this._axis];
+    return this._itemSize[this._sizeDim];
   }
 
   get _itemDim2() {
-    return this._itemSize[this._secondaryAxis];
+    return this._itemSize[this._secondarySizeDim];
   }
 
   get itemSize() {
@@ -91,8 +89,9 @@ export default class Layout {
     if (dir !== this._direction) {
       this._direction = (dir === 'horizontal') ? dir : 'vertical';
       this._sizeDim = (dir === 'horizontal') ? 'width' : 'height';
-      this._axis = (dir === 'horizontal') ? 'x' : 'y';
-      this._secondaryAxis = (dir === 'horizontal') ? 'y' : 'x';
+      this._secondarySizeDim = (dir === 'horizontal') ? 'height' : 'width';
+      this._positionDim = (dir === 'horizontal') ? 'left' : 'top';
+      this._secondaryPositionDim = (dir === 'horizontal') ? 'top' : 'left';
       this._scheduleReflow();
     }
   }
@@ -118,11 +117,11 @@ export default class Layout {
   }
 
   get _viewDim1() {
-    return this._viewportSize[this._axis];
+    return this._viewportSize[this._sizeDim];
   }
 
   get _viewDim2() {
-    return this._viewportSize[this._secondaryAxis];
+    return this._viewportSize[this._secondarySizeDim];
   }
 
   get viewportSize() {
@@ -160,7 +159,7 @@ export default class Layout {
   //
 
   _scroll() {
-    this._scrollPosition = this._latestCoords[this._axis];
+    this._scrollPosition = this._latestCoords[this._positionDim];
 
     this._checkThresholds();
   }
@@ -217,66 +216,45 @@ export default class Layout {
 
   ///
 
+  _emitRange(inProps) {
+    const detail = Object.assign(
+        {
+          first: this._first,
+          last: this._last,
+          num: this._num,
+          stable: true,
+        },
+        inProps);
+    this.dispatchEvent(new CustomEvent('rangechange', {detail}));
+  }
+
   _emitScrollSize() {
-    this._sizeSub.forEach(l => l({[this._sizeDim]: this._scrollSize}));
-  }
-
-  _emitChildPositions() {
-    const offset = this._virtualScroll ? this._scrollPosition : 0;
-    const positions = {};
-    for (let idx = this._first; idx <= this._last; idx++) {
-      positions[idx] = this._getChildPosition(idx);
-    }
-    this._posSub.forEach(l => l(positions));
-  }
-
-  _getChildPosition(idx) {
-    // Override
+    const detail = {
+      [this._sizeDim]: this._scrollSize,
+    };
+    this.dispatchEvent(new CustomEvent('scrollsizechange', {detail}));
   }
 
   _emitScrollError() {
     if (this._scrollError) {
-      this._errSub.forEach(
-          l => l({[this._axis]: this._scrollError, [this._secondaryAxis]: 0}));
+      const detail = {
+        [this._positionDim]: this._scrollError,
+        [this._secondaryPositionDim]: 0,
+      };
+      this.dispatchEvent(new CustomEvent('scrollerrorchange', {detail}));
       this._scrollError = 0;
     }
   }
 
-  _emitRange(inProps) {
-    this._rangeSub.forEach(
-        l => l(Object.assign(
-            {
-              first: this._first,
-              last: this._last,
-              num: this._num,
-              stable: true
-            },
-            inProps)));
-  }
-
-  //
-
-  _listeners(evt) {
-    return (evt === 'position') ?
-        this._posSub :
-        (evt === 'range') ?
-        this._rangeSub :
-        (evt === 'scrollError') ? this._errSub :
-                                  (evt === 'size') ? this._sizeSub : null;
-  }
-
-  addListener(evt, handler) {
-    const l = this._listeners(evt);
-    if (l)
-      l.push(handler);
-  }
-
-  removeListener(evt, handler) {
-    const l = this._listeners(evt);
-    if (l) {
-      const idx = l.indexOf(handler);
-      if (idx >= 0)
-        l.splice(idx, 1);
+  _emitChildPositions() {
+    const detail = {};
+    for (let idx = this._first; idx <= this._last; idx++) {
+      detail[idx] = this._getItemPosition(idx);
     }
+    this.dispatchEvent(new CustomEvent('itempositionchange', {detail}));
+  }
+
+  _getItemPosition(idx) {
+    // Override.
   }
 }

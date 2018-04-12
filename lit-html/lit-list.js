@@ -7,23 +7,17 @@ import {LitMixin} from './lit-repeater.js';
 export const LitList = LitMixin(VirtualList);
 
 const partToList = new WeakMap();
-export const list = (config = {}) => directive(part => {
+export const list = (config = {}) => directive(async part => {
   let list = partToList.get(part);
   if (!list) {
-    list = new LitList();
+    while (!part.startNode.isConnected) {
+      await Promise.resolve();
+    }
+    const {template, layout} = config;
+    list = new LitList({part, template, layout});
     partToList.set(part, list);
   }
-  Object.assign(config, {
-    part,
-    // Assign template only once.
-    template: list.template || config.template,
-    // Assign layout only once.
-    layout: list.layout || config.layout,
-    // Recycle by default.
-    recycle:
-        Boolean(config.hasOwnProperty('recycle') === false || config.recycle),
-  });
-  Object.assign(list, config);
+  list.items = config.items;
 });
 
 export const verticalList = (items, template, layout = new Layout()) =>

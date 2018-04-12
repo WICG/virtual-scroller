@@ -1,26 +1,8 @@
-import {IncrementalRepeats} from '../../incremental-repeater.js';
+import {IncrementalRepeater} from '../../incremental-repeater.js';
 
-class IncrementalListElement extends IncrementalRepeats
-(HTMLElement) {
+class IncrementalListElement extends HTMLElement {
   connectedCallback() {
-    this.container = this;
-    this.newChildFn = this.getNewChild.bind(this);
-    this.updateChildFn = this.updateChild.bind(this);
-    // Wait for distribution.
-    Promise.resolve().then(() => {
-      this._template =
-          this.querySelector('template').content.querySelector('*');
-    });
-  }
-
-  getNewChild() {
-    return this._template.cloneNode(true);
-  }
-
-  updateChild(child, item, idx) {
-    child.querySelector('.idx').textContent = idx;
-    child.querySelector('.value').textContent = item;
-    child.onclick = () => console.log(item)
+    this._updateRepeater();
   }
 
   static get observedAttributes() {
@@ -29,6 +11,38 @@ class IncrementalListElement extends IncrementalRepeats
 
   attributeChangedCallback(name, oldVal, newVal) {
     this[name] = Number(newVal);
+  }
+
+  set items(items) {
+    this._items = items;
+    this._updateRepeater();
+  }
+
+  set chunk(c) {
+    this._chunk = c;
+    this._updateRepeater();
+  }
+
+  _updateRepeater() {
+    this._template = this._template ||
+        this.querySelector('template').content.querySelector('*');
+    if (!this._template) {
+      return;
+    }
+    if (!this._repeater) {
+      this._repeater = new IncrementalRepeater({
+        container: this,
+        newChild: (item, idx) => {
+          const child = this._template.cloneNode(true);
+          child.querySelector('.idx').textContent = idx;
+          child.querySelector('.value').textContent = item;
+          child.onclick = () => console.log(item);
+          return child;
+        }
+      });
+    }
+    this._repeater.chunk = this._chunk;
+    this._repeater.items = this._items;
   }
 }
 
