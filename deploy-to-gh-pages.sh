@@ -39,7 +39,13 @@ git show ${branch}:package.json | sed /\"$repo\"/d > package.json
 npm install
 npm install $org/$repo#$branch
 
-mv node_modules/ components/
+# Manual copy of demo dependencies.
+mkdir components
+mv node_modules/lit-html components/
+mv node_modules/preact components/
+mv node_modules/streaming-spec components/
+mv node_modules/$repo components/
+rm -rf node_modules/
 
 # redirect by default to the component folder
 echo "<META http-equiv=\"refresh\" content=\"0;URL=components/$repo/demo\">" > index.html
