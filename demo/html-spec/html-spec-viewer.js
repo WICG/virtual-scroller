@@ -47,7 +47,7 @@ class HTMLSpecViewer extends VirtualListElement {
   }
 
   onRangechange(range) {
-    if (range.first + range.num >= this.items.length - 4) {
+    if (range.last >= this.items.length - 4) {
       this.addNextChunk();
     }
   }

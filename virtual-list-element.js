@@ -40,12 +40,12 @@ export class VirtualListElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['direction'];
+    return ['layout'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    if (name === 'direction') {
-      this.direction = newVal;
+    if (name === 'layout') {
+      this.layout = newVal;
     }
   }
 
@@ -91,14 +91,6 @@ export class VirtualListElement extends HTMLElement {
       this[_items] = items;
       this[_render]();
     }
-  }
-
-  get first() {
-    return this[_list] ? this[_list].first : 0;
-  }
-
-  get num() {
-    return this[_list] ? this[_list].num : 0;
   }
 
   requestReset() {

@@ -30,17 +30,16 @@
 
 - _rangechange_
   - `bubbles: false, cancelable: false, composed: false`
-  - Fired when the list has scrolled to a new range of items.
+  - Fired when the list has rendered to a new range of items.
   - _event.detail.first_
     - type: `number`
     - the index of the first item currently rendered.
-  - _event.detail.num_
+  - _event.detail.last_
     - type: `number`
-    - the number of items currently rendered.
+    - the index of the last item currently rendered.
 
+# Example
 
-## Minimal setup
- 
 ```html
 <virtual-list></virtual-list>
 
@@ -49,13 +48,13 @@
 
   const list = document.querySelector('virtual-list');
 
-  list.items = new Array(20).fill({name: 'item'});
-
   list.newChild = (item, index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + item.name;
     return child;
   };
+
+  list.items = new Array(20).fill({name: 'item'});
 </script>
 ```
 
@@ -100,12 +99,15 @@ list.requestReset();
 
 ## Range changes
 
-Listen for `rangechange` event to get notified of changes of `first, num`.
+Listen for `rangechange` event to get notified when the displayed items range changes.
 ```js
 list.addEventListener('rangechange', (event) => {
   const range = event.detail;
-  if (range.first + range.num === list.items.length) {
-    console.log('scrolled to the bottom of the list!');
+  if (range.first === 0) {
+    console.log('rendered first item.');
+  }
+  if (range.last === list.items.length - 1) {
+    console.log('rendered last item.');
   }
 });
 ```

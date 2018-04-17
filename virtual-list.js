@@ -217,8 +217,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    */
   _notifyStable() {
     const {first, num} = this;
+    const last = first + num;
     this._container.dispatchEvent(
-        new CustomEvent('rangechange', {detail: {first, num}}));
+        new CustomEvent('rangechange', {detail: {first, last}}));
   }
 };
 
