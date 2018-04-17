@@ -1,28 +1,17 @@
 export const Repeats = Superclass => class extends Superclass {
   constructor(config = {}) {
     super();
-    const {
-      container,
-      items,
-      first,
-      num,
-      itemKey,
-      newChild,
-      updateChild,
-      recycleChild,
-    } = config;
 
-    this._container = container;
-    this._items = items;
-    this._itemKeyFn = itemKey;
-    this._newChildFn = newChild;
-    this._updateChildFn = updateChild;
-    this._recycleChildFn = recycleChild;
+    this._items = null;
+    this._itemKeyFn = null;
+    this._newChildFn = null;
+    this._updateChildFn = null;
+    this._recycleChildFn = null;
     this._measureCallback = null;
     // Consider renaming this. firstVisibleIndex?
-    this._first = first || 0;
+    this._first = 0;
     // Consider renaming this. count? visibleElements?
-    this._num = num || Infinity;
+    this._num = Infinity;
 
     this.__incremental = false;
 
@@ -50,7 +39,71 @@ export const Repeats = Superclass => class extends Superclass {
     // Used to keep track of measures by index.
     this._indexToMeasure = {};
 
-    this._scheduleRender();
+    if (config.container) {
+      this._container = config.container;
+    } else if (!this._container) {
+      throw Error('Must set container');
+    }
+    const {
+      newChild,
+      updateChild,
+      recycleChild,
+      itemKey,
+      items,
+      first,
+      num,
+    } = config;
+    Object.assign(this, {
+      newChild,
+      updateChild,
+      recycleChild,
+      itemKey,
+      items,
+      first,
+      num,
+    });
+  }
+
+  // API
+
+  get newChild() {
+    return this._newChildFn;
+  }
+  set newChild(fn) {
+    if (fn !== this._newChildFn) {
+      this._newChildFn = fn;
+      this.requestReset();
+    }
+  }
+
+  get updateChild() {
+    return this._updateChildFn;
+  }
+  set updateChild(fn) {
+    if (fn !== this._updateChildFn) {
+      this._updateChildFn = fn;
+      this.requestReset();
+    }
+  }
+
+  get recycleChild() {
+    return this._recycleChildFn;
+  }
+  set recycleChild(fn) {
+    if (fn !== this._recycleChildFn) {
+      this._recycleChildFn = fn;
+      this.requestReset();
+    }
+  }
+
+  get itemKey() {
+    return this._itemKeyFn;
+  }
+  set itemKey(fn) {
+    if (fn !== this._itemKeyFn) {
+      this._itemKeyFn = fn;
+      this.requestReset();
+    }
   }
 
   get first() {
@@ -67,8 +120,6 @@ export const Repeats = Superclass => class extends Superclass {
       }
     }
   }
-
-  // API
 
   get num() {
     return this._num;
@@ -92,8 +143,7 @@ export const Repeats = Superclass => class extends Superclass {
     if (arr !== this._items) {
       this._items = arr;
       this.first = this._first;
-      this._needsReset = true;
-      this._scheduleRender();
+      this.requestReset();
     }
   }
 
@@ -124,7 +174,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this._items && this._container);
+    return Boolean(this._items);
   }
 
   /**
@@ -351,8 +401,8 @@ export const Repeats = Superclass => class extends Superclass {
       this._childToKey.delete(child);
       this._keyToChild.delete(key);
       this._active.delete(child);
-      if (this._recycleChildFn) {
-        this._recycleChildFn(child, this._items[idx], idx);
+      if (this.recycleChild) {
+        this.recycleChild(child, this._items[idx], idx);
       } else {
         this._removeChild(child);
       }
@@ -429,7 +479,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _newChild(item, idx) {
-    return this._newChildFn(item, idx);
+    return this.newChild(item, idx);
   }
 
   /**
@@ -442,8 +492,8 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _updateChild(child, item, idx) {
-    if (this._updateChildFn) {
-      this._updateChildFn(child, item, idx);
+    if (this.updateChild) {
+      this.updateChild(child, item, idx);
     }
   }
 

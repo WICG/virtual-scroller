@@ -11,19 +11,21 @@ class HTMLSpecViewer extends VirtualListElement {
       this.appendChild(this._htmlSpec.head);
 
       this.items = [];
-      this.template = (item) => item;
-      this.addEventListener('stable', () => this._onStable());
-      this._addNextChunk();
+      this.addNextChunk();
+      this.addEventListener(
+          'rangechange', (event) => this.onRangechange(event.detail));
     }
   }
 
-  _onStable() {
-    if (this.first + this.num >= this.items.length - 4) {
-      this._addNextChunk();
-    }
+  newChild(item) {
+    return item;
   }
 
-  async _addNextChunk(chunk = 10) {
+  recycleChild() {
+    // keep children in DOM.
+  }
+
+  async addNextChunk(chunk = 10) {
     if (this._adding) {
       return;
     }
@@ -42,6 +44,12 @@ class HTMLSpecViewer extends VirtualListElement {
       }
     }
     this._adding = false;
+  }
+
+  onRangechange(range) {
+    if (range.first + range.num >= this.items.length - 4) {
+      this.addNextChunk();
+    }
   }
 }
 

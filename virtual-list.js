@@ -4,7 +4,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 (Superclass) {
   constructor(config = {}) {
     super(config);
-    this._layout = config.layout;
     this._num = 0;
     this._first = -1;
     this._last = -1;
@@ -14,37 +13,58 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._pendingUpdateView = null;
     this._isContainerVisible = false;
 
+    this._handleLayoutEvent = this._handleLayoutEvent.bind(this);
+    this._scheduleUpdateView = this._scheduleUpdateView.bind(this);
+
     // Ensure container is a positioned element.
     const position = getComputedStyle(this._container).position;
     if (!position || position === 'static') {
       this._container.style.position = 'relative';
     }
-    if (typeof this._layout.updateItemSizes === 'function') {
-      this._measureCallback = m => this._layout.updateItemSizes(m);
+    // Finally, set layout.
+    if (config.layout) {
+      this.layout = config.layout;
     }
-    this._layout.addEventListener(
-        'scrollsizechange', (event) => this._sizeContainer(event.detail));
-    this._layout.addEventListener(
-        'scrollerrorchange', (event) => this._correctScrollError(event.detail));
-    this._layout.addEventListener(
-        'itempositionchange', (event) => this._positionChildren(event.detail));
-    this._layout.addEventListener(
-        'rangechange', (event) => this._adjustRange(event.detail));
-
-    // TODO: Listen on actual container
-    addEventListener('scroll', () => this._scheduleUpdateView());
-    addEventListener('resize', () => this._scheduleUpdateView());
-    this._updateItemsCount();
-    this._scheduleUpdateView();
   }
 
-  get items() {
-    return super.items;
+  get layout() {
+    return this._layout;
   }
 
-  set items(arr) {
-    super.items = arr;
-    this._updateItemsCount();
+  set layout(layout) {
+    if (layout === this._layout) {
+      return;
+    }
+    const prevLayout = this._layout;
+
+    if (prevLayout) {
+      this._measureCallback = null;
+      prevLayout.removeEventListener(
+          'scrollsizechange', this._handleLayoutEvent);
+      prevLayout.removeEventListener(
+          'scrollerrorchange', this._handleLayoutEvent);
+      prevLayout.removeEventListener(
+          'itempositionchange', this._handleLayoutEvent);
+      prevLayout.removeEventListener('rangechange', this._handleLayoutEvent);
+      removeEventListener('scroll', this._scheduleUpdateView);
+      removeEventListener('resize', this._scheduleUpdateView);
+    }
+
+    this._layout = layout;
+
+    if (layout) {
+      if (typeof layout.updateItemSizes === 'function') {
+        this._measureCallback = layout.updateItemSizes.bind(layout);
+      }
+      layout.addEventListener('scrollsizechange', this._handleLayoutEvent);
+      layout.addEventListener('scrollerrorchange', this._handleLayoutEvent);
+      layout.addEventListener('itempositionchange', this._handleLayoutEvent);
+      layout.addEventListener('rangechange', this._handleLayoutEvent);
+      addEventListener('scroll', this._scheduleUpdateView);
+      addEventListener('resize', this._scheduleUpdateView);
+      this._updateItemsCount();
+      this._scheduleUpdateView();
+    }
   }
 
   requestReset() {
@@ -53,7 +73,32 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   requestUpdateView() {
-    this._scheduleUpdateView();
+    if (this._layout) {
+      this._scheduleUpdateView();
+    }
+  }
+
+  /**
+   * @param {!Event} event
+   * @private
+   */
+  _handleLayoutEvent(event) {
+    switch (event.type) {
+      case 'scrollsizechange':
+        this._sizeContainer(event.detail);
+        break;
+      case 'scrollerrorchange':
+        this._correctScrollError(event.detail);
+        break;
+      case 'itempositionchange':
+        this._positionChildren(event.detail);
+        break;
+      case 'rangechange':
+        this._adjustRange(event.detail);
+        break;
+      default:
+        console.warn('event ' + event.type + ' not handled');
+    }
   }
 
   // Rename _ordered to _kids?
@@ -79,7 +124,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (!this._pendingUpdateView) {
       this._pendingUpdateView =
           Promise.resolve().then(() => this._updateView());
-      // window.requestAnimationFrame(() => this._updateView());
     }
   }
   /**
@@ -114,10 +158,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _sizeContainer(size) {
+    // Containers can be shadowRoots, so get the host.
+    const container = this._container.host || this._container;
     Object.keys(size).forEach(key => {
       const prop = (key === 'width') ? 'minWidth' : 'minHeight';
-      // Containers can be shadowRoots, so get the host.
-      (this._container.host || this._container).style[prop] = size[key] + 'px';
+      container.style[prop] = size[key] + 'px';
     });
   }
   /**
@@ -171,7 +216,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _notifyStable() {
-    this._container.dispatchEvent(new Event('stable'));
+    const {first, num} = this;
+    this._container.dispatchEvent(
+        new CustomEvent('rangechange', {detail: {first, num}}));
   }
 };
 
