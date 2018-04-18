@@ -82,18 +82,16 @@ Object.assign(list, {
 
 ## Data manipulation
 
-Updates to the `items` array instance will not be captured by `<virtual-list>`.
-
-Either set a new array to trigger the update, or use `requestReset()` to notify of changes if you want to keep the same array instance.
+`<virtual-list>` will rerender the displayed items when it receives a new `items` array.
 ```js
-/* Set a new array instance to trigger rerendering. */
 list.items = list.items.concat([{name: 'new item'}]);
+```
 
-/* 
-  If you want to keep the same array instance, remember to 
-  invoke `requestReset()` to notify of the changes.
- */
+If you want to keep the same `items` array instance, use `requestReset()` to rerender the displayed items.
+```js
 list.items.push({name: 'new item'});
+list.items[0].name = 'item 0 changed!';
+
 list.requestReset();
 ```
 
