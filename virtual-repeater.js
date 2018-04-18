@@ -2,12 +2,14 @@ export const Repeats = Superclass => class extends Superclass {
   constructor(config = {}) {
     super();
 
-    this._items = null;
-    this._itemKeyFn = null;
     this._newChildFn = null;
     this._updateChildFn = null;
     this._recycleChildFn = null;
+    this._itemKeyFn = null;
+
     this._measureCallback = null;
+
+    this._items = null;
     // Consider renaming this. firstVisibleIndex?
     this._first = 0;
     // Consider renaming this. count? visibleElements?
@@ -44,24 +46,29 @@ export const Repeats = Superclass => class extends Superclass {
     } else if (!this._container) {
       throw Error('Must set container');
     }
-    const {
-      newChild,
-      updateChild,
-      recycleChild,
-      itemKey,
-      items,
-      first,
-      num,
-    } = config;
-    Object.assign(this, {
-      newChild,
-      updateChild,
-      recycleChild,
-      itemKey,
-      items,
-      first,
-      num,
-    });
+
+    // Set only if defined.
+    if (config.hasOwnProperty('newChild')) {
+      this.newChild = config.newChild;
+    }
+    if (config.hasOwnProperty('updateChild')) {
+      this.updateChild = config.updateChild;
+    }
+    if (config.hasOwnProperty('recycleChild')) {
+      this.recycleChild = config.recycleChild;
+    }
+    if (config.hasOwnProperty('itemKey')) {
+      this.itemKey = config.itemKey;
+    }
+    if (config.hasOwnProperty('items')) {
+      this.items = config.items;
+    }
+    if (config.hasOwnProperty('first')) {
+      this.first = config.first;
+    }
+    if (config.hasOwnProperty('num')) {
+      this.num = config.num;
+    }
   }
 
   // API
@@ -309,7 +316,9 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, this._firstChild);
         }
       }
-      this._updateChild(child, item, idx);
+      if (this.updateChild) {
+        this.updateChild(child, item, idx);
+      }
       this._ordered.unshift(child);
     }
   }
@@ -328,7 +337,9 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, null);
         }
       }
-      this._updateChild(child, item, idx);
+      if (this.updateChild) {
+        this.updateChild(child, item, idx);
+      }
       this._ordered.push(child);
     }
   }
@@ -362,7 +373,9 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, null);
         }
       }
-      this._updateChild(child, item, idx);
+      if (this.updateChild) {
+        this.updateChild(child, item, idx);
+      }
     }
   }
 
@@ -372,12 +385,12 @@ export const Repeats = Superclass => class extends Superclass {
    */
   _assignChild(idx) {
     const item = this._items[idx];
-    const key = this._itemKeyFn ? this._itemKeyFn(item) : idx;
+    const key = this.itemKey ? this.itemKey(item) : idx;
     let child;
     if (child = this._keyToChild.get(key)) {
       this._prevActive.delete(child);
     } else {
-      child = this._newChild(item, idx);
+      child = this.newChild(item, idx);
       this._keyToChild.set(key, child);
       this._childToKey.set(child, key);
     }
@@ -440,19 +453,24 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _childIsAttached(child) {
-    return child.parentNode === this._container;
+    const node = this._node(child);
+    return node && node.parentNode === this._container;
   }
   /**
    * @protected
    */
   _hideChild(child) {
-    child.style.display = 'none';
+    if (child.style) {
+      child.style.display = 'none';
+    }
   }
   /**
    * @protected
    */
   _showChild(child) {
-    child.style.display = null;
+    if (child.style) {
+      child.style.display = null;
+    }
   }
 
   /**
@@ -468,33 +486,6 @@ export const Repeats = Superclass => class extends Superclass {
     // console.debug(`_measureChild #${this._container.id} > #${
     //     child.id}: height: ${height}px`);
     return Object.assign({width, height}, getMargins(child));
-  }
-
-  /**
-   * Create a new child instance for the give data.
-   * Override to control child creation behavior.
-   *
-   * @param {*} item
-   * @param {number} idx
-   * @protected
-   */
-  _newChild(item, idx) {
-    return this.newChild(item, idx);
-  }
-
-  /**
-   * Update child with data.
-   * Override to control child update behavior.
-   *
-   * @param {*} child
-   * @param {*} item
-   * @param {number} idx
-   * @protected
-   */
-  _updateChild(child, item, idx) {
-    if (this.updateChild) {
-      this.updateChild(child, item, idx);
-    }
   }
 
   /**

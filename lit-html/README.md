@@ -1,4 +1,4 @@
-# `virtualList(items, template, direction)` directive (lit-html)
+# virtualList(items, template, direction)
 
 `virtualList` directive can be configured with 3 properties:
 - `items (Array)`, the data model.

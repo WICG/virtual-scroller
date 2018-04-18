@@ -3,16 +3,25 @@ import {VirtualRepeater} from '../virtual-repeater.js';
 
 export const LitMixin = Superclass => class extends Superclass {
   constructor(config) {
-    const pool = [];
     const {part, template} = config;
-    Object.assign(config, {
-      container: part.startNode.parentNode,
-      newChild: () => pool.pop() || new NodePart(part.instance, null, null),
-      updateChild: (part, item, idx) => part.setValue(template(item, idx)),
-      recycleChild: (part) => pool.push(part),
-    });
+    config.container = part.startNode.parentNode;
     super(config);
+    this._pool = [];
+    this._template = template;
     this._hostPart = part;
+  }
+
+  newChild() {
+    return this._pool.pop() ||
+        new NodePart(this._hostPart.instance, null, null);
+  }
+
+  updateChild(part, item, idx) {
+    part.setValue(this._template(item, idx));
+  }
+
+  recycleChild(part) {
+    this._pool.push(part);
   }
 
   // Lit-specific overrides for node manipulation
@@ -52,29 +61,18 @@ export const LitMixin = Superclass => class extends Superclass {
     }
   }
 
-  _childIsAttached(part) {
-    return Boolean(part.startNode);
-  }
-
   _hideChild(part) {
-    let node = part.startNode.nextSibling;
+    let node = part.startNode;
     while (node && node !== part.endNode) {
-      if (node.style) {
-        node.style.display = 'none';
-      }
+      super._hideChild(node);
       node = node.nextSibling;
     }
   }
 
   _showChild(part) {
-    if (!this._childIsAttached(part)) {
-      return;
-    }
-    let node = part.startNode.nextSibling;
+    let node = part.startNode;
     while (node && node !== part.endNode) {
-      if (node.style) {
-        node.style.display = null;
-      }
+      super._showChild(node);
       node = node.nextSibling;
     }
   }
