@@ -13,9 +13,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._pendingUpdateView = null;
     this._isContainerVisible = false;
 
-    this._handleLayoutEvent = this._handleLayoutEvent.bind(this);
-    this._scheduleUpdateView = this._scheduleUpdateView.bind(this);
-
     // Ensure container is a positioned element.
     const position = getComputedStyle(this._container).position;
     if (!position || position === 'static') {
@@ -39,15 +36,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     if (prevLayout) {
       this._measureCallback = null;
-      prevLayout.removeEventListener(
-          'scrollsizechange', this._handleLayoutEvent);
-      prevLayout.removeEventListener(
-          'scrollerrorchange', this._handleLayoutEvent);
-      prevLayout.removeEventListener(
-          'itempositionchange', this._handleLayoutEvent);
-      prevLayout.removeEventListener('rangechange', this._handleLayoutEvent);
-      removeEventListener('scroll', this._scheduleUpdateView);
-      removeEventListener('resize', this._scheduleUpdateView);
+      prevLayout.removeEventListener('scrollsizechange', this);
+      prevLayout.removeEventListener('scrollerrorchange', this);
+      prevLayout.removeEventListener('itempositionchange', this);
+      prevLayout.removeEventListener('rangechange', this);
+      removeEventListener('scroll', this);
+      removeEventListener('resize', this);
     }
 
     this._layout = layout;
@@ -56,12 +50,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       if (typeof layout.updateItemSizes === 'function') {
         this._measureCallback = layout.updateItemSizes.bind(layout);
       }
-      layout.addEventListener('scrollsizechange', this._handleLayoutEvent);
-      layout.addEventListener('scrollerrorchange', this._handleLayoutEvent);
-      layout.addEventListener('itempositionchange', this._handleLayoutEvent);
-      layout.addEventListener('rangechange', this._handleLayoutEvent);
-      addEventListener('scroll', this._scheduleUpdateView);
-      addEventListener('resize', this._scheduleUpdateView);
+      layout.addEventListener('scrollsizechange', this);
+      layout.addEventListener('scrollerrorchange', this);
+      layout.addEventListener('itempositionchange', this);
+      layout.addEventListener('rangechange', this);
+      addEventListener('scroll', this);
+      addEventListener('resize', this);
       this._updateItemsCount();
       this._scheduleUpdateView();
     }
@@ -82,8 +76,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @param {!Event} event
    * @private
    */
-  _handleLayoutEvent(event) {
+  handleEvent(event) {
     switch (event.type) {
+      case 'scroll':
+      case 'resize':
+        this._scheduleUpdateView();
+        break;
       case 'scrollsizechange':
         this._sizeContainer(event.detail);
         break;
@@ -97,7 +95,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         this._adjustRange(event.detail);
         break;
       default:
-        console.warn('event ' + event.type + ' not handled');
+        console.warn('event not handled', event);
     }
   }
 
