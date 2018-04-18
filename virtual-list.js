@@ -2,8 +2,8 @@ import {Repeats} from './virtual-repeater.js';
 
 export const RepeatsAndScrolls = Superclass => class extends Repeats
 (Superclass) {
-  constructor(config = {}) {
-    super(config);
+  constructor(config) {
+    super();
     this._num = 0;
     this._first = -1;
     this._last = -1;
@@ -12,50 +12,76 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     this._pendingUpdateView = null;
     this._isContainerVisible = false;
+    this._containerElement = null;
 
-    // Ensure container is a positioned element.
-    const position = getComputedStyle(this._container).position;
-    if (!position || position === 'static') {
-      this._container.style.position = 'relative';
+    if (config) {
+      Object.assign(this, config);
     }
-    // Finally, set layout.
-    if (config.layout) {
-      this.layout = config.layout;
+  }
+
+  get container() {
+    return this._container;
+  }
+  set container(container) {
+    if (container === this._container) {
+      return;
+    }
+
+    removeEventListener('scroll', this);
+    removeEventListener('resize', this);
+
+    super.container = container;
+
+    if (container) {
+      addEventListener('scroll', this);
+      addEventListener('resize', this);
+      this._scheduleUpdateView();
+    }
+
+    // Update the containerElement, copy min-width/height styles to new
+    // container.
+    let containerStyle = null;
+    if (this._containerElement) {
+      containerStyle = this._containerElement.getAttribute('style');
+      this._containerElement.removeAttribute('style');
+    }
+    // Consider document fragments as shadowRoots.
+    this._containerElement =
+        (container && container.nodeType === Node.DOCUMENT_FRAGMENT_NODE) ?
+        container.host :
+        container;
+
+    if (this._containerElement && containerStyle) {
+      this._containerElement.setAttribute('style', containerStyle);
     }
   }
 
   get layout() {
     return this._layout;
   }
-
   set layout(layout) {
     if (layout === this._layout) {
       return;
     }
-    const prevLayout = this._layout;
 
-    if (prevLayout) {
+    if (this._layout) {
       this._measureCallback = null;
-      prevLayout.removeEventListener('scrollsizechange', this);
-      prevLayout.removeEventListener('scrollerrorchange', this);
-      prevLayout.removeEventListener('itempositionchange', this);
-      prevLayout.removeEventListener('rangechange', this);
-      removeEventListener('scroll', this);
-      removeEventListener('resize', this);
+      this._layout.removeEventListener('scrollsizechange', this);
+      this._layout.removeEventListener('scrollerrorchange', this);
+      this._layout.removeEventListener('itempositionchange', this);
+      this._layout.removeEventListener('rangechange', this);
     }
 
     this._layout = layout;
 
-    if (layout) {
-      if (typeof layout.updateItemSizes === 'function') {
-        this._measureCallback = layout.updateItemSizes.bind(layout);
+    if (this._layout) {
+      if (typeof this._layout.updateItemSizes === 'function') {
+        this._measureCallback = this._layout.updateItemSizes.bind(this._layout);
       }
-      layout.addEventListener('scrollsizechange', this);
-      layout.addEventListener('scrollerrorchange', this);
-      layout.addEventListener('itempositionchange', this);
-      layout.addEventListener('rangechange', this);
-      addEventListener('scroll', this);
-      addEventListener('resize', this);
+      this._layout.addEventListener('scrollsizechange', this);
+      this._layout.addEventListener('scrollerrorchange', this);
+      this._layout.addEventListener('itempositionchange', this);
+      this._layout.addEventListener('rangechange', this);
       this._updateItemsCount();
       this._scheduleUpdateView();
     }
@@ -67,9 +93,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   requestUpdateView() {
-    if (this._layout) {
-      this._scheduleUpdateView();
-    }
+    this._scheduleUpdateView();
   }
 
   /**
@@ -119,7 +143,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _scheduleUpdateView() {
-    if (!this._pendingUpdateView) {
+    if (!this._pendingUpdateView && this._container && this._layout) {
       this._pendingUpdateView =
           Promise.resolve().then(() => this._updateView());
     }
@@ -130,13 +154,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   _updateView() {
     this._pendingUpdateView = null;
 
-    // Containers can be shadowRoots, so get the host.
-    const listBounds =
-        (this._container.host || this._container).getBoundingClientRect();
+    const listBounds = this._containerElement.getBoundingClientRect();
 
     // Avoid updating viewport if container is not visible.
-    this._isContainerVisible = listBounds.width || listBounds.height ||
-        listBounds.top || listBounds.left;
+    this._isContainerVisible = Boolean(
+        listBounds.width || listBounds.height || listBounds.top ||
+        listBounds.left);
     if (!this._isContainerVisible) {
       return;
     }
@@ -156,11 +179,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _sizeContainer(size) {
-    // Containers can be shadowRoots, so get the host.
-    const container = this._container.host || this._container;
     Object.keys(size).forEach(key => {
       const prop = (key === 'width') ? 'minWidth' : 'minHeight';
-      container.style[prop] = size[key] + 'px';
+      this._containerElement.style[prop] = size[key] + 'px';
     });
   }
   /**
@@ -202,7 +223,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _shouldRender() {
-    return Boolean(this._isContainerVisible && super._shouldRender());
+    return Boolean(
+        this._isContainerVisible && this._layout && super._shouldRender());
   }
   /**
    * @private

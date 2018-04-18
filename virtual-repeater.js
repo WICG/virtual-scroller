@@ -1,5 +1,5 @@
 export const Repeats = Superclass => class extends Superclass {
-  constructor(config = {}) {
+  constructor(config) {
     super();
 
     this._newChildFn = null;
@@ -28,6 +28,7 @@ export const Repeats = Superclass => class extends Superclass {
     this._prevLast = 0;
 
     this._needsReset = false;
+    this._needsRemeasure = false;
     this._pendingRender = null;
 
     // Contains child nodes in the rendered order.
@@ -41,37 +42,38 @@ export const Repeats = Superclass => class extends Superclass {
     // Used to keep track of measures by index.
     this._indexToMeasure = {};
 
-    if (config.container) {
-      this._container = config.container;
-    } else if (!this._container) {
-      throw Error('Must set container');
-    }
-
-    // Set only if defined.
-    if (config.hasOwnProperty('newChild')) {
-      this.newChild = config.newChild;
-    }
-    if (config.hasOwnProperty('updateChild')) {
-      this.updateChild = config.updateChild;
-    }
-    if (config.hasOwnProperty('recycleChild')) {
-      this.recycleChild = config.recycleChild;
-    }
-    if (config.hasOwnProperty('itemKey')) {
-      this.itemKey = config.itemKey;
-    }
-    if (config.hasOwnProperty('items')) {
-      this.items = config.items;
-    }
-    if (config.hasOwnProperty('first')) {
-      this.first = config.first;
-    }
-    if (config.hasOwnProperty('num')) {
-      this.num = config.num;
+    if (config) {
+      Object.assign(this, config);
     }
   }
 
   // API
+
+  get container() {
+    return this._container;
+  }
+  set container(container) {
+    if (container === this._container) {
+      return;
+    }
+    if (this._container) {
+      // Remove children from old container.
+      this._ordered.forEach((child) => this._removeChild(child));
+    }
+
+    this._container = container;
+
+    if (container) {
+      // Insert children in new container.
+      this._ordered.forEach((child) => this._insertBefore(child, null));
+    } else {
+      this._ordered.length = 0;
+      this._active.clear();
+      this._prevActive.clear();
+      this._keyToChild.clear();
+    }
+    this.requestReset();
+  }
 
   get newChild() {
     return this._newChildFn;
@@ -181,7 +183,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this._items);
+    return Boolean(this.items && this.container && this.newChild);
   }
 
   /**
@@ -496,7 +498,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _removeChild(child) {
-    this._container.removeChild(child);
+    child.parentNode.removeChild(child);
   }
 }
 
