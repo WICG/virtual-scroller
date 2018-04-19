@@ -1,27 +1,90 @@
 <html>
+
 <head>
   <title>Virtual List</title>
 </head>
+
 <body>
-  <h2>Virtual List examples</h2>
-  <ul>
-    <li><a href="basic-repeat/">basic repeat</a></li>
-    <li><a href="contacts/">contacts</a></li>
-    <li><a href="photos/">photos</a></li>
-    <li><a href="html-spec/">html-spec</a></li>
-  </ul>
-  <p>with lit-html:</p>
-  <ul>
-    <li><a href="basic-repeat/lit-html/">basic repeat</a></li>
-    <li><a href="contacts/lit-html/">contacts</a></li>
-    <li><a href="photos/lit-html/">photos</a></li>
-  </ul>
-  <p>with preact:</p>
-  <ul>
-    <li><a href="basic-repeat/preact/">basic repeat</a></li>
-    <li><a href="contacts/preact/">contacts</a></li>
-    <li><a href="photos/preact/">photos</a></li>
-  </ul>
+
+  <style>
+    #lists {
+      display: flex;
+      flex-direction: row;
+    }
+
+    #lists.horizontal {
+      flex-direction: column;
+      height: 300px;
+    }
+
+    virtual-list {
+      display: inline-block;
+      outline: 1px solid;
+      width: 100%;
+      height: 100%;
+    }
+
+    section {
+      padding: 10px;
+      background-color: yellow;
+      border: 1px solid orange;
+    }
+
+    #controls {
+      top: 0;
+      position: fixed;
+      padding: 10px;
+    }
+  </style>
+
+  <div id="lists">
+    <virtual-list id="list"></virtual-list>
+    <virtual-list id="recycler"></virtual-list>
+  </div>
+
+  <div id="controls">
+    <button onclick="toggleLayout()">toggle layout</button>
+  </div>
+
+  <script type="module" src="../virtual-list-element.js"></script>
+  <script>
+    const list = document.querySelector('#list');
+    list.newChild = (item, index) => {
+      const child = document.createElement('section');
+      child.textContent = index + ' - ' + item.name;
+      return child;
+    };
+
+    const pool = [];
+    const recycler = document.querySelector('#recycler');
+    Object.assign(recycler, {
+      newChild: (item, index) => {
+        return pool.pop() || document.createElement('section');
+      },
+      updateChild: (child, item, index) => {
+        child.textContent = index + ' - ' + item.name;
+      },
+      recycleChild: (child, item, index) => {
+        pool.push(child);
+      }
+    });
+
+    const items = [];
+    for (let i = 0; i < 2000; i++) {
+      items.push({
+        name: `item${i}`
+      });
+    }
+    // Shared items!
+    list.items = recycler.items = items;
+
+    window.toggleLayout = function() {
+      const layout = list.layout === 'vertical' ? 'horizontal' : 'vertical';
+      list.layout = recycler.layout = layout;
+      lists.classList.toggle('horizontal', layout === 'horizontal');
+    };
+  </script>
+
 </body>
 
 </html>

@@ -92,6 +92,8 @@ export default class Layout extends EventTarget {
       this._secondarySizeDim = (dir === 'horizontal') ? 'height' : 'width';
       this._positionDim = (dir === 'horizontal') ? 'left' : 'top';
       this._secondaryPositionDim = (dir === 'horizontal') ? 'top' : 'left';
+      // Force emitting scrollSize by changing its value.
+      this._scrollSize = 1;
       this._scheduleReflow();
     }
   }

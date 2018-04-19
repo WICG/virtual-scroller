@@ -82,17 +82,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._layout.addEventListener('scrollerrorchange', this);
       this._layout.addEventListener('itempositionchange', this);
       this._layout.addEventListener('rangechange', this);
-      this._updateItemsCount();
       this._scheduleUpdateView();
     }
   }
 
   requestReset() {
     super.requestReset();
-    this._updateItemsCount();
-  }
-
-  requestUpdateView() {
     this._scheduleUpdateView();
   }
 
@@ -130,15 +125,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   get _kids() {
     return this._ordered;
   }
-
-  /**
-   * @private
-   */
-  _updateItemsCount() {
-    if (this._layout) {
-      this._layout.totalItems = this._items ? this._items.length : 0;
-    }
-  }
   /**
    * @private
    */
@@ -154,8 +140,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   _updateView() {
     this._pendingUpdateView = null;
 
-    const listBounds = this._containerElement.getBoundingClientRect();
+    this._layout.totalItems = this._items ? this._items.length : 0;
 
+    const listBounds = this._containerElement.getBoundingClientRect();
     // Avoid updating viewport if container is not visible.
     this._isContainerVisible = Boolean(
         listBounds.width || listBounds.height || listBounds.top ||
@@ -179,10 +166,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _sizeContainer(size) {
-    Object.keys(size).forEach(key => {
-      const prop = (key === 'width') ? 'minWidth' : 'minHeight';
-      this._containerElement.style[prop] = size[key] + 'px';
-    });
+    const style = this._containerElement.style;
+    style.minWidth = size.width ? size.width + 'px' : null;
+    style.minHeight = size.height ? size.height + 'px' : null;
   }
   /**
    * @private
@@ -190,8 +176,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   async _positionChildren(pos) {
     await Promise.resolve();
     const kids = this._kids;
-    const maxWidth = this._layout.direction === 'horizontal' ? null : '100%';
-    const maxHeight = this._layout.direction === 'vertical' ? null : '100%';
     Object.keys(pos).forEach(key => {
       const idx = key - this._first;
       const child = kids[idx];
@@ -201,8 +185,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         // top ${top}`);
         child.style.position = 'absolute';
         child.style.transform = `translate3d(${left}px, ${top}px, 0)`;
-        child.style.maxWidth = maxWidth;
-        child.style.maxHeight = maxHeight;
       }
     });
   }

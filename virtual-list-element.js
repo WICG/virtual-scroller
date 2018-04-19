@@ -33,6 +33,11 @@ export class VirtualListElement extends HTMLElement {
     position: relative;
     contain: strict;
   }
+  ::slotted(*) {
+    box-sizing: border-box;
+    max-width: 100%;
+    max-height: 100%;
+  }
 </style>
 <slot></slot>`;
     }
@@ -80,6 +85,9 @@ export class VirtualListElement extends HTMLElement {
     if (this[_layoutType] !== layout) {
       this[_layoutType] = layout;
       this[_render]();
+      if (this[_list]) {
+        this[_list].requestReset();
+      }
     }
   }
 
@@ -87,10 +95,8 @@ export class VirtualListElement extends HTMLElement {
     return this[_items];
   }
   set items(items) {
-    if (this[_items] !== items) {
-      this[_items] = items;
-      this[_render]();
-    }
+    this[_items] = items;
+    this[_render]();
   }
 
   requestReset() {

@@ -47,7 +47,7 @@ window.vlist = new VirtualList(config);
 // container.style.display = 'none';
 // setTimeout(() => {
 //   container.style.display = '';
-//   vlist.requestUpdateView();
+//   vlist.requestReset();
 // }, 1000);
 
 // setInterval(() => {
