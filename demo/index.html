@@ -2,19 +2,31 @@
 
 <head>
   <title>Virtual List</title>
-</head>
-
-<body>
-
   <style>
-    #lists {
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      z-index: 1;
+    }
+    main {
+      padding-top: 50px;
       display: flex;
       flex-direction: row;
     }
 
-    #lists.horizontal {
+    main.horizontal {
       flex-direction: column;
       height: 300px;
+    }
+
+    main.grid section {
+      width: 100px;
+      height: 100px;
     }
 
     virtual-list {
@@ -29,25 +41,35 @@
       background-color: yellow;
       border: 1px solid orange;
     }
-
-    #controls {
-      top: 0;
-      position: fixed;
-      padding: 10px;
-    }
   </style>
+</head>
 
-  <div id="lists">
+<body>
+
+  <nav>
+    <label>
+      items:
+      <input type="number" value=2000 min=0 max=1000000 onchange="updateItems(this.valueAsNumber)">
+    </label>
+    <label>
+      layout: 
+      <select onchange="updateLayout(this.value)">
+        <option value="vertical">vertical</option>
+        <option value="horizontal">horizontal</option>
+        <option value="vertical-grid">vertical-grid</option>
+        <option value="horizontal-grid">horizontal-grid</option>
+      </select>
+    </label>
+  </nav>
+  <main>
     <virtual-list id="list"></virtual-list>
     <virtual-list id="recycler"></virtual-list>
-  </div>
+  </main>
 
-  <div id="controls">
-    <button onclick="toggleLayout()">toggle layout</button>
-  </div>
-
-  <script type="module" src="../virtual-list-element.js"></script>
-  <script>
+  <script type="module">
+    import '../virtual-list-element.js';
+    
+    const main = document.querySelector('main');
     const list = document.querySelector('#list');
     list.newChild = (item, index) => {
       const child = document.createElement('section');
@@ -69,19 +91,25 @@
       }
     });
 
-    const items = [];
-    for (let i = 0; i < 2000; i++) {
-      items.push({
-        name: `item${i}`
-      });
-    }
-    // Shared items!
-    list.items = recycler.items = items;
+    updateItems(2000);
+    window.updateItems = updateItems;
+    window.updateLayout = updateLayout;
 
-    window.toggleLayout = function() {
-      const layout = list.layout === 'vertical' ? 'horizontal' : 'vertical';
+    function updateItems(count) {
+      const items = [];
+      for (let i = 0; i < count; i++) {
+        items.push({
+          name: `item${i}`
+        });
+      }
+      // Shared items!
+      list.items = recycler.items = items;
+    };
+
+    function updateLayout(layout) {
       list.layout = recycler.layout = layout;
-      lists.classList.toggle('horizontal', layout === 'horizontal');
+      main.classList.toggle('horizontal', layout.startsWith('horizontal'));
+      main.classList.toggle('grid', layout.endsWith('grid'));
     };
   </script>
 

@@ -1,9 +1,7 @@
-import Layout from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
 
 /** Properties */
 const _items = Symbol();
-const _layout = Symbol();
 const _list = Symbol();
 const _newChild = Symbol();
 const _updateChild = Symbol();
@@ -16,7 +14,6 @@ export class VirtualListElement extends HTMLElement {
   constructor() {
     super();
     this[_items] = null;
-    this[_layout] = null;
     this[_list] = null;
     this[_newChild] = null;
     this[_updateChild] = null;
@@ -82,6 +79,7 @@ export class VirtualListElement extends HTMLElement {
     return this[_layoutType];
   }
   set layout(layout) {
+    layout = layout || 'vertical';
     if (this[_layoutType] !== layout) {
       this[_layoutType] = layout;
       this[_render]();
@@ -117,10 +115,6 @@ export class VirtualListElement extends HTMLElement {
       }
       this[_list] = new VirtualList({container: this});
     }
-    if (!this[_layout]) {
-      this[_layout] = new Layout({itemSize: {height: 10000}});
-    }
-    this[_layout].direction = this[_layoutType];
 
     const {newChild, updateChild, recycleChild, items} = this;
     Object.assign(this[_list], {
@@ -128,7 +122,24 @@ export class VirtualListElement extends HTMLElement {
       updateChild,
       recycleChild,
       items,
-      layout: this[_layout],
+    });
+
+    const direction =
+        this.layout.startsWith('horizontal') ? 'horizontal' : 'vertical';
+    const url = this.layout.endsWith('-grid') ? './layouts/layout-1d-grid.js' :
+                                                './layouts/layout-1d.js';
+    const importPromise = import(url);
+    importPromise.then(module => {
+      const Layout = module.default;
+      const layout = this[_list].layout;
+      if (layout instanceof Layout) {
+        layout.direction = direction;
+      } else {
+        this[_list].layout = new Layout({
+          direction,
+          itemSize: {width: 10000, height: 10000},
+        });
+      }
     });
   }
 }
