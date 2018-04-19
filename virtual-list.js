@@ -35,7 +35,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (container) {
       addEventListener('scroll', this);
       addEventListener('resize', this);
-      this._scheduleUpdateView();
     }
 
     // Update the containerElement, copy min-width/height styles to new
@@ -82,7 +81,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._layout.addEventListener('scrollerrorchange', this);
       this._layout.addEventListener('itempositionchange', this);
       this._layout.addEventListener('rangechange', this);
-      this._scheduleUpdateView();
+      this.requestReset();
     }
   }
 
