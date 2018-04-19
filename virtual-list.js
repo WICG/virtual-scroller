@@ -155,9 +155,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     const scrollerHeight = window.innerHeight;
     const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
     const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
-    const xMax = Math.max(0, scrollerWidth);
-    const yMax = Math.max(0, scrollerHeight);
+    const xMax = this._layout.direction === 'vertical' ?
+        Math.max(0, Math.min(scrollerWidth, listBounds.right)) :
+        scrollerWidth;
+    const yMax = this._layout.direction === 'vertical' ?
+        scrollerHeight :
+        Math.max(0, Math.min(scrollerHeight, listBounds.bottom));
     this._layout.viewportSize = {width: xMax - xMin, height: yMax - yMin};
+
     const left = Math.max(0, -listBounds.x);
     const top = Math.max(0, -listBounds.y);
     this._layout.scrollTo({top, left});
