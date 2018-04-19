@@ -131,15 +131,11 @@ export class VirtualListElement extends HTMLElement {
     const importPromise = import(url);
     importPromise.then(module => {
       const Layout = module.default;
-      const layout = this[_list].layout;
-      if (layout instanceof Layout) {
-        layout.direction = direction;
-      } else {
-        this[_list].layout = new Layout({
-          direction,
-          itemSize: {width: 10000, height: 10000},
-        });
+      let layout = this[_list].layout;
+      if (false === layout instanceof Layout) {
+        layout = this[_list].layout = new Layout();
       }
+      layout.direction = direction;
     });
   }
 }
