@@ -29,12 +29,12 @@
 ## Events
 
 - _rangechange_
-  - `bubbles: false, cancelable: false, composed: false`
+  - type: `RangeChangeEvent, bubbles: false, cancelable: false, composed: false`
   - Fired when the list has rendered to a new range of items.
-  - _event.detail.first_
+  - _event.first_
     - type: `number`
     - the index of the first item currently rendered.
-  - _event.detail.last_
+  - _event.last_
     - type: `number`
     - the index of the last item currently rendered.
 
@@ -62,7 +62,7 @@
 
 You can recycle DOM by using the `recycleChild` function to collect DOM, and reuse it in `newChild`.
 
-If you decide to keep the recycled DOM attached in the main document, perform DOM updates in `updateChild`.
+Ensure to perform DOM updates in `updateChild`, as recycled children will still be configured with the old `item`.
 
 ```js
 const recycled = [];
@@ -87,8 +87,13 @@ Object.assign(list, {
 list.items = list.items.concat([{name: 'new item'}]);
 ```
 
-If you want to keep the same `items` array instance, use `requestReset()` to rerender the displayed items.
+If you want to keep the same `items` array instance, ensure to update the DOM via `updateChild` and to use `requestReset()` to rerender the displayed items.
+
 ```js
+list.updateChild = (child, item, index) => {
+  child.textContent = index + ' - ' + item.name;
+};
+
 list.items.push({name: 'new item'});
 list.items[0].name = 'item 0 changed!';
 
@@ -100,11 +105,10 @@ list.requestReset();
 Listen for `rangechange` event to get notified when the displayed items range changes.
 ```js
 list.addEventListener('rangechange', (event) => {
-  const range = event.detail;
-  if (range.first === 0) {
+  if (event.first === 0) {
     console.log('rendered first item.');
   }
-  if (range.last === list.items.length - 1) {
+  if (event.last === list.items.length - 1) {
     console.log('rendered last item.');
   }
 });

@@ -13,7 +13,7 @@ class HTMLSpecViewer extends VirtualListElement {
       this.items = [];
       this.addNextChunk();
       this.addEventListener(
-          'rangechange', (event) => this.onRangechange(event.detail));
+          'rangechange', (event) => this.onRangechange(event));
     }
   }
 

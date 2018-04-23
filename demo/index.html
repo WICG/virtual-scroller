@@ -13,6 +13,7 @@
       padding: 10px;
       z-index: 1;
     }
+
     main {
       padding-top: 50px;
       display: flex;
@@ -41,6 +42,11 @@
       background-color: yellow;
       border: 1px solid orange;
     }
+
+    #recycler section {
+      background-color: limegreen;
+      border-color: green;
+    }
   </style>
 </head>
 
@@ -49,12 +55,12 @@
   <nav>
     <label>
       items:
-      <input type="number" value=2000 min=0 max=1000000 onchange="updateItems(this.valueAsNumber)">
+      <input id="count" type="number" value=50 min=0 max=1000000 onchange="updateItems(this.valueAsNumber)">
     </label>
     <label>
-      layout: 
-      <select onchange="updateLayout(this.value)">
-        <option value="vertical">vertical</option>
+      layout:
+      <select id="layout" onchange="updateLayout(this.value)">
+        <option value="vertical" selected>vertical</option>
         <option value="horizontal">horizontal</option>
         <option value="vertical-grid">vertical-grid</option>
         <option value="horizontal-grid">horizontal-grid</option>
@@ -68,17 +74,20 @@
 
   <script type="module">
     import '../virtual-list-element.js';
-    
+
     const main = document.querySelector('main');
     const list = document.querySelector('#list');
+    const recycler = document.querySelector('#recycler');
+
+
     list.newChild = (item, index) => {
-      const child = document.createElement('section');
+      return document.createElement('section');
+    };
+    list.updateChild = (child, item, index) => {
       child.textContent = index + ' - ' + item.name;
-      return child;
     };
 
     const pool = [];
-    const recycler = document.querySelector('#recycler');
     Object.assign(recycler, {
       newChild: (item, index) => {
         return pool.pop() || document.createElement('section');
@@ -91,7 +100,9 @@
       }
     });
 
-    updateItems(2000);
+    updateLayout(layout.value);
+    updateItems(count.valueAsNumber);
+
     window.updateItems = updateItems;
     window.updateLayout = updateLayout;
 
@@ -107,9 +118,9 @@
     };
 
     function updateLayout(layout) {
-      list.layout = recycler.layout = layout;
       main.classList.toggle('horizontal', layout.startsWith('horizontal'));
       main.classList.toggle('grid', layout.endsWith('grid'));
+      list.layout = recycler.layout = layout;
     };
   </script>
 

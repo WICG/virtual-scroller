@@ -86,14 +86,14 @@ export default class Layout extends EventTarget {
   }
 
   set direction(dir) {
+    // Force it to be either horizontal or vertical.
+    dir = (dir === 'horizontal') ? dir : 'vertical';
     if (dir !== this._direction) {
-      this._direction = (dir === 'horizontal') ? dir : 'vertical';
+      this._direction = dir;
       this._sizeDim = (dir === 'horizontal') ? 'width' : 'height';
       this._secondarySizeDim = (dir === 'horizontal') ? 'height' : 'width';
       this._positionDim = (dir === 'horizontal') ? 'left' : 'top';
       this._secondaryPositionDim = (dir === 'horizontal') ? 'top' : 'left';
-      // Force emitting scrollSize by changing its value.
-      this._scrollSize = 1;
       this._scheduleReflow();
     }
   }

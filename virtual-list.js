@@ -1,5 +1,19 @@
 import {Repeats} from './virtual-repeater.js';
 
+export class RangeChangeEvent extends Event {
+  constructor(type, init) {
+    super(type, init);
+    this._first = Math.floor(init.first || 0);
+    this._last = Math.floor(init.last || 0);
+  }
+  get first() {
+    return this._first;
+  }
+  get last() {
+    return this._last;
+  }
+}
+
 export const RepeatsAndScrolls = Superclass => class extends Repeats
 (Superclass) {
   constructor(config) {
@@ -35,6 +49,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (container) {
       addEventListener('scroll', this);
       addEventListener('resize', this);
+      this._scheduleUpdateView();
     }
 
     // Update the containerElement, copy min-width/height styles to new
@@ -69,6 +84,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._layout.removeEventListener('scrollerrorchange', this);
       this._layout.removeEventListener('itempositionchange', this);
       this._layout.removeEventListener('rangechange', this);
+      this._needsRemeasure = true;
     }
 
     this._layout = layout;
@@ -81,7 +97,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._layout.addEventListener('scrollerrorchange', this);
       this._layout.addEventListener('itempositionchange', this);
       this._layout.addEventListener('rangechange', this);
-      this.requestReset();
+      this._scheduleUpdateView();
     }
   }
 
@@ -160,7 +176,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     const yMax = this._layout.direction === 'vertical' ?
         scrollerHeight :
         Math.max(0, Math.min(scrollerHeight, listBounds.bottom));
-    this._layout.viewportSize = {width: xMax - xMin, height: yMax - yMin};
+    const width = xMax - xMin;
+    const height = yMax - yMin;
+    this._layout.viewportSize = {width, height};
 
     const left = Math.max(0, -listBounds.x);
     const top = Math.max(0, -listBounds.y);
@@ -225,7 +243,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     const {first, num} = this;
     const last = first + num;
     this._container.dispatchEvent(
-        new CustomEvent('rangechange', {detail: {first, last}}));
+        new RangeChangeEvent('rangechange', {first, last}));
   }
 };
 
