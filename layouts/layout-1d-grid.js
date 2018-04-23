@@ -1,6 +1,10 @@
 import Layout1dBase from './layout-1d-base.js';
 
 export default class Layout extends Layout1dBase {
+  constructor(config) {
+    super(config);
+    this._rolumns = 1;
+  }
   _viewDim2Changed() {
     this._defineGrid();
   }
@@ -48,6 +52,6 @@ export default class Layout extends Layout1dBase {
 
   _updateScrollSize() {
     this._scrollSize =
-        (Math.ceil(this._totalItems / this._rolumns) * this._delta);
+        Math.max(1, Math.ceil(this._totalItems / this._rolumns) * this._delta);
   }
 }
