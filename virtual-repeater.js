@@ -70,7 +70,6 @@ export const Repeats = Superclass => class extends Superclass {
       this._ordered.length = 0;
       this._active.clear();
       this._prevActive.clear();
-      this._keyToChild.clear();
     }
     this.requestReset();
   }
@@ -81,6 +80,7 @@ export const Repeats = Superclass => class extends Superclass {
   set newChild(fn) {
     if (fn !== this._newChildFn) {
       this._newChildFn = fn;
+      this._keyToChild.clear();
       this.requestReset();
     }
   }
