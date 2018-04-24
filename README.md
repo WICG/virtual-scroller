@@ -18,7 +18,7 @@
   - the data model.
 - _layout_ 
   - type: `string`
-  - layout type, can be set via attribute or property to "vertical" (default) or "horizontal".
+  - layout type, can be set via attribute or property to "vertical" (default), "horizontal", "vertical-grid" or "horizontal-grid".
 
 
 ## Methods
