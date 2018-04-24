@@ -67,10 +67,6 @@ export const PreactMixin = Superclass => class extends Superclass {
     super._insertBefore(child.instance.base, referenceNode);
   }
 
-  _childIsAttached(child) {
-    return super._childIsAttached(child.instance.base);
-  }
-
   _hideChild(child) {
     super._hideChild(child.instance.base);
   }

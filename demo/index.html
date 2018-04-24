@@ -1,27 +1,153 @@
 <html>
+
 <head>
   <title>Virtual List</title>
+  <style>
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      z-index: 1;
+    }
+
+    main {
+      padding-top: 50px;
+      font-size: 0;
+    }
+
+    main>* {
+      font-size: 1rem;
+    }
+
+    virtual-list {
+      float: left;
+      outline: 1px solid;
+      width: 50%;
+      height: auto;
+    }
+
+    .horizontal virtual-list {
+      clear: both;
+      width: auto;
+      height: 40vh;
+    }
+
+    section {
+      padding: 10px;
+      background-color: yellow;
+      border: 1px solid orange;
+    }
+
+    .horizontal section {
+      width: 100px;
+      height: 50px;
+    }
+
+    .grid section {
+      width: 120px;
+      height: 80px;
+    }
+
+    .grid.horizontal section {
+      width: 80px;
+      height: 120px;
+    }
+
+    #recycler section {
+      background-color: limegreen;
+      border-color: green;
+    }
+  </style>
 </head>
+
 <body>
-  <h2>Virtual List examples</h2>
-  <ul>
-    <li><a href="basic-repeat/">basic repeat</a></li>
-    <li><a href="contacts/">contacts</a></li>
-    <li><a href="photos/">photos</a></li>
-    <li><a href="html-spec/">html-spec</a></li>
-  </ul>
-  <p>with lit-html:</p>
-  <ul>
-    <li><a href="basic-repeat/lit-html/">basic repeat</a></li>
-    <li><a href="contacts/lit-html/">contacts</a></li>
-    <li><a href="photos/lit-html/">photos</a></li>
-  </ul>
-  <p>with preact:</p>
-  <ul>
-    <li><a href="basic-repeat/preact/">basic repeat</a></li>
-    <li><a href="contacts/preact/">contacts</a></li>
-    <li><a href="photos/preact/">photos</a></li>
-  </ul>
+
+  <nav>
+    <label>
+      items:
+      <input id="count" type="number" value=50 min=0 max=300000 onchange="updateItems(this)">
+    </label>
+    <label>
+      layout:
+      <select id="layout" onchange="updateLayout(this)">
+        <option value="vertical">vertical</option>
+        <option value="horizontal">horizontal</option>
+        <option value="vertical-grid">vertical-grid</option>
+        <option value="horizontal-grid">horizontal-grid</option>
+      </select>
+    </label>
+  </nav>
+  <main>
+    <virtual-list id="list"></virtual-list>
+    <virtual-list id="recycler"></virtual-list>
+  </main>
+
+  <script type="module">
+    import '../virtual-list-element.js';
+
+    const main = document.querySelector('main');
+    const list = document.querySelector('#list');
+    const recycler = document.querySelector('#recycler');
+
+
+    list.newChild = (item, index) => {
+      return document.createElement('section');
+    };
+    list.updateChild = (child, item, index) => {
+      child.textContent = index + ' - ' + item.name;
+    };
+
+    const pool = [];
+    Object.assign(recycler, {
+      newChild: (item, index) => {
+        return pool.pop() || document.createElement('section');
+      },
+      updateChild: (child, item, index) => {
+        child.textContent = index + ' - ' + item.name;
+      },
+      recycleChild: (child, item, index) => {
+        pool.push(child);
+      }
+    });
+
+    updateItems(document.querySelector('#count'));
+    updateLayout(document.querySelector('#layout'));
+
+    window.updateItems = updateItems;
+    window.updateLayout = updateLayout;
+
+    function updateItems(countEl) {
+      let count = countEl.valueAsNumber;
+      if (Number.isNaN(count)) {
+        // Default.
+        count = 50;
+      } else {
+        // Force min/max.
+        count = Math.max(Number.parseInt(countEl.min), Math.min(count, Number.parseInt(countEl.max)));
+      }
+      countEl.value = count;
+      const items = [];
+      for (let i = 0; i < count; i++) {
+        items.push({
+          name: `item${i}`
+        });
+      }
+      // Shared items!
+      list.items = recycler.items = items;
+    };
+
+    function updateLayout(layoutEl) {
+      const layout = layoutEl.value;
+      main.classList.toggle('horizontal', layout.startsWith('horizontal'));
+      main.classList.toggle('grid', layout.endsWith('grid'));
+      list.layout = recycler.layout = layout;
+    };
+  </script>
+
 </body>
 
 </html>

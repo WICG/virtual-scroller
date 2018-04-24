@@ -1,28 +1,19 @@
 export const Repeats = Superclass => class extends Superclass {
-  constructor(config = {}) {
+  constructor(config) {
     super();
-    const {
-      container,
-      items,
-      first,
-      num,
-      itemKey,
-      newChild,
-      updateChild,
-      recycleChild,
-    } = config;
 
-    this._container = container;
-    this._items = items;
-    this._itemKeyFn = itemKey;
-    this._newChildFn = newChild;
-    this._updateChildFn = updateChild;
-    this._recycleChildFn = recycleChild;
+    this._newChildFn = null;
+    this._updateChildFn = null;
+    this._recycleChildFn = null;
+    this._itemKeyFn = null;
+
     this._measureCallback = null;
+
+    this._items = null;
     // Consider renaming this. firstVisibleIndex?
-    this._first = first || 0;
+    this._first = 0;
     // Consider renaming this. count? visibleElements?
-    this._num = num || Infinity;
+    this._num = Infinity;
 
     this.__incremental = false;
 
@@ -37,6 +28,7 @@ export const Repeats = Superclass => class extends Superclass {
     this._prevLast = 0;
 
     this._needsReset = false;
+    this._needsRemeasure = false;
     this._pendingRender = null;
 
     // Contains child nodes in the rendered order.
@@ -50,7 +42,77 @@ export const Repeats = Superclass => class extends Superclass {
     // Used to keep track of measures by index.
     this._indexToMeasure = {};
 
-    this._scheduleRender();
+    if (config) {
+      Object.assign(this, config);
+    }
+  }
+
+  // API
+
+  get container() {
+    return this._container;
+  }
+  set container(container) {
+    if (container === this._container) {
+      return;
+    }
+    if (this._container) {
+      // Remove children from old container.
+      this._ordered.forEach((child) => this._removeChild(child));
+    }
+
+    this._container = container;
+
+    if (container) {
+      // Insert children in new container.
+      this._ordered.forEach((child) => this._insertBefore(child, null));
+    } else {
+      this._ordered.length = 0;
+      this._active.clear();
+      this._prevActive.clear();
+    }
+    this.requestReset();
+  }
+
+  get newChild() {
+    return this._newChildFn;
+  }
+  set newChild(fn) {
+    if (fn !== this._newChildFn) {
+      this._newChildFn = fn;
+      this._keyToChild.clear();
+      this.requestReset();
+    }
+  }
+
+  get updateChild() {
+    return this._updateChildFn;
+  }
+  set updateChild(fn) {
+    if (fn !== this._updateChildFn) {
+      this._updateChildFn = fn;
+      this.requestReset();
+    }
+  }
+
+  get recycleChild() {
+    return this._recycleChildFn;
+  }
+  set recycleChild(fn) {
+    if (fn !== this._recycleChildFn) {
+      this._recycleChildFn = fn;
+      this.requestReset();
+    }
+  }
+
+  get itemKey() {
+    return this._itemKeyFn;
+  }
+  set itemKey(fn) {
+    if (fn !== this._itemKeyFn) {
+      this._itemKeyFn = fn;
+      this.requestReset();
+    }
   }
 
   get first() {
@@ -67,8 +129,6 @@ export const Repeats = Superclass => class extends Superclass {
       }
     }
   }
-
-  // API
 
   get num() {
     return this._num;
@@ -92,8 +152,7 @@ export const Repeats = Superclass => class extends Superclass {
     if (arr !== this._items) {
       this._items = arr;
       this.first = this._first;
-      this._needsReset = true;
-      this._scheduleRender();
+      this.requestReset();
     }
   }
 
@@ -124,7 +183,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this._items && this._container);
+    return Boolean(this.items && this.container && this.newChild);
   }
 
   /**
@@ -259,7 +318,9 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, this._firstChild);
         }
       }
-      this._updateChild(child, item, idx);
+      if (this.updateChild) {
+        this.updateChild(child, item, idx);
+      }
       this._ordered.unshift(child);
     }
   }
@@ -278,7 +339,9 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, null);
         }
       }
-      this._updateChild(child, item, idx);
+      if (this.updateChild) {
+        this.updateChild(child, item, idx);
+      }
       this._ordered.push(child);
     }
   }
@@ -312,7 +375,9 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, null);
         }
       }
-      this._updateChild(child, item, idx);
+      if (this.updateChild) {
+        this.updateChild(child, item, idx);
+      }
     }
   }
 
@@ -322,12 +387,12 @@ export const Repeats = Superclass => class extends Superclass {
    */
   _assignChild(idx) {
     const item = this._items[idx];
-    const key = this._itemKeyFn ? this._itemKeyFn(item) : idx;
+    const key = this.itemKey ? this.itemKey(item) : idx;
     let child;
     if (child = this._keyToChild.get(key)) {
       this._prevActive.delete(child);
     } else {
-      child = this._newChild(item, idx);
+      child = this.newChild(item, idx);
       this._keyToChild.set(key, child);
       this._childToKey.set(child, key);
     }
@@ -351,8 +416,8 @@ export const Repeats = Superclass => class extends Superclass {
       this._childToKey.delete(child);
       this._keyToChild.delete(key);
       this._active.delete(child);
-      if (this._recycleChildFn) {
-        this._recycleChildFn(child, this._items[idx], idx);
+      if (this.recycleChild) {
+        this.recycleChild(child, this._items[idx], idx);
       } else {
         this._removeChild(child);
       }
@@ -390,19 +455,24 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _childIsAttached(child) {
-    return child.parentNode === this._container;
+    const node = this._node(child);
+    return node && node.parentNode === this._container;
   }
   /**
    * @protected
    */
   _hideChild(child) {
-    child.style.display = 'none';
+    if (child.style) {
+      child.style.display = 'none';
+    }
   }
   /**
    * @protected
    */
   _showChild(child) {
-    child.style.display = null;
+    if (child.style) {
+      child.style.display = null;
+    }
   }
 
   /**
@@ -421,33 +491,6 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   /**
-   * Create a new child instance for the give data.
-   * Override to control child creation behavior.
-   *
-   * @param {*} item
-   * @param {number} idx
-   * @protected
-   */
-  _newChild(item, idx) {
-    return this._newChildFn(item, idx);
-  }
-
-  /**
-   * Update child with data.
-   * Override to control child update behavior.
-   *
-   * @param {*} child
-   * @param {*} item
-   * @param {number} idx
-   * @protected
-   */
-  _updateChild(child, item, idx) {
-    if (this._updateChildFn) {
-      this._updateChildFn(child, item, idx);
-    }
-  }
-
-  /**
    * Remove child.
    * Override to control child removal.
    *
@@ -455,7 +498,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _removeChild(child) {
-    this._container.removeChild(child);
+    child.parentNode.removeChild(child);
   }
 }
 

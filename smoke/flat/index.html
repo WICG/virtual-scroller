@@ -19,8 +19,23 @@
       height: 50px;
       background-color: yellow;
     }
+
+    #other {
+      width: 50vw;
+    }
+
+    #other .title {
+      background-color: green;
+    }
+
+    button {
+      position: fixed;
+      z-index: 1;
+    }
   </style>
+  <button onclick="vlist.container = vlist.container === container ? other : container;">swap container</button>
   <my-container id="container"></my-container>
+  <my-container id="other"></my-container>
   <script type="module" src="script.js"></script>
 </body>
 

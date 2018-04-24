@@ -1,10 +1,23 @@
 import {Repeats} from './virtual-repeater.js';
 
+export class RangeChangeEvent extends Event {
+  constructor(type, init) {
+    super(type, init);
+    this._first = Math.floor(init.first || 0);
+    this._last = Math.floor(init.last || 0);
+  }
+  get first() {
+    return this._first;
+  }
+  get last() {
+    return this._last;
+  }
+}
+
 export const RepeatsAndScrolls = Superclass => class extends Repeats
 (Superclass) {
-  constructor(config = {}) {
-    super(config);
-    this._layout = config.layout;
+  constructor(config) {
+    super();
     this._num = 0;
     this._first = -1;
     this._last = -1;
@@ -13,47 +26,116 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     this._pendingUpdateView = null;
     this._isContainerVisible = false;
+    this._containerElement = null;
 
-    // Ensure container is a positioned element.
-    const position = getComputedStyle(this._container).position;
-    if (!position || position === 'static') {
-      this._container.style.position = 'relative';
+    if (config) {
+      Object.assign(this, config);
     }
-    if (typeof this._layout.updateItemSizes === 'function') {
-      this._measureCallback = m => this._layout.updateItemSizes(m);
-    }
-    this._layout.addEventListener(
-        'scrollsizechange', (event) => this._sizeContainer(event.detail));
-    this._layout.addEventListener(
-        'scrollerrorchange', (event) => this._correctScrollError(event.detail));
-    this._layout.addEventListener(
-        'itempositionchange', (event) => this._positionChildren(event.detail));
-    this._layout.addEventListener(
-        'rangechange', (event) => this._adjustRange(event.detail));
-
-    // TODO: Listen on actual container
-    addEventListener('scroll', () => this._scheduleUpdateView());
-    addEventListener('resize', () => this._scheduleUpdateView());
-    this._updateItemsCount();
-    this._scheduleUpdateView();
   }
 
-  get items() {
-    return super.items;
+  get container() {
+    return this._container;
+  }
+  set container(container) {
+    if (container === this._container) {
+      return;
+    }
+
+    removeEventListener('scroll', this);
+    removeEventListener('resize', this);
+
+    super.container = container;
+
+    if (container) {
+      addEventListener('scroll', this);
+      addEventListener('resize', this);
+      this._scheduleUpdateView();
+    }
+
+    // Update the containerElement, copy min-width/height styles to new
+    // container.
+    let containerStyle = null;
+    if (this._containerElement) {
+      containerStyle = this._containerElement.getAttribute('style');
+      this._containerElement.removeAttribute('style');
+    }
+    // Consider document fragments as shadowRoots.
+    this._containerElement =
+        (container && container.nodeType === Node.DOCUMENT_FRAGMENT_NODE) ?
+        container.host :
+        container;
+
+    if (this._containerElement && containerStyle) {
+      this._containerElement.setAttribute('style', containerStyle);
+    }
   }
 
-  set items(arr) {
-    super.items = arr;
-    this._updateItemsCount();
+  get layout() {
+    return this._layout;
+  }
+  set layout(layout) {
+    if (layout === this._layout) {
+      return;
+    }
+
+    if (this._layout) {
+      this._measureCallback = null;
+      this._layout.removeEventListener('scrollsizechange', this);
+      this._layout.removeEventListener('scrollerrorchange', this);
+      this._layout.removeEventListener('itempositionchange', this);
+      this._layout.removeEventListener('rangechange', this);
+      // Remove min-width/height from containerElement so
+      // layout can get correct viewport size.
+      if (this._containerElement) {
+        this._containerElement.removeAttribute('style');
+        this.requestRemeasure();
+      }
+    }
+
+    this._layout = layout;
+
+    if (this._layout) {
+      if (typeof this._layout.updateItemSizes === 'function') {
+        this._measureCallback = this._layout.updateItemSizes.bind(this._layout);
+      }
+      this._layout.addEventListener('scrollsizechange', this);
+      this._layout.addEventListener('scrollerrorchange', this);
+      this._layout.addEventListener('itempositionchange', this);
+      this._layout.addEventListener('rangechange', this);
+      this._scheduleUpdateView();
+    }
   }
 
   requestReset() {
     super.requestReset();
-    this._updateItemsCount();
+    this._scheduleUpdateView();
   }
 
-  requestUpdateView() {
-    this._scheduleUpdateView();
+  /**
+   * @param {!Event} event
+   * @private
+   */
+  handleEvent(event) {
+    switch (event.type) {
+      case 'scroll':
+      case 'resize':
+        this._scheduleUpdateView();
+        break;
+      case 'scrollsizechange':
+        this._sizeContainer(event.detail);
+        break;
+      case 'scrollerrorchange':
+        this._correctScrollError(event.detail);
+        break;
+      case 'itempositionchange':
+        this._positionChildren(event.detail);
+        break;
+      case 'rangechange':
+        this._adjustRange(event.detail);
+        break;
+      default:
+        console.warn('event not handled', event);
+    }
   }
 
   // Rename _ordered to _kids?
@@ -63,23 +145,13 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   get _kids() {
     return this._ordered;
   }
-
-  /**
-   * @private
-   */
-  _updateItemsCount() {
-    if (this._layout) {
-      this._layout.totalItems = this._items ? this._items.length : 0;
-    }
-  }
   /**
    * @private
    */
   _scheduleUpdateView() {
-    if (!this._pendingUpdateView) {
+    if (!this._pendingUpdateView && this._container && this._layout) {
       this._pendingUpdateView =
           Promise.resolve().then(() => this._updateView());
-      // window.requestAnimationFrame(() => this._updateView());
     }
   }
   /**
@@ -88,13 +160,13 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   _updateView() {
     this._pendingUpdateView = null;
 
-    // Containers can be shadowRoots, so get the host.
-    const listBounds =
-        (this._container.host || this._container).getBoundingClientRect();
+    this._layout.totalItems = this._items ? this._items.length : 0;
 
+    const listBounds = this._containerElement.getBoundingClientRect();
     // Avoid updating viewport if container is not visible.
-    this._isContainerVisible = listBounds.width || listBounds.height ||
-        listBounds.top || listBounds.left;
+    this._isContainerVisible = Boolean(
+        listBounds.width || listBounds.height || listBounds.top ||
+        listBounds.left);
     if (!this._isContainerVisible) {
       return;
     }
@@ -103,9 +175,16 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     const scrollerHeight = window.innerHeight;
     const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
     const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
-    const xMax = Math.max(0, scrollerWidth);
-    const yMax = Math.max(0, scrollerHeight);
-    this._layout.viewportSize = {width: xMax - xMin, height: yMax - yMin};
+    const xMax = this._layout.direction === 'vertical' ?
+        Math.max(0, Math.min(scrollerWidth, listBounds.right)) :
+        scrollerWidth;
+    const yMax = this._layout.direction === 'vertical' ?
+        scrollerHeight :
+        Math.max(0, Math.min(scrollerHeight, listBounds.bottom));
+    const width = xMax - xMin;
+    const height = yMax - yMin;
+    this._layout.viewportSize = {width, height};
+
     const left = Math.max(0, -listBounds.x);
     const top = Math.max(0, -listBounds.y);
     this._layout.scrollTo({top, left});
@@ -114,11 +193,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _sizeContainer(size) {
-    Object.keys(size).forEach(key => {
-      const prop = (key === 'width') ? 'minWidth' : 'minHeight';
-      // Containers can be shadowRoots, so get the host.
-      (this._container.host || this._container).style[prop] = size[key] + 'px';
-    });
+    const style = this._containerElement.style;
+    style.minWidth = size.width ? size.width + 'px' : null;
+    style.minHeight = size.height ? size.height + 'px' : null;
   }
   /**
    * @private
@@ -126,8 +203,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   async _positionChildren(pos) {
     await Promise.resolve();
     const kids = this._kids;
-    const maxWidth = this._layout.direction === 'horizontal' ? null : '100%';
-    const maxHeight = this._layout.direction === 'vertical' ? null : '100%';
     Object.keys(pos).forEach(key => {
       const idx = key - this._first;
       const child = kids[idx];
@@ -137,8 +212,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         // top ${top}`);
         child.style.position = 'absolute';
         child.style.transform = `translate3d(${left}px, ${top}px, 0)`;
-        child.style.maxWidth = maxWidth;
-        child.style.maxHeight = maxHeight;
       }
     });
   }
@@ -159,7 +232,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _shouldRender() {
-    return Boolean(this._isContainerVisible && super._shouldRender());
+    return Boolean(
+        this._isContainerVisible && this._layout && super._shouldRender());
   }
   /**
    * @private
@@ -171,7 +245,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _notifyStable() {
-    this._container.dispatchEvent(new Event('stable'));
+    const {first, num} = this;
+    const last = first + num;
+    this._container.dispatchEvent(
+        new RangeChangeEvent('rangechange', {first, last}));
   }
 };
 

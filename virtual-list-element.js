@@ -1,12 +1,38 @@
-import Layout from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
+
+/** Properties */
+const _items = Symbol();
+const _list = Symbol();
+const _newChild = Symbol();
+const _updateChild = Symbol();
+const _recycleChild = Symbol();
+const _grid = Symbol();
+const _horizontal = Symbol();
+const _pendingRender = Symbol();
+/** Functions */
+const _render = Symbol();
+const _scheduleRender = Symbol();
+
+// Lazily loaded Layout classes.
+const dynamicImports = {};
+const importLayoutClass = async (url) => {
+  if (!dynamicImports[url]) {
+    dynamicImports[url] = import(url).then(module => module.default);
+  }
+  return await dynamicImports[url];
+};
 
 export class VirtualListElement extends HTMLElement {
   constructor() {
     super();
-    this._items = null;
-    this._template = null;
-    this._direction = 'vertical';
+    this[_items] = null;
+    this[_list] = null;
+    this[_newChild] = null;
+    this[_updateChild] = null;
+    this[_recycleChild] = null;
+    this[_grid] = false;
+    this[_horizontal] = false;
+    this[_pendingRender] = null;
   }
 
   connectedCallback() {
@@ -18,94 +44,110 @@ export class VirtualListElement extends HTMLElement {
     position: relative;
     contain: strict;
   }
+  ::slotted(*) {
+    box-sizing: border-box;
+    max-width: 100%;
+    max-height: 100%;
+  }
 </style>
 <slot></slot>`;
     }
-    this._render();
+    this[_scheduleRender]();
   }
 
   static get observedAttributes() {
-    return ['direction'];
+    return ['layout'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    if (name === 'direction') {
-      this.direction = newVal;
+    if (name === 'layout') {
+      this.layout = newVal;
     }
   }
 
-  set template(template) {
-    if (!this._template) {
-      if (typeof template === 'function') {
-        this._template = {newChild: template};
-      } else {
-        this._template = template;
-      }
-      this._render();
-    }
+  get newChild() {
+    return this[_newChild];
+  }
+  set newChild(fn) {
+    this[_newChild] = fn;
+    this[_scheduleRender]();
   }
 
-  get direction() {
-    return this._direction;
+  get updateChild() {
+    return this[_updateChild];
+  }
+  set updateChild(fn) {
+    this[_updateChild] = fn;
+    this[_scheduleRender]();
   }
 
-  set direction(dir) {
-    if (this._direction !== dir) {
-      this._direction = dir;
-      this._render();
-    }
+  get recycleChild() {
+    return this[_recycleChild];
+  }
+  set recycleChild(fn) {
+    this[_recycleChild] = fn;
+    this[_scheduleRender]();
+  }
+
+  get layout() {
+    const prefix = this[_horizontal] ? 'horizontal' : 'vertical';
+    const suffix = this[_grid] ? '-grid' : '';
+    return prefix + suffix;
+  }
+  set layout(layout) {
+    this[_horizontal] = layout && layout.startsWith('horizontal');
+    this[_grid] = layout && layout.endsWith('-grid');
+    this[_scheduleRender]();
   }
 
   get items() {
-    return this._items;
+    return this[_items];
   }
-
   set items(items) {
-    if (this._items !== items) {
-      this._items = items;
-      this._render();
-    }
-  }
-
-  get first() {
-    return this._list ? this._list.first : 0;
-  }
-
-  get num() {
-    return this._list ? this._list.num : 0;
+    this[_items] = items;
+    this[_scheduleRender]();
   }
 
   requestReset() {
-    if (this._list) {
-      this._list.requestReset();
+    if (this[_list]) {
+      this[_list].requestReset();
     }
   }
 
-  /**
-   * @protected
-   */
-  _render() {
-    if (!this._template) {
-      return;
-    }
-    if (!this._list) {
-      // Delay init to first connected as list needs to measure
-      // sizes of container and children.
-      if (!this.isConnected) {
-        return;
-      }
-      const {newChild, updateChild, recycleChild} = this._template;
-      this._layout = new Layout({itemSize: {height: 10000}, _overhang: 1000});
-      this._list = new VirtualList({
-        container: this,
-        layout: this._layout,
-        newChild,
-        updateChild,
-        recycleChild,
+  [_scheduleRender]() {
+    if (!this[_pendingRender]) {
+      this[_pendingRender] = Promise.resolve().then(() => {
+        this[_pendingRender] = null;
+        this[_render]();
       });
     }
-    this._list.items = this._items;
-    this._layout.direction = this._direction;
+  }
+
+  async[_render]() {
+    if (!this.newChild) {
+      return;
+    }
+    // Delay init to first connected as list needs to measure
+    // sizes of container and children.
+    if (!this[_list] && !this.isConnected) {
+      return;
+    }
+
+    if (!this[_list]) {
+      this[_list] = new VirtualList({container: this});
+    }
+    const list = this[_list];
+
+    const {newChild, updateChild, recycleChild, items} = this;
+    Object.assign(list, {newChild, updateChild, recycleChild, items});
+
+    const Layout = await importLayoutClass(
+        this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');
+    const direction = this[_horizontal] ? 'horizontal' : 'vertical';
+    if (list.layout instanceof Layout === false ||
+        list.layout.direction !== direction) {
+      list.layout = new Layout({direction});
+    }
   }
 }
 customElements.define('virtual-list', VirtualListElement);
