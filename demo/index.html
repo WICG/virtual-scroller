@@ -69,11 +69,11 @@
   <nav>
     <label>
       items:
-      <input id="count" type="number" value=50 min=0 max=1000000 onchange="updateItems(this.valueAsNumber)">
+      <input id="count" type="number" value=50 min=0 max=300000 onchange="updateItems(this)">
     </label>
     <label>
       layout:
-      <select id="layout" onchange="updateLayout(this.value)">
+      <select id="layout" onchange="updateLayout(this)">
         <option value="vertical">vertical</option>
         <option value="horizontal">horizontal</option>
         <option value="vertical-grid">vertical-grid</option>
@@ -114,13 +114,22 @@
       }
     });
 
-    updateLayout(layout.value);
-    updateItems(count.valueAsNumber);
+    updateItems(document.querySelector('#count'));
+    updateLayout(document.querySelector('#layout'));
 
     window.updateItems = updateItems;
     window.updateLayout = updateLayout;
 
-    function updateItems(count) {
+    function updateItems(countEl) {
+      let count = countEl.valueAsNumber;
+      if (Number.isNaN(count)) {
+        // Default.
+        count = 50;
+      } else {
+        // Force min/max.
+        count = Math.max(Number.parseInt(countEl.min), Math.min(count, Number.parseInt(countEl.max)));
+      }
+      countEl.value = count;
       const items = [];
       for (let i = 0; i < count; i++) {
         items.push({
@@ -131,7 +140,8 @@
       list.items = recycler.items = items;
     };
 
-    function updateLayout(layout) {
+    function updateLayout(layoutEl) {
+      const layout = layoutEl.value;
       main.classList.toggle('horizontal', layout.startsWith('horizontal'));
       main.classList.toggle('grid', layout.endsWith('grid'));
       list.layout = recycler.layout = layout;
