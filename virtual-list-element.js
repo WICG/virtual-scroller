@@ -11,10 +11,11 @@ const _horizontal = Symbol();
 const _pendingRender = Symbol();
 /** Functions */
 const _render = Symbol();
+const _scheduleRender = Symbol();
 
 // Lazily loaded Layout classes.
 const dynamicImports = {};
-const LayoutClass = async (url) => {
+const importLayoutClass = async (url) => {
   if (!dynamicImports[url]) {
     dynamicImports[url] = import(url).then(module => module.default);
   }
@@ -31,7 +32,7 @@ export class VirtualListElement extends HTMLElement {
     this[_recycleChild] = null;
     this[_grid] = false;
     this[_horizontal] = false;
-    this[_pendingRender] = false;
+    this[_pendingRender] = null;
   }
 
   connectedCallback() {
@@ -51,7 +52,7 @@ export class VirtualListElement extends HTMLElement {
 </style>
 <slot></slot>`;
     }
-    this[_render]();
+    this[_scheduleRender]();
   }
 
   static get observedAttributes() {
@@ -69,7 +70,7 @@ export class VirtualListElement extends HTMLElement {
   }
   set newChild(fn) {
     this[_newChild] = fn;
-    this[_render]();
+    this[_scheduleRender]();
   }
 
   get updateChild() {
@@ -77,7 +78,7 @@ export class VirtualListElement extends HTMLElement {
   }
   set updateChild(fn) {
     this[_updateChild] = fn;
-    this[_render]();
+    this[_scheduleRender]();
   }
 
   get recycleChild() {
@@ -85,7 +86,7 @@ export class VirtualListElement extends HTMLElement {
   }
   set recycleChild(fn) {
     this[_recycleChild] = fn;
-    this[_render]();
+    this[_scheduleRender]();
   }
 
   get layout() {
@@ -96,7 +97,7 @@ export class VirtualListElement extends HTMLElement {
   set layout(layout) {
     this[_horizontal] = layout && layout.startsWith('horizontal');
     this[_grid] = layout && layout.endsWith('-grid');
-    this[_render]();
+    this[_scheduleRender]();
   }
 
   get items() {
@@ -104,12 +105,21 @@ export class VirtualListElement extends HTMLElement {
   }
   set items(items) {
     this[_items] = items;
-    this[_render]();
+    this[_scheduleRender]();
   }
 
   requestReset() {
     if (this[_list]) {
       this[_list].requestReset();
+    }
+  }
+
+  [_scheduleRender]() {
+    if (!this[_pendingRender]) {
+      this[_pendingRender] = Promise.resolve().then(() => {
+        this[_pendingRender] = null;
+        this[_render]();
+      });
     }
   }
 
@@ -122,28 +132,22 @@ export class VirtualListElement extends HTMLElement {
     if (!this[_list] && !this.isConnected) {
       return;
     }
-    if (this[_pendingRender]) {
-      return;
-    }
-    this[_pendingRender] = true;
 
     if (!this[_list]) {
       this[_list] = new VirtualList({container: this});
     }
     const list = this[_list];
 
-    const direction = this[_horizontal] ? 'horizontal' : 'vertical';
-    const url =
-        this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js';
-    const Layout = await LayoutClass(url);
-    const layout =
-        list.layout instanceof Layout && list.layout.direction === direction ?
-        list.layout :
-        new Layout({direction});
-
     const {newChild, updateChild, recycleChild, items} = this;
-    Object.assign(list, {newChild, updateChild, recycleChild, items, layout});
-    this[_pendingRender] = false;
+    Object.assign(list, {newChild, updateChild, recycleChild, items});
+
+    const Layout = await importLayoutClass(
+        this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');
+    const direction = this[_horizontal] ? 'horizontal' : 'vertical';
+    if (list.layout instanceof Layout === false ||
+        list.layout.direction !== direction) {
+      list.layout = new Layout({direction});
+    }
   }
 }
 customElements.define('virtual-list', VirtualListElement);

@@ -84,7 +84,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._layout.removeEventListener('scrollerrorchange', this);
       this._layout.removeEventListener('itempositionchange', this);
       this._layout.removeEventListener('rangechange', this);
-      this._needsRemeasure = true;
+      // Remove min-width/height from containerElement so
+      // layout can get correct viewport size.
+      if (this._containerElement) {
+        this._containerElement.removeAttribute('style');
+        this.requestRemeasure();
+      }
     }
 
     this._layout = layout;

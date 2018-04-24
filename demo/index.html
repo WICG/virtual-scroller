@@ -16,31 +16,40 @@
 
     main {
       padding-top: 50px;
-      display: flex;
-      flex-direction: row;
+      font-size: 0;
     }
 
-    main.horizontal {
-      flex-direction: column;
-      height: 440px;
-    }
-
-    main.grid section {
-      width: 100px;
-      height: 100px;
+    main>* {
+      font-size: 1rem;
     }
 
     virtual-list {
-      display: inline-block;
+      float: left;
       outline: 1px solid;
-      width: 100%;
-      height: 100%;
+      width: 50%;
+      height: auto;
+    }
+
+    .horizontal virtual-list {
+      clear: both;
+      width: auto;
+      height: 30vh;
     }
 
     section {
       padding: 10px;
       background-color: yellow;
       border: 1px solid orange;
+    }
+
+    .horizontal section {
+      width: 100px;
+      height: 50px;
+    }
+
+    .grid section {
+      width: 100px;
+      height: 100px;
     }
 
     #recycler section {
@@ -60,7 +69,7 @@
     <label>
       layout:
       <select id="layout" onchange="updateLayout(this.value)">
-        <option value="vertical" selected>vertical</option>
+        <option value="vertical">vertical</option>
         <option value="horizontal">horizontal</option>
         <option value="vertical-grid">vertical-grid</option>
         <option value="horizontal-grid">horizontal-grid</option>
