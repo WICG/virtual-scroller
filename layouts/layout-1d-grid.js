@@ -5,6 +5,15 @@ export default class Layout extends Layout1dBase {
     super(config);
     this._rolumns = 1;
   }
+
+  updateItemSizes(sizes) {
+    // Assume all items have the same size.
+    const size = Object.values(sizes)[0];
+    if (size) {
+      this.itemSize = size;
+    }
+  }
+
   _viewDim2Changed() {
     this._defineGrid();
   }
