@@ -27,6 +27,16 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._pendingUpdateView = null;
     this._isContainerVisible = false;
     this._containerElement = null;
+    this._layout = null;
+    this._containerScrolls = false;
+    // Keep track of original inline style of the container,
+    // so it can be restored when container is changed.
+    this._containerInlineStyle = null;
+    // A sentinel element that sizes the container when
+    // it is a scrolling element.
+    this._containerSizer = null;
+    // We keep track of the scroll size to support changing container.
+    this._scrollSize = null;
 
     if (config) {
       Object.assign(this, config);
@@ -37,36 +47,39 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     return this._container;
   }
   set container(container) {
-    if (container === this._container) {
-      return;
-    }
-
-    removeEventListener('scroll', this);
-    removeEventListener('resize', this);
-
     super.container = container;
 
-    if (container) {
-      addEventListener('scroll', this);
-      addEventListener('resize', this);
-      this._scheduleUpdateView();
-    }
-
-    // Update the containerElement, copy min-width/height styles to new
-    // container.
-    let containerStyle = null;
-    if (this._containerElement) {
-      containerStyle = this._containerElement.getAttribute('style');
-      this._containerElement.removeAttribute('style');
-    }
+    const oldEl = this._containerElement;
     // Consider document fragments as shadowRoots.
-    this._containerElement =
+    const newEl =
         (container && container.nodeType === Node.DOCUMENT_FRAGMENT_NODE) ?
         container.host :
         container;
+    if (oldEl === newEl) {
+      return;
+    }
 
-    if (this._containerElement && containerStyle) {
-      this._containerElement.setAttribute('style', containerStyle);
+    if (oldEl) {
+      if (this._containerInlineStyle) {
+        oldEl.setAttribute('style', this._containerInlineStyle);
+      } else {
+        oldEl.removeAttribute('style');
+      }
+      this._containerInlineStyle = null;
+      this._updateScrollListener(false);
+    } else {
+      // First time container was setup, add listeners only now.
+      addEventListener('scroll', this, {passive: true});
+      addEventListener('resize', this);
+    }
+
+    this._containerElement = newEl;
+
+    if (newEl) {
+      this._containerInlineStyle = newEl.getAttribute('style') || null;
+      this._computeContainerScrolls();
+      this._sizeContainer(this._scrollSize);
+      this._scheduleUpdateView();
     }
   }
 
@@ -84,10 +97,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._layout.removeEventListener('scrollerrorchange', this);
       this._layout.removeEventListener('itempositionchange', this);
       this._layout.removeEventListener('rangechange', this);
-      // Remove min-width/height from containerElement so
-      // layout can get correct viewport size.
+      // Reset container size so layout can get correct viewport size.
       if (this._containerElement) {
-        this._containerElement.removeAttribute('style');
+        this._sizeContainer();
         this.requestRemeasure();
       }
     }
@@ -118,11 +130,17 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   handleEvent(event) {
     switch (event.type) {
       case 'scroll':
+        if (!this._containerScrolls ||
+            event.target === this._containerElement) {
+          this._scheduleUpdateView();
+        }
+        break;
       case 'resize':
         this._scheduleUpdateView();
         break;
       case 'scrollsizechange':
         this._sizeContainer(event.detail);
+        this._scrollSize = event.detail;
         break;
       case 'scrollerrorchange':
         this._correctScrollError(event.detail);
@@ -135,6 +153,42 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         break;
       default:
         console.warn('event not handled', event);
+    }
+  }
+  /**
+   * @private
+   */
+  _computeContainerScrolls() {
+    if (!this._containerElement) {
+      return;
+    }
+    const style = getComputedStyle(this._containerElement);
+    const scrolls = (style.overflow === 'auto' || style.overflow === 'scroll');
+    if (this._containerScrolls !== scrolls) {
+      this._containerScrolls = scrolls;
+      this._updateScrollListener(scrolls);
+    }
+  }
+  /**
+   * @private
+   */
+  _updateScrollListener(scrolls) {
+    if (scrolls) {
+      this._containerElement.addEventListener('scroll', this, {passive: true});
+      if (!this._containerSizer) {
+        this._containerSizer = document.createElement('div');
+        this._containerSizer.style.width = '1px';
+        this._containerSizer.style.height = '1px';
+        this._containerSizer.style.position = 'absolute';
+        this._containerSizer.textContent = ' ';
+      }
+      this._container.prepend(this._containerSizer);
+    } else {
+      this._containerElement.removeEventListener(
+          'scroll', this, {passive: true});
+      if (this._containerSizer) {
+        this._containerSizer.remove();
+      }
     }
   }
 
@@ -171,31 +225,46 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       return;
     }
 
-    const scrollerWidth = window.innerWidth;
-    const scrollerHeight = window.innerHeight;
-    const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
-    const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
-    const xMax = this._layout.direction === 'vertical' ?
-        Math.max(0, Math.min(scrollerWidth, listBounds.right)) :
-        scrollerWidth;
-    const yMax = this._layout.direction === 'vertical' ?
-        scrollerHeight :
-        Math.max(0, Math.min(scrollerHeight, listBounds.bottom));
-    const width = xMax - xMin;
-    const height = yMax - yMin;
+    let width, height, top, left;
+    if (this._containerScrolls) {
+      width = listBounds.width;
+      height = listBounds.height;
+      left = this._containerElement.scrollLeft;
+      top = this._containerElement.scrollTop;
+    } else {
+      const scrollerWidth = window.innerWidth;
+      const scrollerHeight = window.innerHeight;
+      const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
+      const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
+      const xMax = this._layout.direction === 'vertical' ?
+          Math.max(0, Math.min(scrollerWidth, listBounds.right)) :
+          scrollerWidth;
+      const yMax = this._layout.direction === 'vertical' ?
+          scrollerHeight :
+          Math.max(0, Math.min(scrollerHeight, listBounds.bottom));
+      width = xMax - xMin;
+      height = yMax - yMin;
+      left = Math.max(0, -listBounds.x);
+      top = Math.max(0, -listBounds.y);
+    }
     this._layout.viewportSize = {width, height};
 
-    const left = Math.max(0, -listBounds.x);
-    const top = Math.max(0, -listBounds.y);
     this._layout.scrollTo({top, left});
   }
   /**
    * @private
    */
   _sizeContainer(size) {
-    const style = this._containerElement.style;
-    style.minWidth = size.width ? size.width + 'px' : null;
-    style.minHeight = size.height ? size.height + 'px' : null;
+    if (this._containerScrolls) {
+      const left = size && size.width ? size.width - 1 : 0;
+      const top = size && size.height ? size.height - 1 : 0;
+      this._containerSizer.style.transform =
+          `translate3d(${left}px, ${top}px, 0)`;
+    } else {
+      const style = this._containerElement.style;
+      style.minWidth = size && size.width ? size.width + 'px' : null;
+      style.minHeight = size && size.height ? size.height + 'px' : null;
+    }
   }
   /**
    * @private
@@ -239,7 +308,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _correctScrollError(err) {
-    window.scroll(window.scrollX - err.left, window.scrollY - err.top);
+    if (this._containerScrolls) {
+      this._containerElement.scrollTop += err.top;
+      this._containerElement.scrollLeft += err.left;
+    } else {
+      window.scroll(window.scrollX - err.left, window.scrollY - err.top);
+    }
   }
   /**
    * @protected
