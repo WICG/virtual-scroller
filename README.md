@@ -51,6 +51,7 @@ If set, this property is invoked in two scenarios:
 
 * The user scrolls the list, changing which items' elements are visible. In this case, `updateChild` is called for all of the newly-visible elements.
 * The developer sets the `items` property, changing the contents of an item whose element is visible.
+* The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. (See [below](#data-manipulation) for why this can be useful.)
 
 ### `recycleChild` property
 
@@ -60,7 +61,7 @@ Set this property to replace the default behavior of removing an item's element 
 
 This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling).
 
-_We are discussing the naming and API for this functionality in [#25](https://github.com/PolymerLabs/virtual-list/issues/25)._
+_We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-list/issues/25)._
 
 ### `items` property
 
@@ -68,7 +69,7 @@ Type: `Array`
 
 Set this property to control the items which are displayed in the list. (The items are mapped to elements via the `newChild` and `updateChild` properties.)
 
-_Right now the getter for this property just returns back the set value. We are discussing how exactly that should work in [#29](https://github.com/PolymerLabs/virtual-list/issues/29)._
+_Right now the getter for this property just returns back the set value. We are discussing how exactly that should work in [#29](https://github.com/valdrinkoshi/virtual-list/issues/29)._
 
 ### `layout` property
 
@@ -89,7 +90,7 @@ This re-renders all of the currently-displayed items, updating them from their s
 
 This can be useful for if you mutate the `items` array, or elements in it, instead of setting the `items` property to a new value. Also see [the example below](#data-manipulation).
 
-_We are discussing the naming of this API, as well as whether it should exist at all, in [#26](https://github.com/PolymerLabs/virtual-list/issues/26). The aforementioned [#29](https://github.com/PolymerLabs/virtual-list/issues/29) is also relevant._
+_We are discussing the naming of this API, as well as whether it should exist at all, in [#26](https://github.com/valdrinkoshi/virtual-list/issues/26). The aforementioned [#29](https://github.com/valdrinkoshi/virtual-list/issues/29) is also relevant._
 
 ### "`rangechange`" event
 
@@ -134,9 +135,7 @@ The `<virtual-list>` element will automatically rerender the displayed items whe
 list.items = list.items.concat([{name: 'new item'}]);
 ```
 
-In this case, `newChild` will be called for every item, including the ones that already had corresponding elements in the old items array.
-
-If you want to keep the same `items` array instance, you can use `requestReset()` to rerender the currently-displayed items. If you do this, you'll also need to set `updateChild`, since the elements will no longer be created from scratch. For example:
+If you want to keep the same `items` array instance, you can use `requestReset()` to notify the list about changes, and cause a rerender of currently-displayed items. If you do this, you'll also need to set `updateChild`, since the elements will already be created. For example:
 
 ```js
 list.updateChild = (child, item, index) => {
@@ -148,6 +147,8 @@ list.items[0].name = 'item 0 changed!';
 
 list.requestReset();
 ```
+
+In this case, `newChild` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items array.
 
 ### Range changes
 
