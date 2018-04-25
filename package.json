@@ -19,12 +19,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PolymerLabs/virtual-list.git"
+    "url": "git+https://github.com/valdrinkoshi/virtual-list.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/PolymerLabs/virtual-list/issues"
+    "url": "https://github.com/valdrinkoshi/virtual-list/issues"
   },
-  "homepage": "https://github.com/PolymerLabs/virtual-list#readme"
+  "homepage": "https://github.com/valdrinkoshi/virtual-list#readme"
 }
