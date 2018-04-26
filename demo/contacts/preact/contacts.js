@@ -1,4 +1,4 @@
-import {h, render} from '../../../../preact/dist/preact.esm.js';
+import {h, render} from '../../../node_modules/preact/dist/preact.esm.js';
 import {List} from '../../../preact/preact-list.js';
 import {itemType, Sample as BaseSample} from '../contacts.js';
 

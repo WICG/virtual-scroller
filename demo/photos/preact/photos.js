@@ -1,4 +1,4 @@
-import {h, render} from '../../../../preact/dist/preact.esm.js';
+import {h, render} from '../../../node_modules/preact/dist/preact.esm.js';
 import {List} from '../../../preact/preact-list.js';
 import {getDims, getUrl, Sample as BaseSample} from '../photos.js';
 

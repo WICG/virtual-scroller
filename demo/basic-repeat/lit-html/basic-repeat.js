@@ -1,5 +1,5 @@
-import {html, render} from '../../../../lit-html/lib/lit-extended.js';
 import {repeat} from '../../../lit-html/lit-repeater.js';
+import {html, render} from '../../../node_modules/lit-html/lib/lit-extended.js';
 import {Sample as BaseSample} from '../basic-repeat.js';
 
 export class Sample extends BaseSample {

@@ -172,9 +172,9 @@ To work on the proof-of-concept implementation, ensure you have installed the np
 
 ```sh
 $ npm install
-$ polymer serve --npm
+$ python -m SimpleHTTPServer 8081
 ```
 
-Then, navigate to the url: http://localhost:8081/components/virtual-list/
+Then, navigate to the url: http://localhost:8081/
 
 For more documentation on the internal pieces that we use to implement our `<virtual-list>` prototype, see [DESIGN.md](./DESIGN.md).

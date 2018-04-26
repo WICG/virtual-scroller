@@ -1,5 +1,5 @@
-import {directive} from '../../lit-html/lit-html.js';
 import {IncrementalRepeater} from '../incremental-repeater.js';
+import {directive} from '../node_modules/lit-html/lit-html.js';
 
 import {LitMixin} from './lit-repeater.js';
 
