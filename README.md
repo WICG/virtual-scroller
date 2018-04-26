@@ -31,6 +31,8 @@ The (tentative) API design choices made here, as well as the list's capabilities
 </script>
 ```
 
+Checkout more examples in [demo/index.html](./demo/index.html) and [demo/examples.html](demo/examples.html).
+
 ## API
 
 ### `newChild` property

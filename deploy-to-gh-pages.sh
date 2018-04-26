@@ -49,8 +49,7 @@ find node_modules/$repo -name '*.js' -exec sed -i '' 's/node_modules\//component
 mv node_modules/$repo .
 rm -rf node_modules/
 
-# redirect by default to the component folder
-echo "<META http-equiv=\"refresh\" content=\"0;URL=./demo/\">" > index.html
+# Allow github to use README.md as main page.
 
 # send it all to github
 git add -A .
