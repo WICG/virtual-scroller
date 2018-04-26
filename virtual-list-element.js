@@ -44,9 +44,11 @@ export class VirtualListElement extends HTMLElement {
     position: relative;
     contain: strict;
   }
-  ::slotted(*) {
-    box-sizing: border-box;
+  :host(:not([layout])) ::slotted(*), 
+  :host([layout=vertical]) ::slotted(*) {
     max-width: 100%;
+  }
+  :host([layout=horizontal]) ::slotted(*) {
     max-height: 100%;
   }
 </style>
@@ -95,8 +97,14 @@ export class VirtualListElement extends HTMLElement {
     return prefix + suffix;
   }
   set layout(layout) {
+    const old = this.layout;
     this[_horizontal] = layout && layout.startsWith('horizontal');
     this[_grid] = layout && layout.endsWith('-grid');
+    layout = this.layout;
+    // Reflect to attribute.
+    if (old !== layout) {
+      this.setAttribute('layout', layout);
+    }
     this[_scheduleRender]();
   }
 
