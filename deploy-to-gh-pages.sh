@@ -46,7 +46,7 @@ mv node_modules/preact components/
 mv node_modules/streaming-spec components/
 # replace node_modules/ with components/
 find node_modules/$repo -name '*.js' -exec sed -i '' 's/node_modules\//components\//g' {} \;
-mv node_modules/$repo .
+mv node_modules/$repo/* .
 rm -rf node_modules/
 
 # Allow github to use README.md as main page.
