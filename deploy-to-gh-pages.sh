@@ -44,11 +44,12 @@ mkdir components
 mv node_modules/lit-html components/
 mv node_modules/preact components/
 mv node_modules/streaming-spec components/
-mv node_modules/$repo components/
+# replace node_modules/ with components/
+find node_modules/$repo -name '*.js' -exec sed -i '' 's/node_modules\//components\//g' {} \;
+mv node_modules/$repo .
 rm -rf node_modules/
 
-# redirect by default to the component folder
-echo "<META http-equiv=\"refresh\" content=\"0;URL=components/$repo/demo\">" > index.html
+# Allow github to use README.md as main page.
 
 # send it all to github
 git add -A .

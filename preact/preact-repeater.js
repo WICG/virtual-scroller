@@ -1,4 +1,4 @@
-import {Component, h, render} from '../../preact/dist/preact.esm.js';
+import {Component, h, render} from '../node_modules/preact/dist/preact.esm.js';
 import {VirtualRepeater} from '../virtual-repeater.js';
 
 export class Repeat extends Component {
