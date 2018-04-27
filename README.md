@@ -63,6 +63,14 @@ This is often used for node-recycling scenarios, as seen in [the example below](
 
 _We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-list/issues/25)._
 
+### `itemKey` property
+
+Type: `function(child: Element) => string|number`
+
+Set this property to customize the mapping of created DOM nodes.
+
+This is often used for more efficient re-ordering, as seen in ???
+
 ### `items` property
 
 Type: `Array`
@@ -149,6 +157,25 @@ list.requestReset();
 ```
 
 In this case, `newChild` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items array.
+
+### Efficient re-ordering
+
+`<virtual-list>` keeps track of the generated DOM via an internal key/Element map, in order to limit the number of created nodes via `newChild`. The default key is the array index.
+
+When manipulating data, you might be re-ordering items. For example, imagine we have a contact list and the following method to move a contact to the end:
+```js
+const moveContactToEnd = (contact) => {
+  myContacts.splice(myContacts.indexOf(contact), 1); // remove it
+  myContacts.push(contact); // add it to the end
+  virtualList.items = myContacts;
+};
+```
+With the default `itemKey`, we would create a new DOM element via `newChild`, even though it was the same contact. 
+We can customize the key/Element mapping via `itemKey`:
+```js
+virtualList.itemKey = (contact) => contact.userId;
+```
+This would not call `newChild`; it would just reuse the same DOM element previously created.
 
 ### Range changes
 
