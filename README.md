@@ -69,7 +69,7 @@ Type: `function(child: Element) => string|number`
 
 Set this property to customize the mapping of created DOM nodes.
 
-This is often used for more efficient re-ordering, as seen in ???
+This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering).
 
 ### `items` property
 
