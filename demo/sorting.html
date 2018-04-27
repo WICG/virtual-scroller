@@ -1,0 +1,125 @@
+<html>
+
+<head>
+  <title>Sorting contacts</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      max-width: 600px;
+      margin: 10px auto;
+    }
+  </style>
+</head>
+
+<body>
+
+  <label>
+    <input type="checkbox" onchange="toggleItemKey(this.checked)"> Use
+    <code>contact.guid</code> as
+    <code>itemKey</code>
+  </label>
+  <virtual-list></virtual-list>
+
+  <script type="module">
+    import '../virtual-list-element.js';
+
+    const virtualList = document.querySelector('virtual-list');
+
+    virtualList.newChild = (contact) => {
+      const element = document.createElement('contact-element');
+      element.addEventListener('moveup', (event) => moveContact(event.target.contact, -1));
+      element.addEventListener('movedown', (event) => moveContact(event.target.contact, 1));
+      return element;
+    };
+    virtualList.updateChild = (element, contact) => element.contact = contact;
+
+
+    let myContacts = null;
+    fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {
+      myContacts = virtualList.items = contacts;
+    });
+
+    function moveContact(contact, offset) {
+      const i = myContacts.indexOf(contact);
+      const newI = Math.max(0, Math.min(myContacts.length, i + offset));
+      myContacts.splice(i, 1); // remove it
+      myContacts.splice(newI, 0, contact); // add it to new position
+      virtualList.requestReset(); // notify virtual-list
+    }
+
+    window.toggleItemKey = function toggleItemKey(useGuid) {
+      virtualList.itemKey = useGuid ? (contact) => contact.guid : null;
+    };
+  </script>
+
+  <script type="module">
+    class ContactElement extends HTMLElement {
+      connectedCallback() {
+        if (this.shadowRoot) {
+          return;
+        }
+        this.attachShadow({ mode: 'open' }).innerHTML = `
+          <style>
+            :host {
+              display: flex;
+              align-items: center;
+              width: 100%;
+              padding: 1rem 0;
+              border-bottom: 1px solid #eee;
+            }
+            img {
+              width: 50px;
+              height: 50px;
+              margin-right: 15px;
+              border-radius: 50%;
+              background-color: lightgray;
+            }
+            label {
+              width: 100%;
+              flex: 1;
+            }
+            button {
+              background-color: transparent;
+              border: none;
+            }
+          </style>
+          <img id="img">
+          <label id="label"></label>
+          <span id="counter"></span>
+          <button id="up">🔼</button>
+          <button id="down">🔽</button>
+        `;
+        this._img = this.shadowRoot.querySelector('#img');
+        this._label = this.shadowRoot.querySelector('label');
+        this._counter = this.shadowRoot.querySelector('#counter');
+        this._renderCount = 0;
+        this._up = this.shadowRoot.querySelector('#up');
+        this._down = this.shadowRoot.querySelector('#down');
+        this._up.addEventListener('click', () => this.dispatchEvent(new Event('moveup')));
+        this._down.addEventListener('click', () => this.dispatchEvent(new Event('movedown')));
+        if (this.contact)
+          this._render();
+      }
+      get contact() {
+        return this._contact;
+      }
+      set contact(contact) {
+        if (contact !== this._contact) {
+          this._contact = contact;
+          this._render();
+        }
+      }
+      _render() {
+        if (!this.shadowRoot) return;
+        this._img.src = this.contact ? this.contact.image : null;
+        this._label.textContent = this.contact ? this.contact.name : null;
+        this._label.style.color = this.contact ? this.contact.color : null;
+        this._counter.textContent = `render count: ${++this._renderCount}`;
+      }
+    }
+    customElements.define('contact-element', ContactElement);
+  </script>
+</body>
+
+</html>
