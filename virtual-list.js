@@ -234,16 +234,18 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       return;
     }
 
+    const scrollBounds = this._scrollTarget ?
+        this._scrollTarget.getBoundingClientRect() :
+        {width: innerWidth, height: innerHeight};
     let width, height, top, left;
-    if (this._scrollTarget) {
-      const scrollBounds = this._scrollTarget.getBoundingClientRect();
+    if (this._scrollTarget === this._containerElement) {
       width = scrollBounds.width;
       height = scrollBounds.height;
       left = this._scrollTarget.scrollLeft;
       top = this._scrollTarget.scrollTop;
     } else {
-      const scrollerWidth = window.innerWidth;
-      const scrollerHeight = window.innerHeight;
+      const scrollerWidth = scrollBounds.width;
+      const scrollerHeight = scrollBounds.height;
       const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
       const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
       const xMax = this._layout.direction === 'vertical' ?
