@@ -8,6 +8,7 @@ const _updateChild = Symbol();
 const _recycleChild = Symbol();
 const _grid = Symbol();
 const _horizontal = Symbol();
+const _scrollTarget = Symbol();
 const _pendingRender = Symbol();
 /** Functions */
 const _render = Symbol();
@@ -33,6 +34,7 @@ export class VirtualListElement extends HTMLElement {
     this[_grid] = false;
     this[_horizontal] = false;
     this[_pendingRender] = null;
+    this[_scrollTarget] = null;
   }
 
   connectedCallback() {
@@ -54,6 +56,22 @@ export class VirtualListElement extends HTMLElement {
 </style>
 <slot></slot>`;
     }
+    // Search for element that scrolls up the parent tree.
+    let node = this;
+    while (node) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const cs = getComputedStyle(node);
+        if (cs.overflow === 'auto' || cs.overflow === 'scroll') {
+          // Found it!
+          break;
+        }
+      }
+      node = node.host || node.assignedSlot || node.parentNode;
+      if (node === document.body) {
+        node = null;
+      }
+    }
+    this[_scrollTarget] = node;
     this[_scheduleRender]();
   }
 
@@ -145,6 +163,7 @@ export class VirtualListElement extends HTMLElement {
       this[_list] = new VirtualList({container: this});
     }
     const list = this[_list];
+    list.scrollTarget = this[_scrollTarget];
 
     const {newChild, updateChild, recycleChild, items} = this;
     Object.assign(list, {newChild, updateChild, recycleChild, items});
