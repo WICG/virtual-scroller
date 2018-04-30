@@ -236,7 +236,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     const scrollBounds = this._scrollTarget ?
         this._scrollTarget.getBoundingClientRect() :
-        {width: innerWidth, height: innerHeight};
+        {top: 0, left: 0, width: innerWidth, height: innerHeight};
     let width, height, top, left;
     if (this._scrollTarget === this._containerElement) {
       width = scrollBounds.width;
@@ -246,18 +246,24 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     } else {
       const scrollerWidth = scrollBounds.width;
       const scrollerHeight = scrollBounds.height;
-      const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
-      const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
+      const xMin = Math.max(
+          0, Math.min(scrollerWidth, listBounds.left - scrollBounds.left));
+      const yMin = Math.max(
+          0, Math.min(scrollerHeight, listBounds.top - scrollBounds.top));
       const xMax = this._layout.direction === 'vertical' ?
-          Math.max(0, Math.min(scrollerWidth, listBounds.right)) :
+          Math.max(
+              0,
+              Math.min(scrollerWidth, listBounds.right - scrollBounds.left)) :
           scrollerWidth;
       const yMax = this._layout.direction === 'vertical' ?
           scrollerHeight :
-          Math.max(0, Math.min(scrollerHeight, listBounds.bottom));
+          Math.max(
+              0,
+              Math.min(scrollerHeight, listBounds.bottom - scrollBounds.top));
       width = xMax - xMin;
       height = yMax - yMin;
-      left = Math.max(0, -listBounds.x);
-      top = Math.max(0, -listBounds.y);
+      left = Math.max(0, -(listBounds.x - scrollBounds.left));
+      top = Math.max(0, -(listBounds.y - scrollBounds.top));
     }
     this._layout.viewportSize = {width, height};
 
