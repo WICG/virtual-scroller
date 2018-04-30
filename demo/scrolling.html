@@ -1,0 +1,121 @@
+<html>
+
+<head>
+  <title>Scrolling</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      max-width: 600px;
+      margin: 10px auto;
+    }
+
+    .scroll {
+      overflow: auto;
+      height: 200px;
+      border: 4px solid darkgray;
+      border-left: none;
+      border-right: none;
+      border-radius: 6px;
+    }
+
+    header {
+      background-color: lightskyblue;
+      padding: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Scrolling</h2>
+
+  <p>
+    <code>&lt;virtual-list&gt;</code> can scroll within a given size.</p>
+
+  <virtual-list class="scroll"></virtual-list>
+
+  <p>
+    <code>&lt;virtual-list&gt;</code> can scroll within a sized wrapper.</p>
+
+  <main class="scroll">
+    <header>Contacts
+      <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quaerat animi exercitationem beatae similique aspernatur
+        molestiae optio neque facilis fugit quam, eius illo quo id itaque nihil. Nesciunt debitis pariatur alias.</p>
+    </header>
+    <virtual-list></virtual-list>
+  </main>
+
+  <p>
+    <code>&lt;virtual-list&gt;</code> can scroll within the main document.</p>
+
+  <virtual-list></virtual-list>
+
+  <script type="module">
+    import '../virtual-list-element.js';
+
+    fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {
+      document.querySelectorAll('virtual-list').forEach((list) => {
+        list.newChild = () => document.createElement('contact-element');
+        list.updateChild = (child, contact) => child.contact = contact;
+        list.items = contacts;
+      });
+    });
+  </script>
+
+  <script type="module">
+    class ContactElement extends HTMLElement {
+      connectedCallback() {
+        if (this.shadowRoot) {
+          return;
+        }
+        this.attachShadow({ mode: 'open' }).innerHTML = `
+<style>
+  :host {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+  }
+  img {
+    width: 50px;
+    height: 50px;
+    margin-right: 15px;
+    border-radius: 50%;
+    background-color: lightgray;
+  }
+  label {
+    width: 100%;
+    flex: 1;
+  }
+</style>
+<img id="img">
+<label id="label"></label>`;
+        this._img = this.shadowRoot.querySelector('#img');
+        this._label = this.shadowRoot.querySelector('label');
+        this.contact && this._render();
+      }
+      get contact() {
+        return this._contact;
+      }
+      set contact(contact) {
+        if (contact !== this._contact) {
+          this._contact = contact;
+          this._render();
+        }
+      }
+      _render() {
+        if (!this.shadowRoot) return;
+        const contact = this.contact || {};
+        this._img.src = contact.image;
+        this._label.textContent = contact.name;
+        this._label.style.color = contact.color;
+      }
+    }
+    customElements.define('contact-element', ContactElement);
+  </script>
+
+</body>
+
+</html>
