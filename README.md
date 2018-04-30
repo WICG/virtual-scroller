@@ -65,9 +65,9 @@ _We are discussing the naming and API for this functionality in [#25](https://gi
 
 ### `itemKey` property
 
-Type: `function(child: Element) => string|number`
+Type: `function(item: any) => any`
 
-Set this property to customize the mapping of created DOM nodes.
+Set this property to provide an identifier for a given item.
 
 This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering).
 
@@ -179,12 +179,12 @@ This renders 3 contacts, and the `<virtual-list>` key/Element map is:
 ```
 We want to move the first contact to the end:
 ```js
-const moveFirstContactToEnd = () => {
+function moveFirstContactToEnd() {
   const contact = myContacts[0];
   myContacts.splice(0, 1); // remove it
   myContacts.push(contact); // add it to the end
   virtualList.requestReset(); // notify virtual-list
-};
+}
 ```
 With the default `itemKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
 ```
