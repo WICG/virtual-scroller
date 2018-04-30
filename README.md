@@ -65,6 +65,14 @@ This is often used for node-recycling scenarios, as seen in [the example below](
 
 _We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-list/issues/25)._
 
+### `itemKey` property
+
+Type: `function(item: any) => any`
+
+Set this property to provide an identifier for a given item.
+
+This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering).
+
 ### `items` property
 
 Type: `Array`
@@ -151,6 +159,57 @@ list.requestReset();
 ```
 
 In this case, `newChild` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items array.
+
+### Efficient re-ordering
+
+`<virtual-list>` keeps track of the generated DOM via an internal key/Element map to limit the number of created nodes. 
+
+The default key is the array index, but can be customized through the `itemKey` property.
+
+Imagine we have a list of 3 contacts:
+```js
+const myContacts = [{name: 'A'}, {name: 'B'}, {name: 'C'}];
+virtualList.items = myContacts;
+virtualList.newChild = () => document.createElement('div');
+virtualList.updateChild = (div, contact) => div.textContent = contact.name;
+```
+This renders 3 contacts, and the `<virtual-list>` key/Element map is:
+```
+0: <div>A</div>
+1: <div>B</div>
+2: <div>C</div>
+```
+We want to move the first contact to the end:
+```js
+function moveFirstContactToEnd() {
+  const contact = myContacts[0];
+  myContacts.splice(0, 1); // remove it
+  myContacts.push(contact); // add it to the end
+  virtualList.requestReset(); // notify virtual-list
+}
+```
+With the default `itemKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
+```
+0: <div>B</div> (was <div>A</div>)
+1: <div>C</div> (was <div>B</div>)
+2: <div>A</div> (was <div>C</div>)
+```
+This is suboptimal, as we just needed to move the first DOM node to the end.
+
+We can customize the key/Element mapping via `itemKey`:
+```js
+virtualList.itemKey = (contact) => contact.name;
+```
+
+This updates the `<virtual-list>` key/Element map to:
+```
+A: <div>A</div>
+B: <div>B</div>
+C: <div>C</div>
+```
+Now, invoking `moveFirstContactToEnd()` will only move the first contact DOM node to the end.
+
+See [demo/sorting.html](demo/sorting.html) as an example implementation.
 
 ### Range changes
 
