@@ -124,9 +124,18 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
   }
 
+  /**
+   * The element that generates scroll events and defines the container
+   * viewport. The value `null` (default) corresponds to `window` as scroll
+   * target.
+   * @type {Element|null}
+   */
   get scrollTarget() {
     return this._scrollTarget;
   }
+  /**
+   * @param {Element|null} target
+   */
   set scrollTarget(target) {
     // Consider window as null.
     if (target === window) {
@@ -190,6 +199,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
   }
   /**
+   * @return {!Element}
    * @private
    */
   _createContainerSizer() {
