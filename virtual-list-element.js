@@ -1,5 +1,14 @@
 import {VirtualList} from './virtual-list.js';
 
+// Lazily loaded Layout classes.
+const dynamicImports = {};
+async function importLayoutClass(url) {
+  if (!dynamicImports[url]) {
+    dynamicImports[url] = import(url).then(module => module.default);
+  }
+  return await dynamicImports[url];
+}
+
 /** Properties */
 const _items = Symbol();
 const _list = Symbol();
@@ -14,14 +23,6 @@ const _pendingRender = Symbol();
 const _render = Symbol();
 const _scheduleRender = Symbol();
 
-// Lazily loaded Layout classes.
-const dynamicImports = {};
-const importLayoutClass = async (url) => {
-  if (!dynamicImports[url]) {
-    dynamicImports[url] = import(url).then(module => module.default);
-  }
-  return await dynamicImports[url];
-};
 
 export class VirtualListElement extends HTMLElement {
   constructor() {
@@ -56,22 +57,7 @@ export class VirtualListElement extends HTMLElement {
 </style>
 <slot></slot>`;
     }
-    // Search for element that scrolls up the parent tree.
-    let node = this;
-    while (node) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const cs = getComputedStyle(node);
-        if (cs.overflow === 'auto' || cs.overflow === 'scroll') {
-          // Found it!
-          break;
-        }
-      }
-      node = node.host || node.assignedSlot || node.parentNode;
-      if (node === document.body) {
-        node = null;
-      }
-    }
-    this[_scrollTarget] = node;
+    this[_scrollTarget] = findScrollTarget(this);
     this[_scheduleRender]();
   }
 
@@ -178,3 +164,31 @@ export class VirtualListElement extends HTMLElement {
   }
 }
 customElements.define('virtual-list', VirtualListElement);
+
+function findScrollTarget(node) {
+  // Search for element that scrolls up the parent tree.
+  while (node && node !== document.body) {
+    if (node.nodeType === Node.ELEMENT_NODE && scrolls(node)) {
+      // Found it!
+      return node;
+    }
+    node = node.host || node.assignedSlot || node.parentNode;
+  }
+  return null;
+}
+
+function scrolls(element) {
+  // Check inline style to avoid forcing layout.
+  const inlineInfo = scrollInfo(element.style);
+  if (inlineInfo.x || inlineInfo.y) {
+    return true;
+  }
+  const computedInfo = scrollInfo(getComputedStyle(element));
+  return computedInfo.x || computedInfo.y;
+}
+
+function scrollInfo(style) {
+  const x = style.overflowX === 'auto' || style.overflowX === 'scroll';
+  const y = style.overflowY === 'auto' || style.overflowY === 'scroll';
+  return {x, y};
+}
