@@ -16,24 +16,15 @@
 
     main {
       padding-top: 50px;
-      font-size: 0;
-    }
-
-    main>* {
-      font-size: 1rem;
+      height: calc(100vh - 66px);
+      display: flex;
+      flex-direction: row;
     }
 
     virtual-list {
-      float: left;
       outline: 1px solid;
-      width: 50%;
-      height: auto;
-    }
-
-    .horizontal virtual-list {
-      clear: both;
-      width: auto;
-      height: 40vh;
+      flex: 1;
+      height: 100%;
     }
 
     section {

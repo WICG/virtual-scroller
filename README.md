@@ -114,6 +114,25 @@ list.addEventListener('rangechange', (event) => {
 });
 ```
 
+## Scrolling
+
+`<virtual-list>` needs to be sized in order to determine how many items should be rendered. Its default size is:
+```css
+virtual-list {
+  width: 100%;
+  height: 150px;
+}
+```
+
+Main document scrolling will be achievable through [`document.rootScroller`](https://www.chromestatus.com/feature/4533350404456448)
+```html
+<virtual-list style="height: 100vh"></virtual-list>
+<script type="module">
+  import './node_modules/virtual-list/virtual-list-element.js';
+  document.rootScroller = document.querySelector('virtual-list');
+</script>
+```
+
 # Development
 
 Implementation of a Virtual list API, influenced by the research done by the [infinite list study group](https://github.com/domenic/infinite-list-study-group).
