@@ -232,7 +232,9 @@ list.addEventListener('rangechange', (event) => {
 `<virtual-list>` needs to be sized in order to determine how many items should be rendered. Its default size is:
 ```css
 virtual-list {
-  width: 100%;
+  /* https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-width */
+  width: 300px;
+  /* https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-height */
   height: 150px;
 }
 ```
