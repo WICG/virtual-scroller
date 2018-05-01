@@ -15,6 +15,7 @@ const _list = Symbol();
 const _newChild = Symbol();
 const _updateChild = Symbol();
 const _recycleChild = Symbol();
+const _itemKey = Symbol();
 const _grid = Symbol();
 const _horizontal = Symbol();
 const _pendingRender = Symbol();
@@ -31,6 +32,7 @@ export class VirtualListElement extends HTMLElement {
     this[_newChild] = null;
     this[_updateChild] = null;
     this[_recycleChild] = null;
+    this[_itemKey] = null;
     this[_grid] = false;
     this[_horizontal] = false;
     this[_pendingRender] = null;
@@ -95,6 +97,14 @@ export class VirtualListElement extends HTMLElement {
     this[_scheduleRender]();
   }
 
+  get itemKey() {
+    return this[_itemKey];
+  }
+  set itemKey(fn) {
+    this[_itemKey] = fn;
+    this[_scheduleRender]();
+  }
+
   get layout() {
     const prefix = this[_horizontal] ? 'horizontal' : 'vertical';
     const suffix = this[_grid] ? '-grid' : '';
@@ -150,8 +160,8 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const {newChild, updateChild, recycleChild, items} = this;
-    Object.assign(list, {newChild, updateChild, recycleChild, items});
+    const {newChild, updateChild, recycleChild, itemKey, items} = this;
+    Object.assign(list, {newChild, updateChild, recycleChild, itemKey, items});
 
     const Layout = await importLayoutClass(
         this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');

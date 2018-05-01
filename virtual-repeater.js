@@ -111,6 +111,7 @@ export const Repeats = Superclass => class extends Superclass {
   set itemKey(fn) {
     if (fn !== this._itemKeyFn) {
       this._itemKeyFn = fn;
+      this._keyToChild.clear();
       this.requestReset();
     }
   }

@@ -1,5 +1,5 @@
-import {directive} from '../../lit-html/lit-html.js';
 import Layout from '../layouts/layout-1d.js';
+import {directive} from '../node_modules/lit-html/lit-html.js';
 import {VirtualList} from '../virtual-list.js';
 
 import {LitMixin} from './lit-repeater.js';

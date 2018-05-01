@@ -1,5 +1,5 @@
-import {html, render} from '../../../../lit-html/lib/lit-extended.js';
 import {list} from '../../../lit-html/lit-list.js';
+import {html, render} from '../../../node_modules/lit-html/lib/lit-extended.js';
 import {itemType, Sample as BaseSample} from '../contacts.js';
 
 export class Sample extends BaseSample {

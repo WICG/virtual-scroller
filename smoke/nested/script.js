@@ -1,6 +1,6 @@
-import {html, render} from '../../../lit-html/lit-html.js';
 import Layout from '../../layouts/layout-1d.js';
 import {list} from '../../lit-html/lit-list.js';
+import {html, render} from '../../node_modules/lit-html/lit-html.js';
 import {VirtualList} from '../../virtual-list.js';
 
 const items = new Array(40).fill({
