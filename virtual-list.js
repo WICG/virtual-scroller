@@ -307,7 +307,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         // console.debug(`_positionChild #${this._container.id} > #${child.id}:
         // top ${top}`);
         child.style.position = 'absolute';
-        child.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+        child.style.transform = `translate(${left}px, ${top}px)`;
       }
     });
   }

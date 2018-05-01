@@ -1,11 +1,15 @@
-# VirtualRepeater (Repeats mixin)
+# Virtual list pieces
+
+This document gives an overview of various pieces we use to build up the `<virtual-list>` element. For now we are considering these implementation details. A future proposal may expose these building blocks more directly, but only after significant refinement.
+
+## VirtualRepeater (Repeats mixin)
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
 - Given an `items` array, it displays `num` elements starting from `first` index.
 - Delegates DOM creation, update and recycling via `newChild, updateChild, recycleChild`.
 - Delegates DOM layout via `_measureCallback`.
 
-## Basic setup
+### Basic setup
 
 ```js
 const repeater = new VirtualRepeater({
@@ -36,7 +40,7 @@ const repeater = new VirtualRepeater({
 });
 ```
 
-## Recycling
+### Recycling
 
 You can recycle DOM through the `recycleChild`, and use the recycled DOM
 in `newChild`.
@@ -84,7 +88,7 @@ setTimeout(() => {
 
 ```
 
-## Data manipulation
+### Data manipulation
 
 Updates to the `items` array instance will not be captured by VirtualRepeater.
 
@@ -102,13 +106,13 @@ repeater.items.push({name: 'new item'});
 repeater.requestReset();
 ```
 
-## Protected methods/properties
+### Protected methods/properties
 
-### _incremental
+#### _incremental
 
 Set to true to disable DOM additions/removals done by VirtualRepeater.
 
-### _measureCallback()
+#### _measureCallback()
 
 You can receive child layout information through `_measureCallback`,
 which will get invoked after each rendering.
@@ -122,7 +126,7 @@ repeater._measureCallback = (measuresInfo) => {
 };
 ```
 
-# Layout
+## Layout
 
 Given a viewport size and total items count, it computes children position, container size, range of visible items, and scroll error.
 
@@ -187,7 +191,7 @@ el.addEventListener('scroll', () => {
 });
 ```
 
-# VirtualList (RepeatsAndScrolls mixin)
+## VirtualList (RepeatsAndScrolls mixin)
 
 - Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance
 - Exposes a `layout` property, updates the `layout.totalItems`, `layout.viewportSize`, and the scroll position (`layout.scrollTo()`)

@@ -1,5 +1,5 @@
-import {html, render} from '../../../../lit-html/lib/lit-extended.js';
 import {repeat} from '../../../lit-html/lit-incremental-repeater.js';
+import {html, render} from '../../../node_modules/lit-html/lib/lit-extended.js';
 
 class LitIncrementalListElement extends HTMLElement {
   constructor() {
