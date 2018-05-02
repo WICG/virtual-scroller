@@ -28,8 +28,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._isContainerVisible = false;
     this._containerElement = null;
 
-    this._containerRO =
-        new ResizeObserver((entries) => this._handleContainerResize(entries));
+    this._containerRO = new ResizeObserver(
+        (entries) => this._containerSizeChanged(entries[0].contentRect));
 
     if (config) {
       Object.assign(this, config);
@@ -255,11 +255,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   /**
    * @private
    */
-  _handleContainerResize(entries) {
+  _containerSizeChanged(size) {
     // Include also padding.
-    const cr = entries[0].contentRect;
-    const width = cr.left + cr.right;
-    const height = cr.top + cr.bottom;
+    const width = size.left + size.right;
+    const height = size.top + size.bottom;
     // console.debug('container changed size', {width, height});
     this._isContainerVisible = width > 0 || height > 0;
     this._scheduleUpdateView();
