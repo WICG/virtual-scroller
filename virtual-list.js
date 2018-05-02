@@ -28,6 +28,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._isContainerVisible = false;
     this._containerElement = null;
 
+    this._containerRO =
+        new ResizeObserver((entries) => this._handleContainerResize(entries));
+
     if (config) {
       Object.assign(this, config);
     }
@@ -42,15 +45,15 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
 
     removeEventListener('scroll', this);
-    removeEventListener('resize', this);
 
     super.container = container;
 
     if (container) {
       addEventListener('scroll', this);
-      addEventListener('resize', this);
-      this._scheduleUpdateView();
     }
+
+    this._containerRO.disconnect();
+    this._isContainerVisible = false;
 
     // Update the containerElement, copy min-width/height styles to new
     // container.
@@ -67,6 +70,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     if (this._containerElement && containerStyle) {
       this._containerElement.setAttribute('style', containerStyle);
+    }
+    if (this._containerElement) {
+      this._containerRO.observe(this._containerElement);
     }
   }
 
@@ -118,7 +124,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   handleEvent(event) {
     switch (event.type) {
       case 'scroll':
-      case 'resize':
         this._scheduleUpdateView();
         break;
       case 'scrollsizechange':
@@ -162,14 +167,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 
     this._layout.totalItems = this._items ? this._items.length : 0;
 
-    const listBounds = this._containerElement.getBoundingClientRect();
     // Avoid updating viewport if container is not visible.
-    this._isContainerVisible = Boolean(
-        listBounds.width || listBounds.height || listBounds.top ||
-        listBounds.left);
     if (!this._isContainerVisible) {
       return;
     }
+    const listBounds = this._containerElement.getBoundingClientRect();
 
     const scrollerWidth = window.innerWidth;
     const scrollerHeight = window.innerHeight;
@@ -249,6 +251,18 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     const last = first + num;
     this._container.dispatchEvent(
         new RangeChangeEvent('rangechange', {first, last}));
+  }
+  /**
+   * @private
+   */
+  _handleContainerResize(entries) {
+    // Include also padding.
+    const cr = entries[0].contentRect;
+    const width = cr.left + cr.right;
+    const height = cr.top + cr.bottom;
+    // console.debug('container changed size', {width, height});
+    this._isContainerVisible = width > 0 || height > 0;
+    this._scheduleUpdateView();
   }
 };
 
