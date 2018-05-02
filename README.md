@@ -22,6 +22,7 @@ The (tentative) API design choices made here, as well as the list's capabilities
   list.newChild = (item, index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + item.name;
+    child.onclick = () => console.log(`clicked item #${index}`);
     return child;
   };
 
