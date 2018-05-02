@@ -11,9 +11,13 @@
       margin: 10px auto;
     }
 
-    .fallback::before {
-      content: 'Loading ...';
-      line-height: 50px;
+    fallback-element {
+      display: block;
+    }
+
+    fallback-element::before {
+      content: 'Loading...';
+      line-height: 80px;
     }
   </style>
 </head>
@@ -30,31 +34,33 @@
     import '../virtual-list-element.js';
     import './contacts/contact-element.js';
 
-    const virtualList = document.querySelector('virtual-list');
-
-    Object.assign(virtualList, {
-      newChild(contact) {
-        if (contact.fallback) {
-          const fallback = document.createElement('div');
-          fallback.classList.add('fallback');
-          return fallback;
-        }
-        return document.createElement('contact-element');
-      },
-      updateChild(element, contact) {
-        element.contact = contact;
-      },
-      itemKey(contact) {
-        return contact.guid;
-      }
-    });
-
-    const fallbackHeight = 50;
+    const fallbackHeight = 80;
     const fallbacks = [];
     for (let i = 0, l = Math.ceil(innerHeight / fallbackHeight) + 5; i < l; i++) {
       fallbacks.push({ fallback: true, guid: 'fallback' + i });
     }
-    virtualList.items = [...fallbacks];
+
+    const nodePool = {
+      'fallback-element': [],
+      'contact-element': []
+    };
+    const virtualList = document.querySelector('virtual-list');
+    Object.assign(virtualList, {
+      newChild(contact) {
+        const type = contact.fallback ? 'fallback-element' : 'contact-element';
+        return nodePool[type].pop() || document.createElement(type);
+      },
+      updateChild(element, contact) {
+        element.contact = contact;
+      },
+      recycleChild(element) {
+        nodePool[element.localName].push(element);
+      },
+      itemKey(contact) {
+        return contact.guid;
+      },
+      items: [...fallbacks]
+    });
 
     let delayMs = 1000;
     let isLoading = false;
