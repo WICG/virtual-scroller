@@ -229,21 +229,12 @@ list.addEventListener('rangechange', (event) => {
 
 ### Scrolling
 
-`<virtual-list>` needs to be sized in order to determine how many items should be rendered. Its default size is:
-```css
-virtual-list {
-  /* https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-width */
-  width: 300px;
-  /* https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-height */
-  height: 150px;
-}
-```
+`<virtual-list>` needs to be sized in order to determine how many items should be rendered. Its default size is 300px × 150px, similar to [CSS inline replaced elements](https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-width) like images and iframes.
 
-Main document scrolling will be achievable through [`document.rootScroller`](https://www.chromestatus.com/feature/4533350404456448)
+Main document scrolling will be achievable through [`document.rootScroller`](https://github.com/bokand/root-scroller)
 ```html
 <virtual-list style="height: 100vh"></virtual-list>
 <script type="module">
-  import './node_modules/virtual-list/virtual-list-element.js';
   document.rootScroller = document.querySelector('virtual-list');
 </script>
 ```
