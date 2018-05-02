@@ -1,0 +1,116 @@
+<html>
+
+<head>
+  <title>Fallback element</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      max-width: 600px;
+      margin: 10px auto;
+    }
+
+    .fallback::before {
+      content: 'Loading ...';
+      line-height: 50px;
+    }
+  </style>
+</head>
+
+<body>
+  <label>
+    Server response time (ms):
+    <input type="number" value=1000 min=0 max=10000 onchange="updateDelay(this)">
+  </label>
+
+  <virtual-list></virtual-list>
+
+  <script type="module">
+    import '../virtual-list-element.js';
+    import './contacts/contact-element.js';
+
+    const virtualList = document.querySelector('virtual-list');
+
+    Object.assign(virtualList, {
+      newChild(contact) {
+        if (contact.fallback) {
+          const fallback = document.createElement('div');
+          fallback.classList.add('fallback');
+          return fallback;
+        }
+        return document.createElement('contact-element');
+      },
+      updateChild(element, contact) {
+        element.contact = contact;
+      },
+      itemKey(contact) {
+        return contact.guid;
+      }
+    });
+
+    const fallbackHeight = 50;
+    const fallbacks = [];
+    for (let i = 0, l = Math.ceil(innerHeight / fallbackHeight) + 5; i < l; i++) {
+      fallbacks.push({ fallback: true, guid: 'fallback' + i });
+    }
+    virtualList.items = [...fallbacks];
+
+    let delayMs = 1000;
+    let isLoading = false;
+    let allContacts = null;
+    loadMore();
+
+    async function loadMore() {
+      if (isLoading) return;
+      isLoading = true;
+
+      virtualList.removeEventListener('rangechange', onRangechange);
+
+      const newContacts = await getContacts();
+
+      const i = virtualList.items.indexOf(fallbacks[0]);
+      if (newContacts.length) {
+        // Keep fallbacks, insert newContacts.
+        virtualList.items.splice(i, 0, ...newContacts);
+        virtualList.addEventListener('rangechange', onRangechange);
+      } else {
+        // Loaded all contacts! Remove fallbacks.
+        virtualList.items.splice(i, fallbacks.length);
+      }
+      virtualList.requestReset();
+
+      isLoading = false;
+    }
+
+    async function getContacts() {
+      if (!allContacts) {
+        allContacts = await fetch('contacts/contacts.json').then(resp => resp.json());
+      }
+      // Simulate slow server load...
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      return allContacts.splice(0, fallbacks.length);
+    }
+
+    function onRangechange(range) {
+      const i = virtualList.items.indexOf(fallbacks[0]);
+      if (i >= 0 && range.last > i) {
+        loadMore();
+      }
+    }
+
+    window.updateDelay = function updateDelay(delayEl) {
+      delayMs = delayEl.valueAsNumber;
+      if (Number.isNaN(delayMs)) {
+        // Default.
+        delayMs = 1000;
+      } else {
+        // Force min/max.
+        delayMs = Math.max(Number.parseInt(delayEl.min), Math.min(delayMs, Number.parseInt(delayEl.max)));
+      }
+      delayEl.value = delayMs;
+    };
+  </script>
+</body>
+
+</html>

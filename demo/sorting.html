@@ -10,11 +10,6 @@
       max-width: 600px;
       margin: 10px auto;
     }
-
-    contact-element {
-      will-change: transform;
-      transition: transform 200ms ease-in-out;
-    }
   </style>
 </head>
 
@@ -29,11 +24,13 @@
 
   <script type="module">
     import '../virtual-list-element.js';
+    import './contacts/contact-element.js';
 
     const virtualList = document.querySelector('virtual-list');
 
     virtualList.newChild = (contact) => {
       const element = document.createElement('contact-element');
+      element.setAttribute('sortable', '');
       element.addEventListener('moveup', (event) => moveContact(event.target.contact, -1));
       element.addEventListener('movedown', (event) => moveContact(event.target.contact, 1));
       return element;
@@ -56,77 +53,6 @@
     window.toggleItemKey = function toggleItemKey(useGuid) {
       virtualList.itemKey = useGuid ? (contact) => contact.guid : null;
     };
-  </script>
-
-  <script type="module">
-    class ContactElement extends HTMLElement {
-      connectedCallback() {
-        if (this.shadowRoot) {
-          return;
-        }
-        this.attachShadow({ mode: 'open' }).innerHTML = `
-<style>
-  :host {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 1rem 0;
-    border-bottom: 1px solid #eee;
-  }
-  img {
-    width: 50px;
-    height: 50px;
-    margin-right: 15px;
-    border-radius: 50%;
-    background-color: lightgray;
-  }
-  label {
-    width: 100%;
-    flex: 1;
-  }
-  button {
-    background-color: transparent;
-    border: none;
-    outline: none;
-  }
-</style>
-<img id="img">
-<label id="label"></label>
-<span id="counter"></span>
-<button id="up">🔼</button>
-<button id="down">🔽</button>`;
-
-        this._img = this.shadowRoot.querySelector('#img');
-        this._label = this.shadowRoot.querySelector('label');
-        this._counter = this.shadowRoot.querySelector('#counter');
-        this._renderCount = 0;
-
-        const up = this.shadowRoot.querySelector('#up');
-        up.addEventListener('click', () => this.dispatchEvent(new Event('moveup')));
-        const down = this.shadowRoot.querySelector('#down');
-        down.addEventListener('click', () => this.dispatchEvent(new Event('movedown')));
-
-        this.contact && this._render();
-      }
-      get contact() {
-        return this._contact;
-      }
-      set contact(contact) {
-        if (contact !== this._contact) {
-          this._contact = contact;
-          this._render();
-        }
-      }
-      _render() {
-        if (!this.shadowRoot) return;
-        const contact = this.contact || {};
-        this._img.src = contact.image;
-        this._label.textContent = contact.name;
-        this._label.style.color = contact.color;
-        this._counter.textContent = `render count: ${++this._renderCount}`;
-      }
-    }
-    customElements.define('contact-element', ContactElement);
   </script>
 </body>
 
