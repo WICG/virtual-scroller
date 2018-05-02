@@ -1,56 +1,54 @@
+import Layout from '../../layouts/layout-1d.js';
 import {HtmlSpec} from '../../node_modules/streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js';
-import {VirtualListElement} from '../../virtual-list-element.js';
+import {VirtualList} from '../../virtual-list.js';
 
-class HTMLSpecViewer extends VirtualListElement {
-  connectedCallback() {
-    super.connectedCallback();
-    if (!this._htmlSpec) {
-      this._htmlSpec = new HtmlSpec();
-      this._htmlSpec.head.style.display = 'none';
-      this.appendChild(this._htmlSpec.head);
+const htmlSpec = new HtmlSpec();
+htmlSpec.head.style.display = 'none';
+document.body.appendChild(htmlSpec.head);
 
-      this.items = [];
-      this.addNextChunk();
-      this.addEventListener(
-          'rangechange', (event) => this.onRangechange(event));
-    }
-  }
+const items = [];
 
+const list = new VirtualList({
+  items,
+  container: document.body,
+  layout: new Layout({itemSize: {height: 1000}}),
   newChild(item) {
     return item;
-  }
-
+  },
   recycleChild() {
-    // keep children in DOM.
-  }
+    // Keep nodes in the dom.
+  },
+});
+document.body.addEventListener('rangechange', onRangechange);
 
-  async addNextChunk(chunk = 10) {
-    if (this._adding) {
-      return;
-    }
-    this._adding = true;
-    const stream = this._htmlSpec.advance(this.items[this.items.length - 1]);
-    for await (const el of iterateStream(stream)) {
-      if (/^(style|link|script)$/.test(el.localName)) {
-        this._htmlSpec.head.appendChild(el);
-      } else {
-        this.items.push(el);
-        chunk--;
-      }
-      if (chunk === 0) {
-        this.requestReset();
-        break;
-      }
-    }
-    this._adding = false;
-  }
+let isAddingChunks = false;
+addNextChunk();
 
-  onRangechange(range) {
-    if (range.last >= this.items.length - 4) {
-      this.addNextChunk();
+async function addNextChunk(chunk = 10) {
+  if (isAddingChunks) {
+    return;
+  }
+  isAddingChunks = true;
+  const last = items[items.length - 1];
+  const stream = htmlSpec.advance(last);
+  for await (const el of iterateStream(stream)) {
+    if (/^(style|link|script)$/.test(el.localName)) {
+      htmlSpec.head.appendChild(el);
+    } else {
+      items.push(el);
+      chunk--;
+    }
+    if (chunk === 0) {
+      list.requestReset();
+      break;
     }
   }
+  isAddingChunks = false;
 }
 
-customElements.define('html-spec-viewer', HTMLSpecViewer);
+function onRangechange(range) {
+  if (range.last >= items.length - 4) {
+    addNextChunk();
+  }
+}
