@@ -27,6 +27,16 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._pendingUpdateView = null;
     this._isContainerVisible = false;
     this._containerElement = null;
+    this._layout = null;
+    this._scrollTarget = null;
+    // Keep track of original inline style of the container,
+    // so it can be restored when container is changed.
+    this._containerInlineStyle = null;
+    // A sentinel element that sizes the container when
+    // it is a scrolling element.
+    this._sizer = null;
+    // We keep track of the scroll size to support changing container.
+    this._scrollSize = null;
 
     this._containerRO = new ResizeObserver(
         (entries) => this._containerSizeChanged(entries[0].contentRect));
@@ -40,39 +50,47 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     return this._container;
   }
   set container(container) {
-    if (container === this._container) {
-      return;
-    }
-
-    removeEventListener('scroll', this);
-
     super.container = container;
 
-    if (container) {
-      addEventListener('scroll', this);
+    const oldEl = this._containerElement;
+    // Consider document fragments as shadowRoots.
+    const newEl =
+        (container && container.nodeType === Node.DOCUMENT_FRAGMENT_NODE) ?
+        container.host :
+        container;
+    if (oldEl === newEl) {
+      return;
     }
 
     this._containerRO.disconnect();
     this._isContainerVisible = false;
 
-    // Update the containerElement, copy min-width/height styles to new
-    // container.
-    let containerStyle = null;
-    if (this._containerElement) {
-      containerStyle = this._containerElement.getAttribute('style');
-      this._containerElement.removeAttribute('style');
+    if (oldEl) {
+      if (this._containerInlineStyle) {
+        oldEl.setAttribute('style', this._containerInlineStyle);
+      } else {
+        oldEl.removeAttribute('style');
+      }
+      this._containerInlineStyle = null;
+      if (oldEl === this._scrollTarget) {
+        oldEl.removeEventListener('scroll', this, {passive: true});
+        this._sizer && this._sizer.remove();
+      }
+    } else {
+      // First time container was setup, add listeners only now.
+      addEventListener('scroll', this, {passive: true});
     }
-    // Consider document fragments as shadowRoots.
-    this._containerElement =
-        (container && container.nodeType === Node.DOCUMENT_FRAGMENT_NODE) ?
-        container.host :
-        container;
 
-    if (this._containerElement && containerStyle) {
-      this._containerElement.setAttribute('style', containerStyle);
-    }
-    if (this._containerElement) {
-      this._containerRO.observe(this._containerElement);
+    this._containerElement = newEl;
+
+    if (newEl) {
+      this._containerInlineStyle = newEl.getAttribute('style') || null;
+      if (newEl === this._scrollTarget) {
+        this._sizer = this._sizer || this._createContainerSizer();
+        this._container.prepend(this._sizer);
+      }
+      this._sizeContainer(this._scrollSize);
+      this._containerRO.observe(newEl);
     }
   }
 
@@ -90,10 +108,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._layout.removeEventListener('scrollerrorchange', this);
       this._layout.removeEventListener('itempositionchange', this);
       this._layout.removeEventListener('rangechange', this);
-      // Remove min-width/height from containerElement so
-      // layout can get correct viewport size.
+      // Reset container size so layout can get correct viewport size.
       if (this._containerElement) {
-        this._containerElement.removeAttribute('style');
+        this._sizeContainer();
         this.requestRemeasure();
       }
     }
@@ -112,6 +129,44 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
   }
 
+  /**
+   * The element that generates scroll events and defines the container
+   * viewport. The value `null` (default) corresponds to `window` as scroll
+   * target.
+   * @type {Element|null}
+   */
+  get scrollTarget() {
+    return this._scrollTarget;
+  }
+  /**
+   * @param {Element|null} target
+   */
+  set scrollTarget(target) {
+    // Consider window as null.
+    if (target === window) {
+      target = null;
+    }
+    if (this._scrollTarget === target) {
+      return;
+    }
+    if (this._scrollTarget) {
+      this._scrollTarget.removeEventListener('scroll', this, {passive: true});
+      if (this._sizer && this._scrollTarget === this._containerElement) {
+        this._sizer.remove();
+      }
+    }
+
+    this._scrollTarget = target;
+
+    if (target) {
+      target.addEventListener('scroll', this, {passive: true});
+      if (target === this._containerElement) {
+        this._sizer = this._sizer || this._createContainerSizer();
+        this._container.prepend(this._sizer);
+      }
+    }
+  }
+
   requestReset() {
     super.requestReset();
     this._scheduleUpdateView();
@@ -124,10 +179,13 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   handleEvent(event) {
     switch (event.type) {
       case 'scroll':
-        this._scheduleUpdateView();
+        if (!this._scrollTarget || event.target === this._scrollTarget) {
+          this._scheduleUpdateView();
+        }
         break;
       case 'scrollsizechange':
         this._sizeContainer(event.detail);
+        this._scrollSize = event.detail;
         break;
       case 'scrollerrorchange':
         this._correctScrollError(event.detail);
@@ -141,6 +199,18 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       default:
         console.warn('event not handled', event);
     }
+  }
+  /**
+   * @return {!Element}
+   * @private
+   */
+  _createContainerSizer() {
+    const sizer = document.createElement('div');
+    sizer.style.width = '1px';
+    sizer.style.height = '1px';
+    sizer.style.position = 'absolute';
+    sizer.textContent = ' ';
+    return sizer;
   }
 
   // Rename _ordered to _kids?
@@ -173,31 +243,54 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
     const listBounds = this._containerElement.getBoundingClientRect();
 
-    const scrollerWidth = window.innerWidth;
-    const scrollerHeight = window.innerHeight;
-    const xMin = Math.max(0, Math.min(scrollerWidth, listBounds.left));
-    const yMin = Math.max(0, Math.min(scrollerHeight, listBounds.top));
-    const xMax = this._layout.direction === 'vertical' ?
-        Math.max(0, Math.min(scrollerWidth, listBounds.right)) :
-        scrollerWidth;
-    const yMax = this._layout.direction === 'vertical' ?
-        scrollerHeight :
-        Math.max(0, Math.min(scrollerHeight, listBounds.bottom));
-    const width = xMax - xMin;
-    const height = yMax - yMin;
+    const scrollBounds = this._scrollTarget ?
+        this._scrollTarget.getBoundingClientRect() :
+        {top: 0, left: 0, width: innerWidth, height: innerHeight};
+    let width, height, top, left;
+    if (this._scrollTarget === this._containerElement) {
+      width = scrollBounds.width;
+      height = scrollBounds.height;
+      left = this._scrollTarget.scrollLeft;
+      top = this._scrollTarget.scrollTop;
+    } else {
+      const scrollerWidth = scrollBounds.width;
+      const scrollerHeight = scrollBounds.height;
+      const xMin = Math.max(
+          0, Math.min(scrollerWidth, listBounds.left - scrollBounds.left));
+      const yMin = Math.max(
+          0, Math.min(scrollerHeight, listBounds.top - scrollBounds.top));
+      const xMax = this._layout.direction === 'vertical' ?
+          Math.max(
+              0,
+              Math.min(scrollerWidth, listBounds.right - scrollBounds.left)) :
+          scrollerWidth;
+      const yMax = this._layout.direction === 'vertical' ?
+          scrollerHeight :
+          Math.max(
+              0,
+              Math.min(scrollerHeight, listBounds.bottom - scrollBounds.top));
+      width = xMax - xMin;
+      height = yMax - yMin;
+      left = Math.max(0, -(listBounds.x - scrollBounds.left));
+      top = Math.max(0, -(listBounds.y - scrollBounds.top));
+    }
     this._layout.viewportSize = {width, height};
 
-    const left = Math.max(0, -listBounds.x);
-    const top = Math.max(0, -listBounds.y);
     this._layout.scrollTo({top, left});
   }
   /**
    * @private
    */
   _sizeContainer(size) {
-    const style = this._containerElement.style;
-    style.minWidth = size.width ? size.width + 'px' : null;
-    style.minHeight = size.height ? size.height + 'px' : null;
+    if (this._scrollTarget === this._containerElement) {
+      const left = size && size.width ? size.width - 1 : 0;
+      const top = size && size.height ? size.height - 1 : 0;
+      this._sizer.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+    } else {
+      const style = this._containerElement.style;
+      style.minWidth = size && size.width ? size.width + 'px' : null;
+      style.minHeight = size && size.height ? size.height + 'px' : null;
+    }
   }
   /**
    * @private
@@ -241,7 +334,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _correctScrollError(err) {
-    window.scroll(window.scrollX - err.left, window.scrollY - err.top);
+    if (this._scrollTarget) {
+      this._scrollTarget.scrollTop += err.top;
+      this._scrollTarget.scrollLeft += err.left;
+    } else {
+      window.scroll(window.scrollX - err.left, window.scrollY - err.top);
+    }
   }
   /**
    * @protected
