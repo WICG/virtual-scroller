@@ -22,6 +22,7 @@ The (tentative) API design choices made here, as well as the list's capabilities
   list.newChild = (item, index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + item.name;
+    child.onclick = () => console.log(`clicked item #${index}`);
     return child;
   };
 
@@ -225,6 +226,18 @@ list.addEventListener('rangechange', (event) => {
     // Perhaps you would want to load more data for display!
   }
 });
+```
+
+### Scrolling
+
+`<virtual-list>` needs to be sized in order to determine how many items should be rendered. Its default size is 300px × 150px, similar to [CSS inline replaced elements](https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-width) like images and iframes.
+
+Main document scrolling will be achievable through [`document.rootScroller`](https://github.com/bokand/root-scroller)
+```html
+<virtual-list style="height: 100vh"></virtual-list>
+<script type="module">
+  document.rootScroller = document.querySelector('virtual-list');
+</script>
 ```
 
 ## Development

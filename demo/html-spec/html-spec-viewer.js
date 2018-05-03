@@ -1,54 +1,73 @@
-import Layout from '../../layouts/layout-1d.js';
 import {HtmlSpec} from '../../node_modules/streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js';
-import {VirtualList} from '../../virtual-list.js';
+import {VirtualListElement} from '../../virtual-list-element.js';
 
-const htmlSpec = new HtmlSpec();
-htmlSpec.head.style.display = 'none';
-document.body.appendChild(htmlSpec.head);
+class HTMLSpecViewer extends VirtualListElement {
+  connectedCallback() {
+    super.connectedCallback();
+    if (!this._htmlSpec) {
+      const style = document.createElement('style');
+      style.textContent = `
+  :host {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    padding: 8px;
+    width: auto;
+    height: auto;
+  }`;
+      this.shadowRoot.appendChild(style);
+      if ('rootScroller' in document) {
+        document.rootScroller = this;
+      }
 
-const items = [];
+      this._htmlSpec = new HtmlSpec();
+      this._htmlSpec.head.style.display = 'none';
+      this.appendChild(this._htmlSpec.head);
 
-const list = new VirtualList({
-  items,
-  container: document.body,
-  layout: new Layout({itemSize: {height: 1000}}),
+      this.items = [];
+      this.addNextChunk();
+      this.addEventListener(
+          'rangechange', (event) => this.onRangechange(event));
+    }
+  }
+
   newChild(item) {
     return item;
-  },
+  }
+
   recycleChild() {
-    // Keep nodes in the dom.
-  },
-});
-document.body.addEventListener('rangechange', onRangechange);
-
-let isAddingChunks = false;
-addNextChunk();
-
-async function addNextChunk(chunk = 10) {
-  if (isAddingChunks) {
-    return;
+    // keep children in DOM.
   }
-  isAddingChunks = true;
-  const last = items[items.length - 1];
-  const stream = htmlSpec.advance(last);
-  for await (const el of iterateStream(stream)) {
-    if (/^(style|link|script)$/.test(el.localName)) {
-      htmlSpec.head.appendChild(el);
-    } else {
-      items.push(el);
-      chunk--;
+
+  async addNextChunk(chunk = 10) {
+    if (this._adding) {
+      return;
     }
-    if (chunk === 0) {
-      list.requestReset();
-      break;
+    this._adding = true;
+    const stream = this._htmlSpec.advance(this.items[this.items.length - 1]);
+    for await (const el of iterateStream(stream)) {
+      if (/^(style|link|script)$/.test(el.localName)) {
+        this._htmlSpec.head.appendChild(el);
+      } else {
+        this.items.push(el);
+        chunk--;
+      }
+      if (chunk === 0) {
+        this.requestReset();
+        break;
+      }
+    }
+    this._adding = false;
+  }
+
+  onRangechange(range) {
+    if (range.last >= this.items.length - 4) {
+      this.addNextChunk();
     }
   }
-  isAddingChunks = false;
 }
 
-function onRangechange(range) {
-  if (range.last >= items.length - 4) {
-    addNextChunk();
-  }
-}
+customElements.define('html-spec-viewer', HTMLSpecViewer);
