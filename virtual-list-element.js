@@ -1,5 +1,14 @@
 import {VirtualList} from './virtual-list.js';
 
+// Lazily loaded Layout classes.
+const dynamicImports = {};
+async function importLayoutClass(url) {
+  if (!dynamicImports[url]) {
+    dynamicImports[url] = import(url).then(module => module.default);
+  }
+  return await dynamicImports[url];
+}
+
 /** Properties */
 const _items = Symbol();
 const _list = Symbol();
@@ -14,14 +23,6 @@ const _pendingRender = Symbol();
 const _render = Symbol();
 const _scheduleRender = Symbol();
 
-// Lazily loaded Layout classes.
-const dynamicImports = {};
-const importLayoutClass = async (url) => {
-  if (!dynamicImports[url]) {
-    dynamicImports[url] = import(url).then(module => module.default);
-  }
-  return await dynamicImports[url];
-};
 
 export class VirtualListElement extends HTMLElement {
   constructor() {
@@ -45,10 +46,15 @@ export class VirtualListElement extends HTMLElement {
     display: block;
     position: relative;
     contain: strict;
+    width: 300px;
+    height: 150px;
+    overflow: auto;
   }
-  ::slotted(*) {
-    box-sizing: border-box;
+  :host(:not([layout])) ::slotted(*), 
+  :host([layout=vertical]) ::slotted(*) {
     max-width: 100%;
+  }
+  :host([layout=horizontal]) ::slotted(*) {
     max-height: 100%;
   }
 </style>
@@ -105,8 +111,14 @@ export class VirtualListElement extends HTMLElement {
     return prefix + suffix;
   }
   set layout(layout) {
+    const old = this.layout;
     this[_horizontal] = layout && layout.startsWith('horizontal');
     this[_grid] = layout && layout.endsWith('-grid');
+    layout = this.layout;
+    // Reflect to attribute.
+    if (old !== layout) {
+      this.setAttribute('layout', layout);
+    }
     this[_scheduleRender]();
   }
 
@@ -144,7 +156,7 @@ export class VirtualListElement extends HTMLElement {
     }
 
     if (!this[_list]) {
-      this[_list] = new VirtualList({container: this});
+      this[_list] = new VirtualList({container: this, scrollTarget: this});
     }
     const list = this[_list];
 
