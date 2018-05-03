@@ -9,23 +9,21 @@
       font-family: Roboto, Helvetica, sans-serif;
       max-width: 600px;
       margin: 10px auto;
+      display: flex;
+      flex-direction: column;
     }
 
     virtual-list {
       width: 100%;
-      height: 50vh;
+      height: 100%;
+      flex: 1;
       margin: 10px 0;
       border-top: 2px solid #eee;
       border-bottom: 2px solid #eee;
     }
 
-    fallback-element {
-      display: block;
-      width: 100%;
-      text-align: center;
-      line-height: 80px;
-      border-bottom: 1px solid #eee;
-      animation: inverse-color 1000ms infinite;
+    contact-element {
+      height: 80px;
     }
 
     @keyframes inverse-color {
@@ -50,101 +48,85 @@
   <script type="module">
     import '../virtual-list-element.js';
     import './contacts/contact-element.js';
+    import { ContactDataSource } from './contacts/contact-data-source.js';
 
-    const fallbackHeight = 80;
-    const fallbacksCount = Math.ceil(innerHeight / fallbackHeight) + 5;
-    const fallbacks = [];
-    for (let i = 0; i < fallbacksCount; i++) {
-      fallbacks.push({ fallback: true, guid: 'fallback' + i, index: i });
-    }
+    /**
+     * 1. A fallback item has the same shape as a contact item, with an additional
+     * field `customAnimation`.
+     * 2. Both fallbacks and contacts are represented with <contact-element>
+     * 3. We load more contacts when user scrolls to the end of the list
+     * (listen for `rangechange`)
+     */
 
-    // Make a copy of the fallbacks.
-    const items = fallbacks.slice();
-
-    const nodePool = {
-      'fallback-element': [],
-      'contact-element': []
-    };
+    const dataSource = new ContactDataSource();
     const virtualList = document.querySelector('virtual-list');
-    Object.assign(virtualList, {
-      newChild(contact) {
-        const type = contact.fallback ? 'fallback-element' : 'contact-element';
-        return nodePool[type].pop() || document.createElement(type);
-      },
-      updateChild(element, contact) {
-        if (contact.fallback) {
-          element.textContent = '... Loading ...';
-          element.style.animationDelay = (50 * contact.index) + 'ms';
-        } else {
-          element.contact = contact;
-        }
-      },
-      recycleChild(element) {
-        nodePool[element.localName].push(element);
-      },
-      itemKey(contact) {
-        return contact.guid;
-      },
-      items,
+    const fallbacks = getFallbacks(virtualList.offsetHeight);
+    let firstFallbackIndex = 0;
+    let lastVisibleIndex = -1;
+
+    virtualList.newChild = (contact) => document.createElement('contact-element');
+    virtualList.updateChild = (element, contact) => {
+      element.style.animation = contact.customAnimation;
+      element.contact = contact;
+    };
+    // Start with fallbacks.
+    virtualList.items = [...fallbacks];
+
+    virtualList.addEventListener('rangechange', (range) => {
+      lastVisibleIndex = range.last;
+      if (lastVisibleIndex >= firstFallbackIndex) {
+        loadMore();
+      }
     });
 
-    let delayMs = 1000;
-    let isLoading = false;
-    let allContacts = null;
-    loadMore();
-
-    window.updateDelay = updateDelay;
-
     async function loadMore() {
-      if (isLoading) return;
-      isLoading = true;
-
-      virtualList.removeEventListener('rangechange', onRangechange);
-
-      const newContacts = await getContacts();
-
-      const i = items.length - fallbacksCount;
-      if (newContacts.length) {
-        // Keep fallbacks, insert newContacts.
-        items.splice(i, 0, ...newContacts);
-        virtualList.addEventListener('rangechange', onRangechange);
+      if (dataSource.loading || dataSource.loadedAll) return;
+      // Load 10x contacts so user has room to scroll once they're loaded.
+      const newContacts = await dataSource.getContacts(fallbacks.length * 10);
+      if (dataSource.loadedAll) {
+        virtualList.items.splice(firstFallbackIndex, fallbacks.length, ...newContacts);
+        firstFallbackIndex = Infinity;
       } else {
-        // Loaded all contacts! Remove fallbacks.
-        items.splice(i, fallbacksCount);
+        virtualList.items.splice(firstFallbackIndex, 0, ...newContacts);
+        firstFallbackIndex += newContacts.length;
       }
       virtualList.requestReset();
-
-      isLoading = false;
-    }
-
-    async function getContacts() {
-      if (!allContacts) {
-        allContacts = await fetch('contacts/contacts.json').then(resp => resp.json());
-      }
-      // Simulate slow server load...
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-      return allContacts.splice(0, fallbacksCount);
-    }
-
-    function onRangechange(range) {
-      if (range.last > items.length - fallbacksCount) {
+      // We need to keep loading if the list is scrolled to the end.
+      if (lastVisibleIndex >= firstFallbackIndex) {
         loadMore();
       }
     }
 
-    function updateDelay(delayEl) {
-      delayMs = delayEl.valueAsNumber;
-      if (Number.isNaN(delayMs)) {
+    function getFallbacks(viewportHeight) {
+      // Compute how many <contact-element> can fit in the virtual-list height.
+      const elementHeight = 80;
+      // We want enough fallbacks to cover the viewport height.
+      const count = Math.ceil(viewportHeight / elementHeight);
+      const fallbacks = [];
+      for (let i = 0; i < count; i++) {
+        fallbacks.push({
+          name: 'Loading...',
+          image: null,
+          customAnimation: `inverse-color 1000ms ${i * 50}ms infinite`,
+        });
+      }
+      return fallbacks;
+    }
+
+    window.updateDelay = function updateDelay(delayEl) {
+      let delay = delayEl.valueAsNumber;
+      if (Number.isNaN(delay)) {
         // Default.
-        delayMs = 1000;
+        delay = 1000;
       } else {
         // Force min/max.
-        delayMs = Math.max(
+        delay = Math.max(
           Number.parseInt(delayEl.min),
-          Math.min(delayMs, Number.parseInt(delayEl.max))
+          Math.min(delay, Number.parseInt(delayEl.max))
         );
       }
-      delayEl.value = delayMs;
+      delayEl.value = delay;
+      dataSource.delay = delay;
     };
   </script>
 </body>

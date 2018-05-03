@@ -9,7 +9,8 @@ class ContactElement extends HTMLElement {
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 1rem 0;
+    padding: 10px;
+    box-sizing: border-box;
     border-bottom: 1px solid #eee;
     will-change: transform;
   }
@@ -69,7 +70,9 @@ class ContactElement extends HTMLElement {
     if (!this.shadowRoot)
       return;
     const contact = this.contact || {};
-    this._img.src = contact.image;
+    if (contact.image) {
+      this._img.src = contact.image;
+    }
     this._label.textContent = contact.name;
     this._label.style.color = contact.color;
     this._counter.textContent = `render count: ${++this._renderCount}`;
