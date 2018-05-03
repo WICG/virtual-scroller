@@ -6,6 +6,23 @@ class HTMLSpecViewer extends VirtualListElement {
   connectedCallback() {
     super.connectedCallback();
     if (!this._htmlSpec) {
+      const style = document.createElement('style');
+      style.textContent = `
+  :host {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    padding: 8px;
+    width: auto;
+    height: auto;
+  }`;
+      this.shadowRoot.appendChild(style);
+      if ('rootScroller' in document) {
+        document.rootScroller = this;
+      }
+
       this._htmlSpec = new HtmlSpec();
       this._htmlSpec.head.style.display = 'none';
       this.appendChild(this._htmlSpec.head);
