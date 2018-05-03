@@ -13,20 +13,29 @@
 
     fallback-element {
       display: block;
+      width: 100%;
+      text-align: center;
+      line-height: 80px;
+      border-bottom: 1px solid #eee;
+      animation: inverse-color 1000ms infinite;
     }
 
-    fallback-element::before {
-      content: 'Loading...';
-      line-height: 80px;
+    @keyframes inverse-color {
+      50% {
+        background-color: #ddd;
+        color: white;
+      }
     }
   </style>
 </head>
 
 <body>
-  <label>
-    Server response time (ms):
-    <input type="number" value=1000 min=0 max=10000 onchange="updateDelay(this)">
-  </label>
+  <p>
+    <label>
+      Server response time (ms):
+      <input type="number" value=1000 min=0 max=10000 onchange="updateDelay(this)">
+    </label>
+  </p>
 
   <virtual-list></virtual-list>
 
@@ -35,10 +44,14 @@
     import './contacts/contact-element.js';
 
     const fallbackHeight = 80;
+    const fallbacksCount = Math.ceil(innerHeight / fallbackHeight) + 5;
     const fallbacks = [];
-    for (let i = 0, l = Math.ceil(innerHeight / fallbackHeight) + 5; i < l; i++) {
-      fallbacks.push({ fallback: true, guid: 'fallback' + i });
+    for (let i = 0; i < fallbacksCount; i++) {
+      fallbacks.push({ fallback: true, guid: 'fallback' + i, index: i });
     }
+
+    // Make a copy of the fallbacks.
+    const items = fallbacks.slice();
 
     const nodePool = {
       'fallback-element': [],
@@ -51,7 +64,12 @@
         return nodePool[type].pop() || document.createElement(type);
       },
       updateChild(element, contact) {
-        element.contact = contact;
+        if (contact.fallback) {
+          element.textContent = '... Loading ...';
+          element.style.animationDelay = (50 * contact.index) + 'ms';
+        } else {
+          element.contact = contact;
+        }
       },
       recycleChild(element) {
         nodePool[element.localName].push(element);
@@ -59,13 +77,15 @@
       itemKey(contact) {
         return contact.guid;
       },
-      items: [...fallbacks]
+      items,
     });
 
     let delayMs = 1000;
     let isLoading = false;
     let allContacts = null;
     loadMore();
+
+    window.updateDelay = updateDelay;
 
     async function loadMore() {
       if (isLoading) return;
@@ -75,14 +95,14 @@
 
       const newContacts = await getContacts();
 
-      const i = virtualList.items.indexOf(fallbacks[0]);
+      const i = items.length - fallbacksCount;
       if (newContacts.length) {
         // Keep fallbacks, insert newContacts.
-        virtualList.items.splice(i, 0, ...newContacts);
+        items.splice(i, 0, ...newContacts);
         virtualList.addEventListener('rangechange', onRangechange);
       } else {
         // Loaded all contacts! Remove fallbacks.
-        virtualList.items.splice(i, fallbacks.length);
+        items.splice(i, fallbacksCount);
       }
       virtualList.requestReset();
 
@@ -95,24 +115,26 @@
       }
       // Simulate slow server load...
       await new Promise(resolve => setTimeout(resolve, delayMs));
-      return allContacts.splice(0, fallbacks.length);
+      return allContacts.splice(0, fallbacksCount);
     }
 
     function onRangechange(range) {
-      const i = virtualList.items.indexOf(fallbacks[0]);
-      if (i >= 0 && range.last > i) {
+      if (range.last > items.length - fallbacksCount) {
         loadMore();
       }
     }
 
-    window.updateDelay = function updateDelay(delayEl) {
+    function updateDelay(delayEl) {
       delayMs = delayEl.valueAsNumber;
       if (Number.isNaN(delayMs)) {
         // Default.
         delayMs = 1000;
       } else {
         // Force min/max.
-        delayMs = Math.max(Number.parseInt(delayEl.min), Math.min(delayMs, Number.parseInt(delayEl.max)));
+        delayMs = Math.max(
+          Number.parseInt(delayEl.min),
+          Math.min(delayMs, Number.parseInt(delayEl.max))
+        );
       }
       delayEl.value = delayMs;
     };
