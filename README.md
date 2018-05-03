@@ -54,7 +54,7 @@ If set, this property is invoked in two scenarios:
 
 * The user scrolls the list, changing which items' elements are visible. In this case, `updateChild` is called for all of the newly-visible elements.
 * The developer sets the `items` property, changing the contents of an item whose element is visible.
-* The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. (See [below](#data-manipulation-using-requestreset) for why this can be useful.)
+* The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
 
 For more on the interplay between `newChild` and `updateChild`, and when each is appropriate, see [the example below](#using-newchild-and-updatechild)
 
@@ -143,8 +143,13 @@ In this example, we are statically displaying a virtual list with four items, wh
 Note that even if we updated the `items` property, nothing new would render in this case:
 
 ```js
-list.items = ['A', 'B', 'C', 'D']; // does nothing
+// Does nothing
+setTimeout(() => {
+  list.items = ['A', 'B', 'C', 'D'];
+}, 100);
 ```
+
+_Note: see [#15](https://github.com/valdrinkoshi/virtual-list/issues/51) for why we included a `setTimeout` here._
 
 If you plan to update your items, you're likely better off using `newChild` to set up the "template" for each item, and using `updateChild` to fill in the data. Like so:
 
@@ -161,7 +166,9 @@ list.updateChild = (child, item) => {
 list.items = ['a', 'b', 'c', 'd'];
 
 // This now works: it calls updateChild four times
-list.items = ['A', 'B', 'C', 'D'];
+setTimeout(() => {
+  list.items = ['A', 'B', 'C', 'D'];
+}, 100);
 ```
 
 ### DOM recycling using `recycleChild`
