@@ -18,6 +18,7 @@ const _recycleChild = Symbol();
 const _itemKey = Symbol();
 const _grid = Symbol();
 const _horizontal = Symbol();
+const _scrollTarget = Symbol();
 const _pendingRender = Symbol();
 /** Functions */
 const _render = Symbol();
@@ -36,6 +37,7 @@ export class VirtualListElement extends HTMLElement {
     this[_grid] = false;
     this[_horizontal] = false;
     this[_pendingRender] = null;
+    this[_scrollTarget] = null;
   }
 
   connectedCallback() {
@@ -60,6 +62,7 @@ export class VirtualListElement extends HTMLElement {
 </style>
 <slot></slot>`;
     }
+    this[_scrollTarget] = findScrollTarget(this);
     this[_scheduleRender]();
   }
 
@@ -159,6 +162,7 @@ export class VirtualListElement extends HTMLElement {
       this[_list] = new VirtualList({container: this, scrollTarget: this});
     }
     const list = this[_list];
+    list.scrollTarget = this[_scrollTarget];
 
     const {newChild, updateChild, recycleChild, itemKey, items} = this;
     Object.assign(list, {newChild, updateChild, recycleChild, itemKey, items});
@@ -173,3 +177,31 @@ export class VirtualListElement extends HTMLElement {
   }
 }
 customElements.define('virtual-list', VirtualListElement);
+
+function findScrollTarget(node) {
+  // Search for element that scrolls up the parent tree.
+  while (node && node !== document.body) {
+    if (node.nodeType === Node.ELEMENT_NODE && scrolls(node)) {
+      // Found it!
+      return node;
+    }
+    node = node.host || node.assignedSlot || node.parentNode;
+  }
+  return null;
+}
+
+function scrolls(element) {
+  // Check inline style to avoid forcing layout.
+  const inlineInfo = scrollInfo(element.style);
+  if (inlineInfo.x || inlineInfo.y) {
+    return true;
+  }
+  const computedInfo = scrollInfo(getComputedStyle(element));
+  return computedInfo.x || computedInfo.y;
+}
+
+function scrollInfo(style) {
+  const x = style.overflowX === 'auto' || style.overflowX === 'scroll';
+  const y = style.overflowY === 'auto' || style.overflowY === 'scroll';
+  return {x, y};
+}
