@@ -54,7 +54,9 @@ If set, this property is invoked in two scenarios:
 
 * The user scrolls the list, changing which items' elements are visible. In this case, `updateChild` is called for all of the newly-visible elements.
 * The developer sets the `items` property, changing the contents of an item whose element is visible.
-* The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. (See [below](#data-manipulation) for why this can be useful.)
+* The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
+
+For more on the interplay between `newChild` and `updateChild`, and when each is appropriate, see [the example below](#using-newchild-and-updatechild)
 
 ### `recycleChild` property
 
@@ -62,7 +64,7 @@ Type: `function(child: Element, item: any, index: number)`
 
 Set this property to replace the default behavior of removing an item's element from the DOM when it is no longer visible.
 
-This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling).
+This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling-using-recyclechild).
 
 _We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-list/issues/25)._
 
@@ -72,7 +74,7 @@ Type: `function(item: any) => any`
 
 Set this property to provide an identifier for a given item.
 
-This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering).
+This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-itemkey).
 
 ### `items` property
 
@@ -99,7 +101,7 @@ Can also be set as an attribute on the element, e.g. `<virtual-list layout="hori
 
 This re-renders all of the currently-displayed items, updating them from their source data using `updateChild`.
 
-This can be useful for if you mutate the `items` array, or elements in it, instead of setting the `items` property to a new value. Also see [the example below](#data-manipulation).
+This can be useful for if you mutate the `items` array, or elements in it, instead of setting the `items` property to a new value. Also see [the example below](#data-manipulation-using-requestreset).
 
 _We are discussing the naming of this API, as well as whether it should exist at all, in [#26](https://github.com/valdrinkoshi/virtual-list/issues/26). The aforementioned [#29](https://github.com/valdrinkoshi/virtual-list/issues/29) is also relevant._
 
@@ -112,11 +114,64 @@ Fired when the list has finished rendering a new range of items, e.g. because th
 - `first`: a number giving the index of the first item currently rendered.
 - `last`: a number giving the index of the last item currently rendered.
 
-Also see [the example below](#range-changes).
+Also see [the example below](#performing-actions-as-the-list-scrolls-using-the-rangechange-event).
 
 ## More examples
 
-### DOM recycling
+### Using `newChild` and `updateChild`
+
+The rule of thumb for these two options is:
+
+* You always have to set `newChild`. It is responsible for actually creating the DOM elements corresponding to each item.
+* You should set `updateChild` if you ever plan on updating the items in the list.
+
+Thus, for completely static lists, you only need to set `newChild`:
+
+```js
+list.newChild = item => {
+  const child = document.createElement('div');
+  child.textContent = item;
+  return child;
+};
+
+// Calls newChild four times (assuming the screen is big enough)
+list.items = ['a', 'b', 'c', 'd'];
+```
+
+In this example, we are statically displaying a virtual list with four items, which we never plan to update. This can be useful for use cases where you would otherwise use static HTML, but want to get the performance benefits of virtualization. (Admittedly, we'd need more than four items to see that happen in reality.)
+
+Note that even if we updated the `items` property, nothing new would render in this case:
+
+```js
+// Does nothing
+setTimeout(() => {
+  list.items = ['A', 'B', 'C', 'D'];
+}, 100);
+```
+
+_Note: see [#15](https://github.com/valdrinkoshi/virtual-list/issues/51) for why we included a `setTimeout` here._
+
+If you plan to update your items, you're likely better off using `newChild` to set up the "template" for each item, and using `updateChild` to fill in the data. Like so:
+
+```js
+list.newChild = item => {
+  return document.createElement('div');
+};
+
+list.updateChild = (child, item) => {
+  child.textContent = item;
+};
+
+// Calls newChild + updateChild four times
+list.items = ['a', 'b', 'c', 'd'];
+
+// This now works: it calls updateChild four times
+setTimeout(() => {
+  list.items = ['A', 'B', 'C', 'D'];
+}, 100);
+```
+
+### DOM recycling using `recycleChild`
 
 You can recycle DOM by using the `recycleChild` function to collect DOM, and reuse it in `newChild`.
 
@@ -127,10 +182,10 @@ const nodePool = [];
 
 Object.assign(list, {
   newChild() {
-    return nodePool.pop() || document.createElement('section');
+    return nodePool.pop() || document.createElement('div');
   },
-  updateChild(child, item, index) {
-    child.textContent = index + ' - ' + item.name;
+  updateChild(child, item) {
+    child.textContent = item;
   },
   recycleChild(child) {
     nodePool.push(child);
@@ -138,7 +193,7 @@ Object.assign(list, {
 };
 ```
 
-### Data manipulation
+### Data manipulation using `requestReset()`
 
 The `<virtual-list>` element will automatically rerender the displayed items when it receives a new `items` array. For example, to add a new item to the end, you could do:
 
@@ -161,9 +216,9 @@ list.requestReset();
 
 In this case, `newChild` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items array.
 
-### Efficient re-ordering
+### Efficient re-ordering using `itemKey`
 
-`<virtual-list>` keeps track of the generated DOM via an internal key/Element map to limit the number of created nodes. 
+`<virtual-list>` keeps track of the generated DOM via an internal key/Element map to limit the number of created nodes.
 
 The default key is the array index, but can be customized through the `itemKey` property.
 
@@ -212,7 +267,7 @@ Now, invoking `moveFirstContactToEnd()` will only move the first contact DOM nod
 
 See [demo/sorting.html](demo/sorting.html) as an example implementation.
 
-### Range changes
+### Performing actions as the list scrolls using the "`rangechange`" event
 
 Listen for the "`rangechange`" event to get notified when the displayed items range changes.
 
