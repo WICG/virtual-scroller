@@ -71,7 +71,7 @@
 
     // Start with fallbacks, generate enough to cover the viewport height.
     const fallbacksCount = Math.ceil(virtualList.offsetHeight / 80);
-    virtualList.items = getFallbacks(fallbacksCount);
+    virtualList.items = createFallbacks(fallbacksCount);
 
     // Keep track of first fallback index to know when we need to load more contacts.
     let firstFallbackIndex = 0;
@@ -97,7 +97,7 @@
       virtualList.requestReset();
     }
 
-    function getFallbacks(count) {
+    function createFallbacks(count) {
       const fallbacks = [];
       for (let i = 0; i < count; i++) {
         fallbacks.push({
