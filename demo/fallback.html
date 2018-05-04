@@ -65,7 +65,7 @@
 
     virtualList.newChild = (contact) => document.createElement('contact-element');
     virtualList.updateChild = (element, contact) => {
-      element.style.animation = contact.customAnimation;
+      element.style.animation = contact.customAnimation || null;
       element.contact = contact;
     };
 
