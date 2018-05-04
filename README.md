@@ -68,11 +68,11 @@ This is often used for node-recycling scenarios, as seen in [the example below](
 
 _We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-list/issues/25)._
 
-### `itemKey` property
+### `childKey` property
 
 Type: `function(item: any) => any`
 
-Set this property to provide an identifier for a given item.
+Set this property to provide a custom identifier for the element corresponding to a given item.
 
 This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-itemkey).
 
@@ -216,11 +216,11 @@ list.requestReset();
 
 In this case, `newChild` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items array.
 
-### Efficient re-ordering using `itemKey`
+### Efficient re-ordering using `childKey`
 
 `<virtual-list>` keeps track of the generated DOM via an internal key/Element map to limit the number of created nodes.
 
-The default key is the array index, but can be customized through the `itemKey` property.
+The default key is the array index, but can be customized through the `childKey` property.
 
 Imagine we have a list of 3 contacts:
 ```js
@@ -244,7 +244,7 @@ function moveFirstContactToEnd() {
   virtualList.requestReset(); // notify virtual-list
 }
 ```
-With the default `itemKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
+With the default `childKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
 ```
 0: <div>B</div> (was <div>A</div>)
 1: <div>C</div> (was <div>B</div>)
@@ -252,9 +252,9 @@ With the default `itemKey`, we would relayout and repaint all the contacts when 
 ```
 This is suboptimal, as we just needed to move the first DOM node to the end.
 
-We can customize the key/Element mapping via `itemKey`:
+We can customize the key/Element mapping via `childKey`:
 ```js
-virtualList.itemKey = (contact) => contact.name;
+virtualList.childKey = (contact) => contact.name;
 ```
 
 This updates the `<virtual-list>` key/Element map to:

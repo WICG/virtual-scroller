@@ -5,7 +5,7 @@ export const Repeats = Superclass => class extends Superclass {
     this._newChildFn = null;
     this._updateChildFn = null;
     this._recycleChildFn = null;
-    this._itemKeyFn = null;
+    this._childKeyFn = null;
 
     this._measureCallback = null;
 
@@ -105,12 +105,12 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
-  get itemKey() {
-    return this._itemKeyFn;
+  get childKey() {
+    return this._childKeyFn;
   }
-  set itemKey(fn) {
-    if (fn !== this._itemKeyFn) {
-      this._itemKeyFn = fn;
+  set childKey(fn) {
+    if (fn !== this._childKeyFn) {
+      this._childKeyFn = fn;
       this._keyToChild.clear();
       this.requestReset();
     }
@@ -388,7 +388,7 @@ export const Repeats = Superclass => class extends Superclass {
    */
   _assignChild(idx) {
     const item = this._items[idx];
-    const key = this.itemKey ? this.itemKey(item) : idx;
+    const key = this.childKey ? this.childKey(item) : idx;
     let child;
     if (child = this._keyToChild.get(key)) {
       this._prevActive.delete(child);

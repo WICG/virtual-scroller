@@ -29,9 +29,9 @@
 <body>
 
   <label>
-    <input type="checkbox" onchange="toggleItemKey(this.checked)"> Use
+    <input type="checkbox" onchange="toggleChildKey(this.checked)"> Use
     <code>contact.guid</code> as
-    <code>itemKey</code>
+    <code>childKey</code>
   </label>
   <virtual-list></virtual-list>
 
@@ -61,8 +61,8 @@
       virtualList.requestReset(); // notify virtual-list
     }
 
-    window.toggleItemKey = function toggleItemKey(useGuid) {
-      virtualList.itemKey = useGuid ? (contact) => contact.guid : null;
+    window.toggleChildKey = function toggleChildKey(useGuid) {
+      virtualList.childKey = useGuid ? (contact) => contact.guid : null;
     };
   </script>
 
