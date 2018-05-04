@@ -62,49 +62,42 @@
 
     const dataSource = new ContactDataSource();
     const virtualList = document.querySelector('virtual-list');
-    const fallbacks = getFallbacks({
-      elementHeight: 80,
-      viewportHeight: virtualList.offsetHeight
-    });
-    let firstFallbackIndex = 0;
-    let lastVisibleIndex = -1;
 
     virtualList.newChild = (contact) => document.createElement('contact-element');
     virtualList.updateChild = (element, contact) => {
       element.style.animation = contact.customAnimation;
       element.contact = contact;
     };
-    // Start with fallbacks.
-    virtualList.items = [...fallbacks];
 
+    // Start with fallbacks, generate enough to cover the viewport height.
+    const fallbacksCount = Math.ceil(virtualList.offsetHeight / 80);
+    virtualList.items = getFallbacks(fallbacksCount);
+
+    // Keep track of first fallback index to know when we need to load more contacts.
+    let firstFallbackIndex = 0;
     virtualList.addEventListener('rangechange', (range) => {
-      lastVisibleIndex = range.last;
-      if (lastVisibleIndex >= firstFallbackIndex) {
+      if (range.last >= firstFallbackIndex) {
         loadMore();
       }
     });
 
     async function loadMore() {
       if (dataSource.loading || dataSource.loadedAll) return;
-      // Load 10x contacts so user has room to scroll once they're loaded.
-      const newContacts = await dataSource.getContacts(fallbacks.length * 10);
+      // Load 5x contacts so user has room to scroll once they're loaded.
+      const newContacts = await dataSource.getContacts(fallbacksCount * 5);
       if (dataSource.loadedAll) {
-        virtualList.items.splice(firstFallbackIndex, fallbacks.length, ...newContacts);
+        // Remove fallbacks.
+        virtualList.items.splice(firstFallbackIndex, fallbacksCount, ...newContacts);
         firstFallbackIndex = Infinity;
       } else {
+        // Insert new contacts while keeping fallbacks at the end of the list.
         virtualList.items.splice(firstFallbackIndex, 0, ...newContacts);
         firstFallbackIndex += newContacts.length;
       }
       virtualList.requestReset();
-      // We need to keep loading if the list is scrolled to the end.
-      if (lastVisibleIndex >= firstFallbackIndex) {
-        loadMore();
-      }
     }
 
-    function getFallbacks({ elementHeight, viewportHeight }) {
-      // We want enough fallbacks to cover the viewport height.
-      const count = Math.ceil(viewportHeight / elementHeight);
+    function getFallbacks(count) {
       const fallbacks = [];
       for (let i = 0; i < count; i++) {
         fallbacks.push({
