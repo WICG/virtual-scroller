@@ -222,28 +222,26 @@ export const Repeats = Superclass => class extends Superclass {
    * the `_measureCallback`
    * @private
    */
-  async _measureChildren() {
-    if (this._ordered.length > 0) {
-      // Grab the children to be measured. We do this
-      // synchronously as _toMeasure relies on _prevFirst and _prevLast.
-      const {indices, children} = this._toMeasure;
-      // We debounce the measurement of a microtask.
-      const id = ++this._measuringId;
-      await Promise.resolve();
-      // Avoid relayouts.
-      if (id !== this._measuringId) {
-        return;
-      }
-      this._measuringId--;
-      const pm = await Promise.all(children.map(
-          (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c)));
-      const mm = /** @type {{ number: { width: number, height: number } }} */
-          (pm.reduce((out, cur, i) => {
-            out[indices[i]] = this._indexToMeasure[indices[i]] = cur;
-            return out;
-          }, {}));
-      this._measureCallback(mm);
+  async _measureChildren({indices, children}) {
+    // We debounce the measurement of a microtask, as some
+    // child might have just been added to the DOM. This
+    // plays nice with browser timing and avoids forcing
+    // layout, while still being executed within a frame.
+    const id = ++this._measuringId;
+    await Promise.resolve();
+    // Avoid relayouts.
+    if (id !== this._measuringId) {
+      return;
     }
+    this._measuringId = -1;
+    const pm = await Promise.all(children.map(
+        (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c)));
+    const mm = /** @type {{ number: { width: number, height: number } }} */
+        (pm.reduce((out, cur, i) => {
+          out[indices[i]] = this._indexToMeasure[indices[i]] = cur;
+          return out;
+        }, {}));
+    this._measureCallback(mm);
   }
 
   /**
@@ -279,7 +277,7 @@ export const Repeats = Superclass => class extends Superclass {
     //     (${this._prevNum}/${this._items.length} ${this._prevFirst} ->
     //     ${this._prevLast}) measure=${shouldMeasure}`);
     if (shouldMeasure) {
-      this._measureChildren();
+      this._measureChildren(this._toMeasure);
     }
 
     // Cleanup
