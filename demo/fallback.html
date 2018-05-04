@@ -53,14 +53,19 @@
     /**
      * 1. A fallback item has the same shape as a contact item, with an additional
      * field `customAnimation`.
-     * 2. Both fallbacks and contacts are represented with <contact-element>
-     * 3. We load more contacts when user scrolls to the end of the list
+     * 2. Both fallbacks and contacts are represented with <contact-element>.
+     * 3. We start with enough fallbacks to cover the viewport.
+     * 4. We load more contacts when user scrolls to the first fallback
      * (listen for `rangechange`)
+     * 5. Once all contacts are loaded, we can finally remove the fallbacks.
      */
 
     const dataSource = new ContactDataSource();
     const virtualList = document.querySelector('virtual-list');
-    const fallbacks = getFallbacks(virtualList.offsetHeight);
+    const fallbacks = getFallbacks({
+      elementHeight: 80,
+      viewportHeight: virtualList.offsetHeight
+    });
     let firstFallbackIndex = 0;
     let lastVisibleIndex = -1;
 
@@ -97,9 +102,7 @@
       }
     }
 
-    function getFallbacks(viewportHeight) {
-      // Compute how many <contact-element> can fit in the virtual-list height.
-      const elementHeight = 80;
+    function getFallbacks({ elementHeight, viewportHeight }) {
       // We want enough fallbacks to cover the viewport height.
       const count = Math.ceil(viewportHeight / elementHeight);
       const fallbacks = [];
