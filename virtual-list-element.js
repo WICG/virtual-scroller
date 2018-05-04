@@ -46,7 +46,6 @@ export class VirtualListElement extends HTMLElement {
     display: block;
     position: relative;
     contain: strict;
-    width: 300px;
     height: 150px;
     overflow: auto;
   }
