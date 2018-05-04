@@ -41,6 +41,8 @@ export const Repeats = Superclass => class extends Superclass {
     this._childToKey = new WeakMap();
     // Used to keep track of measures by index.
     this._indexToMeasure = {};
+    // Used to debounce _measureChildren calls.
+    this._measuringId = -1;
 
     if (config) {
       Object.assign(this, config);
@@ -222,8 +224,17 @@ export const Repeats = Superclass => class extends Superclass {
    */
   async _measureChildren() {
     if (this._ordered.length > 0) {
+      // Grab the children to be measured. We do this
+      // synchronously as _toMeasure relies on _prevFirst and _prevLast.
       const {indices, children} = this._toMeasure;
+      // We debounce the measurement of a microtask.
+      const id = ++this._measuringId;
       await Promise.resolve();
+      // Avoid relayouts.
+      if (id !== this._measuringId) {
+        return;
+      }
+      this._measuringId--;
       const pm = await Promise.all(children.map(
           (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c)));
       const mm = /** @type {{ number: { width: number, height: number } }} */
