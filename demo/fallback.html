@@ -69,24 +69,28 @@
       element.contact = contact;
     };
 
-    // Start with fallbacks, generate enough to cover the viewport height.
+    // Generate enough fallbacks to cover the viewport height.
     const fallbacksCount = Math.ceil(virtualList.offsetHeight / 80);
-    virtualList.items = createFallbacks(fallbacksCount);
+    const items = new Array(fallbacksCount);
+    for (let i = 0; i < fallbacksCount; i++) {
+      items[i] = {
+        name: 'Loading...',
+        customAnimation: `inverse-color 1000ms ${i * 50}ms infinite`,
+      };
+    }
+    virtualList.items = items;
 
     // Keep track of first fallback index to know when we need to load more contacts.
     let firstFallbackIndex = 0;
-    virtualList.addEventListener('rangechange', (range) => {
-      if (range.last >= firstFallbackIndex) {
-        loadMore();
+    virtualList.addEventListener('rangechange', async (range) => {
+      if (dataSource.loading || dataSource.loadedAll || firstFallbackIndex > range.last) {
+        return;
       }
-    });
 
-    async function loadMore() {
-      if (dataSource.loading || dataSource.loadedAll) return;
       // Load 5x contacts so user has room to scroll once they're loaded.
       const newContacts = await dataSource.getContacts(fallbacksCount * 5);
       if (dataSource.loadedAll) {
-        // Remove fallbacks.
+        // Insert new contacts, remove fallbacks.
         virtualList.items.splice(firstFallbackIndex, fallbacksCount, ...newContacts);
         firstFallbackIndex = Infinity;
       } else {
@@ -95,21 +99,9 @@
         firstFallbackIndex += newContacts.length;
       }
       virtualList.requestReset();
-    }
+    });
 
-    function createFallbacks(count) {
-      const fallbacks = [];
-      for (let i = 0; i < count; i++) {
-        fallbacks.push({
-          name: 'Loading...',
-          image: null,
-          customAnimation: `inverse-color 1000ms ${i * 50}ms infinite`,
-        });
-      }
-      return fallbacks;
-    }
-
-    window.updateDelay = function updateDelay(delayEl) {
+    window.updateDelay = (delayEl) => {
       let delay = delayEl.valueAsNumber;
       if (Number.isNaN(delay)) {
         // Default.
