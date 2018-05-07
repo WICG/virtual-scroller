@@ -285,7 +285,7 @@ list.addEventListener('rangechange', (event) => {
 
 ### Scrolling
 
-`<virtual-list>` needs to be sized in order to determine how many items should be rendered. Its default size is 300px × 150px, similar to [CSS inline replaced elements](https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-width) like images and iframes.
+`<virtual-list>` needs to be sized in order to determine how many items should be rendered. Its default height is 150px, similar to [CSS inline replaced elements](https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-height) like images and iframes.
 
 Main document scrolling will be achievable through [`document.rootScroller`](https://github.com/bokand/root-scroller)
 ```html

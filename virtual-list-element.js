@@ -46,16 +46,15 @@ export class VirtualListElement extends HTMLElement {
     display: block;
     position: relative;
     contain: strict;
-    width: 300px;
     height: 150px;
     overflow: auto;
   }
   :host(:not([layout])) ::slotted(*), 
   :host([layout=vertical]) ::slotted(*) {
-    max-width: 100%;
+    width: 100%;
   }
   :host([layout=horizontal]) ::slotted(*) {
-    max-height: 100%;
+    height: 100%;
   }
 </style>
 <slot></slot>`;
