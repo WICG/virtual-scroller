@@ -35,6 +35,14 @@
 
     const virtualList = document.querySelector('virtual-list');
 
+    /**
+     * The items array come in 2 shapes: 
+     * contacts = {name, image, color, ...otherProps}
+     * groups = {group: true, title, count}
+     * 
+     * In each of the following functions we handle the data differently, and we have
+     * dedicated node pools for recycling among them.
+     */
     const nodePool = { group: [], contact: [] };
     virtualList.newChild = (item) => {
       let element;
@@ -61,23 +69,16 @@
     };
 
     // Get contacts, sort and group by name.
-    fetch('contacts/contacts.json')
-      .then((resp) => resp.json())
-      .then((contacts) => {
-        let group = null;
-        return contacts.sort((a, b) => {
-          const nameA = a.name.toUpperCase(); // ignore upper and lowercase
-          const nameB = b.name.toUpperCase(); // ignore upper and lowercase
-          if (nameA < nameB) {
-            return -1;
-          }
-          if (nameA > nameB) {
-            return 1;
-          }
-          // names must be equal
-          return 0;
-        }).reduce((items, item) => {
-          let title = item.name.substr(0, 1);
+    (async () => {
+      const response = await fetch('contacts/contacts.json');
+      // We get an array of contact objects {name, image, color, ...otherProps}.
+      const contacts = await response.json();
+      // Keeps track of the last group created.
+      let group = null;
+      // We sort the contacts by name and insert group objects within.
+      virtualList.items = contacts.sort((a, b) => a.name.localeCompare(b.name))
+        .reduce((groupedContacts, contact) => {
+          const title = contact.name[0];
           if (group && group.title === title) {
             group.count++;
           } else {
@@ -86,13 +87,12 @@
               count: 1,
               title,
             };
-            items.push(group);
+            groupedContacts.push(group);
           }
-          items.push(item);
-          return items;
+          groupedContacts.push(contact);
+          return groupedContacts;
         }, []);
-      })
-      .then((groupedContacts) => virtualList.items = groupedContacts);
+    })();
   </script>
 </body>
 
