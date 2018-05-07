@@ -5,7 +5,7 @@ export const Repeats = Superclass => class extends Superclass {
     this._newChildFn = null;
     this._updateChildFn = null;
     this._recycleChildFn = null;
-    this._itemKeyFn = null;
+    this._childKeyFn = null;
 
     this._measureCallback = null;
 
@@ -41,6 +41,8 @@ export const Repeats = Superclass => class extends Superclass {
     this._childToKey = new WeakMap();
     // Used to keep track of measures by index.
     this._indexToMeasure = {};
+    // Used to debounce _measureChildren calls.
+    this._measuringId = -1;
 
     if (config) {
       Object.assign(this, config);
@@ -105,12 +107,12 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
-  get itemKey() {
-    return this._itemKeyFn;
+  get childKey() {
+    return this._childKeyFn;
   }
-  set itemKey(fn) {
-    if (fn !== this._itemKeyFn) {
-      this._itemKeyFn = fn;
+  set childKey(fn) {
+    if (fn !== this._childKeyFn) {
+      this._childKeyFn = fn;
       this._keyToChild.clear();
       this.requestReset();
     }
@@ -220,19 +222,26 @@ export const Repeats = Superclass => class extends Superclass {
    * the `_measureCallback`
    * @private
    */
-  async _measureChildren() {
-    if (this._ordered.length > 0) {
-      const {indices, children} = this._toMeasure;
-      await Promise.resolve();
-      const pm = await Promise.all(children.map(
-          (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c)));
-      const mm = /** @type {{ number: { width: number, height: number } }} */
-          (pm.reduce((out, cur, i) => {
-            out[indices[i]] = this._indexToMeasure[indices[i]] = cur;
-            return out;
-          }, {}));
-      this._measureCallback(mm);
+  async _measureChildren({indices, children}) {
+    // We debounce the measurement of a microtask, as some
+    // child might have just been added to the DOM. This
+    // plays nice with browser timing and avoids forcing
+    // layout, while still being executed within a frame.
+    const id = ++this._measuringId;
+    await Promise.resolve();
+    // Avoid relayouts.
+    if (id !== this._measuringId) {
+      return;
     }
+    this._measuringId = -1;
+    const pm = await Promise.all(children.map(
+        (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c)));
+    const mm = /** @type {{ number: { width: number, height: number } }} */
+        (pm.reduce((out, cur, i) => {
+          out[indices[i]] = this._indexToMeasure[indices[i]] = cur;
+          return out;
+        }, {}));
+    this._measureCallback(mm);
   }
 
   /**
@@ -268,7 +277,7 @@ export const Repeats = Superclass => class extends Superclass {
     //     (${this._prevNum}/${this._items.length} ${this._prevFirst} ->
     //     ${this._prevLast}) measure=${shouldMeasure}`);
     if (shouldMeasure) {
-      this._measureChildren();
+      this._measureChildren(this._toMeasure);
     }
 
     // Cleanup
@@ -388,7 +397,7 @@ export const Repeats = Superclass => class extends Superclass {
    */
   _assignChild(idx) {
     const item = this._items[idx];
-    const key = this.itemKey ? this.itemKey(item) : idx;
+    const key = this.childKey ? this.childKey(item) : idx;
     let child;
     if (child = this._keyToChild.get(key)) {
       this._prevActive.delete(child);
