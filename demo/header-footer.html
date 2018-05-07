@@ -1,0 +1,85 @@
+<html>
+
+<head>
+  <title>Fallback element</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      margin: 0;
+    }
+
+    virtual-list {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    header {
+      padding: 10px;
+      box-sizing: border-box;
+      width: 100%;
+      color: #333;
+      background-color: #ddd;
+    }
+  </style>
+</head>
+
+<body>
+
+  <virtual-list></virtual-list>
+
+  <script type="module">
+    import '../virtual-list-element.js';
+    import './contacts/contact-element.js';
+
+    const virtualList = document.querySelector('virtual-list');
+
+    virtualList.newChild = (item) => {
+      if (item.group) {
+        const groupEl = document.createElement('header');
+        groupEl.textContent = `${item.title} (${item.count})`;
+        return groupEl;
+      }
+      const contactEl = document.createElement('contact-element');
+      contactEl.contact = item;
+      return contactEl;
+    };
+
+    // Get contacts, sort and group by name.
+    fetch('contacts/contacts.json')
+      .then((resp) => resp.json())
+      .then((contacts) => {
+        let group = null;
+        return contacts.sort((a, b) => {
+          const nameA = a.name.toUpperCase(); // ignore upper and lowercase
+          const nameB = b.name.toUpperCase(); // ignore upper and lowercase
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          // names must be equal
+          return 0;
+        }).reduce((items, item) => {
+          let title = item.name.substr(0, 1);
+          if (group && group.title === title) {
+            group.count++;
+          } else {
+            group = {
+              group: true,
+              count: 1,
+              title,
+            };
+            items.push(group);
+          }
+          items.push(item);
+          return items;
+        }, []);
+      })
+      .then((groupedContacts) => virtualList.items = groupedContacts);
+  </script>
+</body>
+
+</html>
