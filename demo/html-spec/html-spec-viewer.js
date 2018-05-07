@@ -15,7 +15,6 @@ class HTMLSpecViewer extends VirtualListElement {
     right: 0px;
     bottom: 0px;
     padding: 8px;
-    width: auto;
     height: auto;
   }`;
       this.shadowRoot.appendChild(style);

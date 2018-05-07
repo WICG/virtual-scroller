@@ -8,13 +8,17 @@
     body {
       font-family: Roboto, Helvetica, sans-serif;
       max-width: 600px;
-      margin: 10px auto;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin: 10px 0;
     }
 
     virtual-list {
-      width: 100%;
-      height: 50vh;
-      margin: 10px 0;
+      flex: 1;
       border-top: 2px solid #eee;
       border-bottom: 2px solid #eee;
     }
@@ -24,9 +28,9 @@
 <body>
 
   <label>
-    <input type="checkbox" onchange="toggleItemKey(this.checked)"> Use
+    <input type="checkbox" onchange="toggleChildKey(this.checked)"> Use
     <code>contact.guid</code> as
-    <code>itemKey</code>
+    <code>childKey</code>
   </label>
   <virtual-list></virtual-list>
 
@@ -58,8 +62,8 @@
       virtualList.requestReset(); // notify virtual-list
     }
 
-    window.toggleItemKey = function toggleItemKey(useGuid) {
-      virtualList.itemKey = useGuid ? (contact) => contact.guid : null;
+    window.toggleChildKey = function toggleChildKey(useGuid) {
+      virtualList.childKey = useGuid ? (contact) => contact.guid : null;
     };
   </script>
 </body>

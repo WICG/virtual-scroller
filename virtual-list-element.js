@@ -15,7 +15,7 @@ const _list = Symbol();
 const _newChild = Symbol();
 const _updateChild = Symbol();
 const _recycleChild = Symbol();
-const _itemKey = Symbol();
+const _childKey = Symbol();
 const _grid = Symbol();
 const _horizontal = Symbol();
 const _pendingRender = Symbol();
@@ -32,7 +32,7 @@ export class VirtualListElement extends HTMLElement {
     this[_newChild] = null;
     this[_updateChild] = null;
     this[_recycleChild] = null;
-    this[_itemKey] = null;
+    this[_childKey] = null;
     this[_grid] = false;
     this[_horizontal] = false;
     this[_pendingRender] = null;
@@ -46,16 +46,15 @@ export class VirtualListElement extends HTMLElement {
     display: block;
     position: relative;
     contain: strict;
-    width: 300px;
     height: 150px;
     overflow: auto;
   }
   :host(:not([layout])) ::slotted(*), 
   :host([layout=vertical]) ::slotted(*) {
-    max-width: 100%;
+    width: 100%;
   }
   :host([layout=horizontal]) ::slotted(*) {
-    max-height: 100%;
+    height: 100%;
   }
 </style>
 <slot></slot>`;
@@ -97,11 +96,11 @@ export class VirtualListElement extends HTMLElement {
     this[_scheduleRender]();
   }
 
-  get itemKey() {
-    return this[_itemKey];
+  get childKey() {
+    return this[_childKey];
   }
-  set itemKey(fn) {
-    this[_itemKey] = fn;
+  set childKey(fn) {
+    this[_childKey] = fn;
     this[_scheduleRender]();
   }
 
@@ -160,8 +159,8 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const {newChild, updateChild, recycleChild, itemKey, items} = this;
-    Object.assign(list, {newChild, updateChild, recycleChild, itemKey, items});
+    const {newChild, updateChild, recycleChild, childKey, items} = this;
+    Object.assign(list, {newChild, updateChild, recycleChild, childKey, items});
 
     const Layout = await importLayoutClass(
         this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');
