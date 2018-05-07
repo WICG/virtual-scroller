@@ -1,6 +1,6 @@
 import {list} from '../../../lit-html/lit-list.js';
 import {html, render} from '../../../node_modules/lit-html/lib/lit-extended.js';
-import {itemType, Sample as BaseSample} from '../contacts.js';
+import {itemType, Sample as BaseSample, strip} from '../contacts.js';
 
 export class Sample extends BaseSample {
   _setUp() {
