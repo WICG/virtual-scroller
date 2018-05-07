@@ -74,7 +74,7 @@ Type: `function(item: any) => any`
 
 Set this property to provide a custom identifier for the element corresponding to a given item.
 
-This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-itemkey).
+This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-childkey).
 
 ### `items` property
 
