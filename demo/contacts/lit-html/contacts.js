@@ -17,7 +17,7 @@ export class Sample extends BaseSample {
                             contenteditable="true"
                             on-focus="${e => this._scrollToFocused(e)}"
                             on-blur="${
-            e => this._commitChange(idx, 'longText', e.target)}"
+            e => this._commitChange(idx, 'longText', e.target.textContent)}"
                         >
                             ${item.longText}
                         </p>
@@ -28,17 +28,6 @@ export class Sample extends BaseSample {
                     ${item.title}
                 </div>`;
     };
-  }
-
-  _commitChange(idx, prop, el) {
-    if (idx === -1)
-      return;
-    // Restore old value, lit-html will handle the update
-    // https://github.com/Polymer/lit-html/issues/316
-    const newVal = strip(el.textContent);
-    const prevVal = strip(this.items[idx][prop]);
-    el.textContent = prevVal;
-    super._commitChange(idx, prop, newVal);
   }
 
   render() {
