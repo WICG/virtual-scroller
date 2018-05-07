@@ -35,15 +35,29 @@
 
     const virtualList = document.querySelector('virtual-list');
 
+    const nodePool = { group: [], contact: [] };
     virtualList.newChild = (item) => {
+      let element;
       if (item.group) {
-        const groupEl = document.createElement('header');
-        groupEl.textContent = `${item.title} (${item.count})`;
-        return groupEl;
+        element = nodePool.group.pop() || document.createElement('header');
+      } else {
+        element = nodePool.contact.pop() || document.createElement('contact-element');
       }
-      const contactEl = document.createElement('contact-element');
-      contactEl.contact = item;
-      return contactEl;
+      return element;
+    };
+    virtualList.updateChild = (element, item) => {
+      if (item.group) {
+        element.textContent = `${item.title} (${item.count})`;
+      } else {
+        element.contact = item;
+      }
+    };
+    virtualList.recycleChild = (element, item) => {
+      if (item.group) {
+        nodePool.group.push(element);
+      } else {
+        nodePool.contact.push(element);
+      }
     };
 
     // Get contacts, sort and group by name.
