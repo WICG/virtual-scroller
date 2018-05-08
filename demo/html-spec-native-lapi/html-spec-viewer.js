@@ -10,7 +10,7 @@ class HTMLSpecViewer extends VirtualListElement {
       const style = document.createElement('style');
       style.textContent = `
   :host {
-    position: fixed;
+    position: absolute;
     top: 0px;
     left: 0px;
     right: 0px;
