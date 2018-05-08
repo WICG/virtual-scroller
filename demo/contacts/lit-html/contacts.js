@@ -7,6 +7,9 @@ export class Sample extends BaseSample {
     this.template = (item, idx) => {
       const type = itemType(item);
       if (type === 'contact') {
+        // NOTE(valdrin): don't add spaces in `<p contenteditable>` so
+        // lit-html can place its delimiter comments
+        // https://github.com/Polymer/lit-html/issues/316
         return html`
                     <div
                         style="padding: 10px; border-bottom: 1px solid #CCC; width: 100%; box-sizing: border-box;"
@@ -14,13 +17,11 @@ export class Sample extends BaseSample {
                     >
                         <b>#${item.index} - ${item.first} ${item.last}</b>
                         <p
-                            contenteditable="true"
+                            contenteditable
                             on-focus="${e => this._scrollToFocused(e)}"
                             on-blur="${
-            e => this._commitChange(idx, 'longText', e.target.textContent)}"
-                        >
-                            ${item.longText}
-                        </p>
+            e => this._commitChange(idx, 'longText', e.target)}"
+                        >${item.longText}</p>
                     </div>`;
       }
       return html`
@@ -28,6 +29,24 @@ export class Sample extends BaseSample {
                     ${item.title}
                 </div>`;
     };
+  }
+
+  _commitChange(idx, prop, el) {
+    // NOTE(valdrin): ensure lit-html marker comments are always at the right
+    // place. When user deletes all the content and then writes, the new content
+    // goes as the first child. Likewise when the user hits the Return key, new
+    // content is wrapped in a <div>.
+    let startMarker = el.firstChild;
+    while (startMarker.nodeType !== Node.COMMENT_NODE) {
+      startMarker = startMarker.nextSibling;
+    }
+    el.insertBefore(startMarker, el.firstChild);
+    let endMarker = el.lastChild;
+    while (endMarker.nodeType !== Node.COMMENT_NODE) {
+      endMarker = endMarker.previousSibling;
+    }
+    el.appendChild(endMarker);
+    super._commitChange(idx, prop, el.textContent);
   }
 
   render() {
