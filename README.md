@@ -83,6 +83,8 @@ Type: `number`
 
 Set this property to control how many items are contained in the list. (The items are mapped to elements via the `newChild` and `updateChild` properties.)
 
+Can also be set as an attribute on the element, e.g. `<virtual-list items="10"></virtual-list>`
+
 ### `layout` property
 
 Type: `string`

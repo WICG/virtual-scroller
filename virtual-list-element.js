@@ -63,12 +63,14 @@ export class VirtualListElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['layout'];
+    return ['layout', 'items'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
     if (name === 'layout') {
       this.layout = newVal;
+    } else if (name === 'items') {
+      this.items = Number(newVal);
     }
   }
 
@@ -130,7 +132,7 @@ export class VirtualListElement extends HTMLElement {
   }
 
   requestReset() {
-    if (this[_list]) {
+    if (this[_list] && !this[_pendingRender]) {
       this[_list].requestReset();
     }
   }
