@@ -6,7 +6,8 @@ export class Sample extends BaseSample {
   _setUp() {
     const sample = this;
     this.component = function() {
-      const {item, idx} = this.props;
+      const {idx} = this.props;
+      const item = sample.items[idx];
       if (item) {
         const dim = getDims(item, sample.constraint);
         return h(
@@ -45,7 +46,7 @@ export class Sample extends BaseSample {
     render(
         h(List, {
           layout,
-          items,
+          items: items.length,
           component,
           resetValue,
           ref: c => this._root = c.base

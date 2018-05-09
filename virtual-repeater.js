@@ -9,7 +9,7 @@ export const Repeats = Superclass => class extends Superclass {
 
     this._measureCallback = null;
 
-    this._items = null;
+    this._items = -1;
     // Consider renaming this. firstVisibleIndex?
     this._first = 0;
     // Consider renaming this. count? visibleElements?
@@ -124,8 +124,7 @@ export const Repeats = Superclass => class extends Superclass {
 
   set first(idx) {
     if (typeof idx === 'number') {
-      const len = this._items ? this._items.length : 0;
-      const newFirst = Math.max(0, Math.min(idx, len - this._num));
+      const newFirst = Math.max(0, Math.min(idx, this._items - this._num));
       if (newFirst !== this._first) {
         this._first = newFirst;
         this._scheduleRender();
@@ -151,9 +150,11 @@ export const Repeats = Superclass => class extends Superclass {
     return this._items;
   }
 
-  set items(arr) {
-    if (arr !== this._items) {
-      this._items = arr;
+  set items(items) {
+    // TODO(valdrin) should we check if it is a finite number?
+    // Technically, Infinity would break Layout, not VirtualRepeater.
+    if (typeof items === 'number' && items !== this._items) {
+      this._items = items;
       this.first = this._first;
       this.requestReset();
     }
@@ -186,7 +187,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this.items && this.container && this.newChild);
+    return Boolean(this.items !== -1 && this.container && this.newChild);
   }
 
   /**
@@ -254,8 +255,8 @@ export const Repeats = Superclass => class extends Superclass {
     const rangeChanged =
         this._first !== this._prevFirst || this._num !== this._prevNum;
     if (rangeChanged || this._needsReset) {
-      this._last = this._first +
-          Math.min(this._num, this._items.length - this._first) - 1;
+      this._last =
+          this._first + Math.min(this._num, this._items - this._first) - 1;
       if (this._num || this._prevNum) {
         if (this._needsReset) {
           this._reset(this._first, this._last);
@@ -322,14 +323,13 @@ export const Repeats = Superclass => class extends Superclass {
     const end = Math.min(this._last, this._prevFirst - 1);
     for (let idx = end; idx >= start; idx--) {
       const child = this._assignChild(idx);
-      const item = this._items[idx];
       if (this._manageDom) {
         if (this._maintainDomOrder || !this._childIsAttached(child)) {
           this._insertBefore(child, this._firstChild);
         }
       }
       if (this.updateChild) {
-        this.updateChild(child, item, idx);
+        this.updateChild(child, idx);
       }
       this._ordered.unshift(child);
     }
@@ -343,14 +343,13 @@ export const Repeats = Superclass => class extends Superclass {
     const end = this._last;
     for (let idx = start; idx <= end; idx++) {
       const child = this._assignChild(idx);
-      const item = this._items[idx];
       if (this._manageDom) {
         if (this._maintainDomOrder || !this._childIsAttached(child)) {
           this._insertBefore(child, null);
         }
       }
       if (this.updateChild) {
-        this.updateChild(child, item, idx);
+        this.updateChild(child, idx);
       }
       this._ordered.push(child);
     }
@@ -371,7 +370,6 @@ export const Repeats = Superclass => class extends Superclass {
     this._ordered.length = 0;
     for (let n = 0; n < len; n++) {
       const idx = first + n;
-      const item = this._items[idx];
       const child = this._assignChild(idx);
       this._ordered.push(child);
       if (this._manageDom) {
@@ -386,7 +384,7 @@ export const Repeats = Superclass => class extends Superclass {
         }
       }
       if (this.updateChild) {
-        this.updateChild(child, item, idx);
+        this.updateChild(child, idx);
       }
     }
   }
@@ -396,13 +394,12 @@ export const Repeats = Superclass => class extends Superclass {
    * @private
    */
   _assignChild(idx) {
-    const item = this._items[idx];
-    const key = this.childKey ? this.childKey(item) : idx;
+    const key = this.childKey ? this.childKey(idx) : idx;
     let child;
     if (child = this._keyToChild.get(key)) {
       this._prevActive.delete(child);
     } else {
-      child = this.newChild(item, idx);
+      child = this.newChild(idx);
       this._keyToChild.set(key, child);
       this._childToKey.set(child, key);
     }
@@ -427,7 +424,7 @@ export const Repeats = Superclass => class extends Superclass {
       this._keyToChild.delete(key);
       this._active.delete(child);
       if (this.recycleChild) {
-        this.recycleChild(child, this._items[idx], idx);
+        this.recycleChild(child, idx);
       } else {
         this._removeChild(child);
       }

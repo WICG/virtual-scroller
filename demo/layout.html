@@ -83,13 +83,13 @@
     const main = document.querySelector('main');
     const list = document.querySelector('#list');
     const recycler = document.querySelector('#recycler');
+    let myItems = [];
 
-
-    list.newChild = (item, index) => {
+    list.newChild = (index) => {
       return document.createElement('section');
     };
-    list.updateChild = (child, item, index) => {
-      child.textContent = index + ' - ' + item.name;
+    list.updateChild = (child, index) => {
+      child.textContent = index + ' - ' + myItems[index];
     };
 
     const pool = [];
@@ -97,10 +97,10 @@
       newChild: (item, index) => {
         return pool.pop() || document.createElement('section');
       },
-      updateChild: (child, item, index) => {
-        child.textContent = index + ' - ' + item.name;
+      updateChild: (child, index) => {
+        child.textContent = index + ' - ' + myItems[index];
       },
-      recycleChild: (child, item, index) => {
+      recycleChild: (child, index) => {
         pool.push(child);
       }
     });
@@ -121,14 +121,11 @@
         count = Math.max(Number.parseInt(countEl.min), Math.min(count, Number.parseInt(countEl.max)));
       }
       countEl.value = count;
-      const items = [];
+      myItems = new Array(count);
       for (let i = 0; i < count; i++) {
-        items.push({
-          name: `item${i}`
-        });
+        myItems[i] = `item${i}`;
       }
-      // Shared items!
-      list.items = recycler.items = items;
+      list.items = recycler.items = count;
     };
 
     function updateLayout(layoutEl) {

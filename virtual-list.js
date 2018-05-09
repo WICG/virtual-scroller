@@ -233,7 +233,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   _updateView() {
     this._pendingUpdateView = null;
 
-    this._layout.totalItems = this._items ? this._items.length : 0;
+    this._layout.totalItems = this.items;
 
     const listBounds = this._containerElement.getBoundingClientRect();
     // Avoid updating viewport if container is not visible.

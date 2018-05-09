@@ -34,6 +34,7 @@
     import './contacts/contact-element.js';
 
     const virtualList = document.querySelector('virtual-list');
+    let contacts = [];
 
     /**
      * The items array come in 2 shapes: 
@@ -44,8 +45,9 @@
      * dedicated node pools for recycling among them.
      */
     const nodePool = { group: [], contact: [] };
-    virtualList.newChild = (item) => {
+    virtualList.newChild = (index) => {
       let element;
+      const item = contacts[index];
       if (item.group) {
         element = nodePool.group.pop() || document.createElement('header');
       } else {
@@ -53,14 +55,16 @@
       }
       return element;
     };
-    virtualList.updateChild = (element, item) => {
+    virtualList.updateChild = (element, index) => {
+      const item = contacts[index];
       if (item.group) {
         element.textContent = `${item.title} (${item.count})`;
       } else {
         element.contact = item;
       }
     };
-    virtualList.recycleChild = (element, item) => {
+    virtualList.recycleChild = (element, index) => {
+      const item = contacts[index];
       if (item.group) {
         nodePool.group.push(element);
       } else {
@@ -70,14 +74,14 @@
 
     // Get contacts, sort and group by name.
     (async () => {
-      const response = await fetch('contacts/contacts.json');
       // We get an array of contact objects {name, image, color, ...otherProps}.
-      const contacts = await response.json();
+      const response = await fetch('contacts/contacts.json');
       // Keeps track of the last group created.
       let group = null;
       // We sort the contacts by name and insert group objects within.
-      virtualList.items = contacts.sort((a, b) => a.name.localeCompare(b.name))
-        .reduce((groupedContacts, contact) => {
+      contacts = (await response.json())
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .reduce((contacts, contact) => {
           const title = contact.name[0];
           if (group && group.title === title) {
             group.count++;
@@ -87,11 +91,12 @@
               count: 1,
               title,
             };
-            groupedContacts.push(group);
+            contacts.push(group);
           }
-          groupedContacts.push(contact);
-          return groupedContacts;
+          contacts.push(contact);
+          return contacts;
         }, []);
+      virtualList.items = contacts.length;
     })();
   </script>
 </body>

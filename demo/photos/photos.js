@@ -44,7 +44,8 @@ export class Sample {
         img.appendChild(h);
         return img;
       },
-      updateChild: (child, item, idx) => {
+      updateChild: (child, idx) => {
+        const item = this.items[idx];
         const dim = getDims(item, this.constraint);
         child.src = getUrl(item);
         Object.assign(child.style, {
@@ -58,7 +59,7 @@ export class Sample {
   }
 
   render() {
-    this.list.items = this.items;
+    this.list.items = this.items.length;
   }
 
   async search() {

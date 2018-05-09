@@ -4,7 +4,8 @@ import {itemType, Sample as BaseSample} from '../contacts.js';
 
 export class Sample extends BaseSample {
   _setUp() {
-    this.template = (item, idx) => {
+    this.template = (idx) => {
+      const item = this.items[idx];
       const type = itemType(item);
       if (type === 'contact') {
         // NOTE(valdrin): don't add spaces in `<p contenteditable>` so
@@ -51,6 +52,6 @@ export class Sample extends BaseSample {
 
   render() {
     const {layout, items, template, container} = this;
-    render(html`${list({layout, items, template})}`, container);
+    render(html`${list({layout, items: items.length, template})}`, container);
   }
 }
