@@ -16,8 +16,8 @@ export const LitMixin = Superclass => class extends Superclass {
         new NodePart(this._hostPart.instance, null, null);
   }
 
-  updateChild(part, item, idx) {
-    part.setValue(this._template(item, idx));
+  updateChild(part, idx) {
+    part.setValue(this._template(idx));
   }
 
   recycleChild(part) {

@@ -47,7 +47,7 @@ class RepeaterElement extends HTMLElement {
     }
     this._repeater.first = this._first;
     this._repeater.num = this._num;
-    this._repeater.items = this._items;
+    this._repeater.items = this._items.length;
   }
 }
 

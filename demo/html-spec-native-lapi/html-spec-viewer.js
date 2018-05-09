@@ -28,18 +28,11 @@ class HTMLSpecViewer extends VirtualListElement {
       this.appendChild(this._htmlSpec.head);
 
       this.items = [];
+      this.newChild = (item) => item;
       this.addNextChunk();
       this.addEventListener(
           'rangechange', (event) => this.onRangechange(event));
     }
-  }
-
-  newChild(item) {
-    return item;
-  }
-
-  recycleChild() {
-    // keep children in DOM.
   }
 
   async addNextChunk(chunk = 10) {

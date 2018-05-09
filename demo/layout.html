@@ -85,24 +85,19 @@
     const recycler = document.querySelector('#recycler');
     let myItems = [];
 
-    list.newChild = (index) => {
-      return document.createElement('section');
-    };
-    list.updateChild = (child, index) => {
+    list.newChild = () =>
+      document.createElement('section');
+    list.updateChild = (child, index) =>
       child.textContent = index + ' - ' + myItems[index];
-    };
 
     const pool = [];
     Object.assign(recycler, {
-      newChild: (item, index) => {
-        return pool.pop() || document.createElement('section');
-      },
-      updateChild: (child, index) => {
-        child.textContent = index + ' - ' + myItems[index];
-      },
-      recycleChild: (child, index) => {
-        pool.push(child);
-      }
+      newChild: () =>
+        pool.pop() || document.createElement('section'),
+      updateChild: (child, index) =>
+        child.textContent = index + ' - ' + myItems[index],
+      recycleChild: (child) =>
+        pool.push(child)
     });
 
     updateItems(document.querySelector('#count'));

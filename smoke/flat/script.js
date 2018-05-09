@@ -18,25 +18,26 @@ const layout = new Layout({itemSize: {height: 50}});
 //     container);
 const pool = [];
 const config = {
-  items,
+  items: items.length,
   container,
   layout,
-  newChild: (item, idx) => {
+  newChild: (idx) => {
     let section = pool.pop();
     if (!section) {
       section = document.createElement('section');
       section.innerHTML = `<div class="title"></div>`;
       section._title = section.querySelector('.title');
       // Update it immediately.
-      config.updateChild(section, item, idx);
+      config.updateChild(section, idx);
     }
     return section;
   },
-  updateChild: (section, item, idx) => {
+  updateChild: (section, idx) => {
+    const item = items[idx];
     section.id = `section_${idx}`;
     section._title.textContent = `${idx} - ${item.name}`;
   },
-  recycleChild: (section, item, idx) => {
+  recycleChild: (section) => {
     pool.push(section);
   }
 };
