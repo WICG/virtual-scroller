@@ -44,6 +44,8 @@ export const Repeats = Superclass => class extends Superclass {
     // Used to debounce _measureChildren calls.
     this._measuringId = -1;
 
+    this._forceSync = false;
+
     if (config) {
       Object.assign(this, config);
     }
@@ -194,7 +196,11 @@ export const Repeats = Superclass => class extends Superclass {
    */
   _scheduleRender() {
     if (!this._pendingRender && this._shouldRender()) {
-      this._pendingRender = Promise.resolve().then(() => this._render());
+      this._pendingRender = Promise.resolve().then(() => {
+        if (this._pendingRender) {
+          this._render();
+        }
+      });
     }
   }
 
@@ -228,14 +234,19 @@ export const Repeats = Superclass => class extends Superclass {
     // plays nice with browser timing and avoids forcing
     // layout, while still being executed within a frame.
     const id = ++this._measuringId;
-    await Promise.resolve();
+    if (!this._forceSync) {
+      await Promise.resolve();
+    }
     // Avoid relayouts.
     if (id !== this._measuringId) {
       return;
     }
     this._measuringId = -1;
-    const pm = await Promise.all(children.map(
-        (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c)));
+    let pm = children.map(
+        (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c));
+    if (!this._forceSync) {
+      pm = await Promise.all(pm);
+    }
     const mm = /** @type {{ number: { width: number, height: number } }} */
         (pm.reduce((out, cur, i) => {
           out[indices[i]] = this._indexToMeasure[indices[i]] = cur;

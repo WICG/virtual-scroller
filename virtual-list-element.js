@@ -1,13 +1,6 @@
+import {default as GridLayout} from './layouts/layout-1d-grid.js';
+import Layout from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
-
-// Lazily loaded Layout classes.
-const dynamicImports = {};
-async function importLayoutClass(url) {
-  if (!dynamicImports[url]) {
-    dynamicImports[url] = import(url).then(module => module.default);
-  }
-  return await dynamicImports[url];
-}
 
 /** Properties */
 const _items = Symbol();
@@ -137,7 +130,7 @@ export class VirtualListElement extends HTMLElement {
 
   [_scheduleRender]() {
     if (!this[_pendingRender]) {
-      this[_pendingRender] = Promise.resolve().then(() => {
+      this[_pendingRender] = requestAnimationFrame(() => {
         this[_pendingRender] = null;
         this[_render]();
       });
@@ -159,16 +152,17 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const {newChild, updateChild, recycleChild, childKey, items} = this;
-    Object.assign(list, {newChild, updateChild, recycleChild, childKey, items});
-
-    const Layout = await importLayoutClass(
-        this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');
+    const klass = this[_grid] ? GridLayout : Layout;
     const direction = this[_horizontal] ? 'horizontal' : 'vertical';
-    if (list.layout instanceof Layout === false ||
-        list.layout.direction !== direction) {
-      list.layout = new Layout({direction});
-    }
+    const layout =
+        list.layout instanceof klass && list.layout.direction === direction ?
+        list.layout :
+        new klass({direction});
+
+    const {newChild, updateChild, recycleChild, childKey, items} = this;
+    Object.assign(
+        list, {newChild, updateChild, recycleChild, childKey, items, layout});
+    list.flush();
   }
 }
 customElements.define('virtual-list', VirtualListElement);

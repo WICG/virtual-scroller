@@ -194,7 +194,11 @@ export default class Layout extends EventTarget {
 
   _scheduleReflow() {
     if (!this._pendingReflow) {
-      this._pendingReflow = Promise.resolve().then(() => this._reflow());
+      this._pendingReflow = Promise.resolve().then(() => {
+        if (this._pendingReflow) {
+          this._reflow();
+        }
+      });
     }
   }
 

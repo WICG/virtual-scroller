@@ -167,6 +167,26 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._scheduleUpdateView();
   }
 
+  flush() {
+    this._forceSync = Boolean(this._pendingUpdateView || this._pendingRender);
+    while (this._forceSync) {
+      // viewport + scroll position
+      if (this._pendingUpdateView) {
+        this._updateView();
+      }
+      // render + measure
+      if (this._pendingRender) {
+        this._render();
+      }
+      // triggers first, num, position updates
+      if (this.layout._pendingReflow) {
+        this.layout._reflow();
+      }
+      // Keep forcing sync rendering until we are stable.
+      this._forceSync = this._incremental;
+    }
+  }
+
   /**
    * @param {!Event} event
    * @private
@@ -223,8 +243,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    */
   _scheduleUpdateView() {
     if (!this._pendingUpdateView && this._container && this._layout) {
-      this._pendingUpdateView =
-          Promise.resolve().then(() => this._updateView());
+      this._pendingUpdateView = Promise.resolve().then(() => {
+        if (this._pendingUpdateView) {
+          this._updateView();
+        }
+      });
     }
   }
   /**
@@ -297,7 +320,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   async _positionChildren(pos) {
-    await Promise.resolve();
+    if (!this._forceSync) {
+      await Promise.resolve();
+    }
     const kids = this._kids;
     Object.keys(pos).forEach(key => {
       const idx = key - this._first;
