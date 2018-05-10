@@ -207,7 +207,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     sizer.style.width = '1px';
     sizer.style.height = '1px';
     sizer.style.position = 'absolute';
-    sizer.textContent = ' ';
+    // When the scrollHeight is large, the height
+    // of this element might be ignored. Setting
+    // content ensures the element has a size.
+    sizer.innerHTML = '&nbsp;';
     return sizer;
   }
 
