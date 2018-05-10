@@ -6,7 +6,7 @@ import {VirtualList} from '../../virtual-list.js';
 const items = new Array(200).fill({name: 'item'});
 const container = document.getElementById('container');
 
-const layout = new Layout({itemSize: {height: 50}});
+const layout = new Layout({itemBounds: {height: 50}});
 // render(
 //     html`${list({
 //       items,
@@ -18,7 +18,7 @@ const layout = new Layout({itemSize: {height: 50}});
 //     container);
 const pool = [];
 const config = {
-  items: items.length,
+  size: items.length,
   container,
   layout,
   newChild: (idx) => {

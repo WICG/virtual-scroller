@@ -113,8 +113,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout = layout;
 
     if (this._layout) {
-      if (typeof this._layout.updateItemSizes === 'function') {
-        this._measureCallback = this._layout.updateItemSizes.bind(this._layout);
+      if (typeof this._layout.updateBounds === 'function') {
+        this._measureCallback = this._layout.updateBounds.bind(this._layout);
       }
       this._layout.addEventListener('scrollsizechange', this);
       this._layout.addEventListener('scrollerrorchange', this);
@@ -236,7 +236,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   _updateView() {
     this._pendingUpdateView = null;
 
-    this._layout.totalItems = this.items;
+    this._layout.size = this.size;
 
     const listBounds = this._containerElement.getBoundingClientRect();
     // Avoid updating viewport if container is not visible.

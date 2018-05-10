@@ -63,7 +63,7 @@ export class Sample {
             card.appendChild(text);
 
             card.addEventListener(
-                'input', e => this._updateItemSize(card['_idx'], e));
+                'input', e => this._updateBounds(card['_idx'], e));
             text.addEventListener('focus', e => this._scrollToFocused(e));
             text.addEventListener(
                 'blur',
@@ -106,7 +106,7 @@ export class Sample {
   }
 
   render() {
-    this.list.items = this.items.length;
+    this.list.size = this.items.length;
   }
 
   async load(data) {
@@ -150,8 +150,8 @@ export class Sample {
     }
   }
 
-  _updateItemSize(idx, {currentTarget}) {
-    this.layout.updateItemSizes({
+  _updateBounds(idx, {currentTarget}) {
+    this.layout.updateBounds({
       [idx]: {
         width: currentTarget.offsetWidth,
         height: currentTarget.offsetHeight

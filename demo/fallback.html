@@ -79,7 +79,7 @@
         customAnimation: `inverse-color 1000ms ${i * 50}ms infinite`,
       };
     }
-    virtualList.items = fallbacksCount;
+    virtualList.size = fallbacksCount;
 
     // Keep track of first fallback index to know when we need to load more contacts.
     let firstFallbackIndex = 0;
@@ -99,7 +99,7 @@
         // Insert new contacts while keeping fallbacks at the end of the list.
         contacts.splice(firstFallbackIndex, 0, ...newContacts);
         firstFallbackIndex += newContacts.length;
-        virtualList.items += newContacts.length;
+        virtualList.size += newContacts.length;
       }
     });
 

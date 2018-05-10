@@ -6,11 +6,11 @@ export default class Layout extends Layout1dBase {
     this._rolumns = 1;
   }
 
-  updateItemSizes(sizes) {
+  updateBounds(sizes) {
     // Assume all items have the same size.
     const size = Object.values(sizes)[0];
     if (size) {
-      this.itemSize = size;
+      this.itemBounds = size;
     }
   }
 
@@ -33,8 +33,7 @@ export default class Layout extends Layout1dBase {
     const lastCow = Math.ceil(max / this._delta) - 1;
 
     this._first = firstCow * this._rolumns;
-    this._last =
-        Math.min(((lastCow + 1) * this._rolumns) - 1, this._totalItems);
+    this._last = Math.min(((lastCow + 1) * this._rolumns) - 1, this._size);
     this._physicalMin = this._delta * firstCow;
     this._physicalMax = this._delta * (lastCow + 1);
   }
@@ -61,6 +60,6 @@ export default class Layout extends Layout1dBase {
 
   _updateScrollSize() {
     this._scrollSize =
-        Math.max(1, Math.ceil(this._totalItems / this._rolumns) * this._delta);
+        Math.max(1, Math.ceil(this._size / this._rolumns) * this._delta);
   }
 }

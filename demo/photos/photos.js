@@ -59,7 +59,7 @@ export class Sample {
   }
 
   render() {
-    this.list.items = this.items.length;
+    this.list.size = this.items.length;
   }
 
   async search() {

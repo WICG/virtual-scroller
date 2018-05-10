@@ -46,7 +46,7 @@ export class Sample extends BaseSample {
     render(
         h(List, {
           layout,
-          items: items.length,
+          size: items.length,
           component,
           resetValue,
           ref: c => this._root = c.base

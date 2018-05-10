@@ -11,8 +11,8 @@ export class Repeat extends Component {
   }
 
   _updateRepeater(props) {
-    const {first, num, items} = props;
-    Object.assign(this._repeater, {first, num, items});
+    const {first, num, size} = props;
+    Object.assign(this._repeater, {first, num, size});
   }
 
   componentWillReceiveProps(nextProps) {

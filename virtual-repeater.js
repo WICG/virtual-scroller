@@ -9,7 +9,7 @@ export const Repeats = Superclass => class extends Superclass {
 
     this._measureCallback = null;
 
-    this._items = -1;
+    this._size = -1;
     // Consider renaming this. firstVisibleIndex?
     this._first = 0;
     // Consider renaming this. count? visibleElements?
@@ -124,7 +124,7 @@ export const Repeats = Superclass => class extends Superclass {
 
   set first(idx) {
     if (typeof idx === 'number') {
-      const newFirst = Math.max(0, Math.min(idx, this._items - this._num));
+      const newFirst = Math.max(0, Math.min(idx, this._size - this._num));
       if (newFirst !== this._first) {
         this._first = newFirst;
         this._scheduleRender();
@@ -146,15 +146,15 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
-  get items() {
-    return this._items;
+  get size() {
+    return this._size;
   }
 
-  set items(items) {
+  set size(size) {
     // TODO(valdrin) should we check if it is a finite number?
     // Technically, Infinity would break Layout, not VirtualRepeater.
-    if (typeof items === 'number' && items !== this._items) {
-      this._items = items;
+    if (typeof size === 'number' && size !== this._size) {
+      this._size = size;
       this.first = this._first;
       this.requestReset();
     }
@@ -187,7 +187,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this.items !== -1 && this.container && this.newChild);
+    return Boolean(this.size !== -1 && this.container && this.newChild);
   }
 
   /**
@@ -256,7 +256,7 @@ export const Repeats = Superclass => class extends Superclass {
         this._first !== this._prevFirst || this._num !== this._prevNum;
     if (rangeChanged || this._needsReset) {
       this._last =
-          this._first + Math.min(this._num, this._items - this._first) - 1;
+          this._first + Math.min(this._num, this._size - this._first) - 1;
       if (this._num || this._prevNum) {
         if (this._needsReset) {
           this._reset(this._first, this._last);
@@ -274,8 +274,8 @@ export const Repeats = Superclass => class extends Superclass {
     const shouldMeasure = this._num > 0 && this._measureCallback &&
         (rangeChanged || this._needsRemeasure || this._needsReset);
     // console.debug(`#${this._container.id} _render: ${this._num}/${
-    //     this._items.length} ${this._first} -> ${this._last}
-    //     (${this._prevNum}/${this._items.length} ${this._prevFirst} ->
+    //     this._size} ${this._first} -> ${this._last}
+    //     (${this._prevNum}/${this._size} ${this._prevFirst} ->
     //     ${this._prevLast}) measure=${shouldMeasure}`);
     if (shouldMeasure) {
       this._measureChildren(this._toMeasure);

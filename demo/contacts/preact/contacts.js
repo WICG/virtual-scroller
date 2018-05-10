@@ -23,7 +23,7 @@ export class Sample extends BaseSample {
                 width: '100%',
                 boxSizing: 'border-box'
               },
-              onInput: e => sample._updateItemSize(idx, e),
+              onInput: e => sample._updateBounds(idx, e),
             },
             h('b', null, `#${item.index} - ${item.first} ${item.last}`),
             h('p',
@@ -61,7 +61,7 @@ export class Sample extends BaseSample {
     render(
         h(List, {
           layout,
-          items: items.length,
+          size: items.length,
           component,
           resetValue,
           ref: n => this.container = n.base

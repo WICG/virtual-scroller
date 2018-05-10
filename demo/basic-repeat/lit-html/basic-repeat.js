@@ -18,7 +18,7 @@ export class Sample extends BaseSample {
                 ${repeat({
           first,
           num,
-          items: items.length,
+          size: items.length,
           template
         })}
             </ul>

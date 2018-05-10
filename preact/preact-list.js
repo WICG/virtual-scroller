@@ -13,7 +13,7 @@ export class List extends Repeat {
   }
 
   _updateRepeater(props) {
-    this._repeater.items = props.items;
+    this._repeater.size = props.size;
   }
 }
 

@@ -14,9 +14,9 @@ This document gives an overview of various pieces we use to build up the `<virtu
 ```js
 const repeater = new VirtualRepeater({
   /**
-   * The data model.
+   * Total number of items.
    */
-  items: myItems.length,
+  size: myItems.length,
   /**
    * From which index to start.
    */
@@ -77,10 +77,10 @@ const repeater = new VirtualRepeater({
 });
 
 /**
- * Now, when we manipulate `items, first, num` properties,
+ * Now, when we manipulate `size, first, num` properties,
  * the DOM will be recycled.
  */
-repeater.items--;
+repeater.size--;
 repeater.num = 5;
 setTimeout(() => {
   repeater.num = 2;
@@ -90,14 +90,14 @@ setTimeout(() => {
 
 ### Data manipulation
 
-VirtualRepeater will update the DOM when `items` changes. For cases where data changes while keeping the same amount of `items`, or a specific item changes, you can use `requestReset()` to notify of the changes, or force `items` change.
+VirtualRepeater will update the DOM when `size` changes. For cases where data changes while keeping the same `size`, or a specific item changes, you can use `requestReset()` to notify of the changes, or force `size` change.
 
 ```js
 /**
  * Forces change.
  */
-repeater.items--;
-repeater.items++;
+repeater.size--;
+repeater.size++;
 /**
  * You can also use `requestReset()` to notify of changes.
  */
@@ -118,9 +118,9 @@ which will get invoked after each rendering.
 ```js
 repeater._measureCallback = (measuresInfo) => {
   for (const itemIndex in measuresInfo) {
-    const itemSize = measuresInfo[itemIndex];
+    const itemBounds = measuresInfo[itemIndex];
     console.log(`item at index ${itemIndex}`);
-    console.log(`width: ${itemSize.width}, height: ${itemSize.height}`);
+    console.log(`width: ${itemBounds.width}, height: ${itemBounds.height}`);
   }
 };
 ```
@@ -132,7 +132,7 @@ Given a viewport size and total items count, it computes children position, cont
 ```js
 const layout = new Layout({
   viewportSize: {height: 1000},
-  totalItems: 20,
+  size: 20,
   /**
    * Layout direction, vertical (default) or horizontal.
    */
@@ -140,7 +140,7 @@ const layout = new Layout({
   /**
    * Average item size (default).
    */
-  itemSize: {height: 100},
+  itemBounds: {height: 100},
 });
 ```
 
@@ -173,10 +173,10 @@ layout.addEventListener('scrollerrorchange', (event) => {
 });
 ```
 
-Use `layout.updateItemSizes()` to give layout more information regarding item sizes.
+Use `layout.updateBounds()` to give layout more information regarding item sizes.
 ```js
 // Pass an object with key = item index, value = bounds.
-layout.updateItemSizes({
+layout.updateBounds({
   0: {height: 300},
   4: {height: 100},
 });
@@ -193,7 +193,7 @@ el.addEventListener('scroll', () => {
 ## VirtualList (RepeatsAndScrolls mixin)
 
 - Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance
-- Exposes a `layout` property, updates the `layout.totalItems`, `layout.viewportSize`, and the scroll position (`layout.scrollTo()`)
+- Exposes a `layout` property, updates the `layout.size`, `layout.viewportSize`, and the scroll position (`layout.scrollTo()`)
 - Subscribes to `layout` updates on range (`first, num`), children position, scrolling position and scrolling size
 - Updates the container size (`min-width/height`) and children positions (`position: absolute`)
 
@@ -209,9 +209,9 @@ const list = new VirtualList({
    */
   container: document.body,
   /**
-   * The data model.
+   * The total number of items.
    */
-  items: myItems.length,
+  size: myItems.length,
   /**
    * The DOM representing data.
    */

@@ -27,7 +27,7 @@
     virtualList.updateChild = (elem, i) => elem.textContent = i;
     virtualList.recycleChild = (elem) => nodePool.push(elem);
     // Render as many items as possible --> infinite scrolling!
-    virtualList.items = Number.MAX_SAFE_INTEGER;
+    virtualList.size = Number.MAX_SAFE_INTEGER;
   </script>
 </body>
 

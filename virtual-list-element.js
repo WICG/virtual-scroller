@@ -10,7 +10,7 @@ async function importLayoutClass(url) {
 }
 
 /** Properties */
-const _items = Symbol();
+const _size = Symbol();
 const _list = Symbol();
 const _newChild = Symbol();
 const _updateChild = Symbol();
@@ -27,7 +27,7 @@ const _scheduleRender = Symbol();
 export class VirtualListElement extends HTMLElement {
   constructor() {
     super();
-    this[_items] = null;
+    this[_size] = null;
     this[_list] = null;
     this[_newChild] = null;
     this[_updateChild] = null;
@@ -63,14 +63,14 @@ export class VirtualListElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['layout', 'items'];
+    return ['layout', 'size'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
     if (name === 'layout') {
       this.layout = newVal;
-    } else if (name === 'items') {
-      this.items = Number(newVal);
+    } else if (name === 'size') {
+      this.size = Number(newVal);
     }
   }
 
@@ -123,11 +123,11 @@ export class VirtualListElement extends HTMLElement {
     this[_scheduleRender]();
   }
 
-  get items() {
-    return this[_items];
+  get size() {
+    return this[_size];
   }
-  set items(items) {
-    this[_items] = items;
+  set size(size) {
+    this[_size] = size;
     this[_scheduleRender]();
   }
 
@@ -161,8 +161,8 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const {newChild, updateChild, recycleChild, childKey, items} = this;
-    Object.assign(list, {newChild, updateChild, recycleChild, childKey, items});
+    const {newChild, updateChild, recycleChild, childKey, size} = this;
+    Object.assign(list, {newChild, updateChild, recycleChild, childKey, size});
 
     const Layout = await importLayoutClass(
         this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');

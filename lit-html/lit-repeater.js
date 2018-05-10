@@ -96,6 +96,6 @@ export const repeat = (config = {}) => directive(async part => {
     repeater = new LitRepeater({part, template: config.template});
     partToRepeater.set(part, repeater);
   }
-  const {first, num, items} = config;
-  Object.assign(repeater, {first, num, items});
+  const {first, num, size} = config;
+  Object.assign(repeater, {first, num, size});
 });

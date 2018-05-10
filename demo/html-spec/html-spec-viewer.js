@@ -26,8 +26,8 @@ class HTMLSpecViewer extends VirtualListElement {
       this._htmlSpec.head.style.display = 'none';
       this.appendChild(this._htmlSpec.head);
 
-      this._children = [];
-      this.newChild = (idx) => this._children[idx];
+      this.items = [];
+      this.newChild = (idx) => this.items[idx];
       this.addNextChunk();
       this.addEventListener(
           'rangechange', (event) => this.onRangechange(event));
@@ -39,13 +39,13 @@ class HTMLSpecViewer extends VirtualListElement {
       return;
     }
     this._adding = true;
-    const stream = this._htmlSpec.advance(this._children[this.items - 1]);
+    const stream = this._htmlSpec.advance(this.items[this.size - 1]);
     for await (const el of iterateStream(stream)) {
       if (/^(style|link|script)$/.test(el.localName)) {
         this._htmlSpec.head.appendChild(el);
       } else {
-        this._children.push(el);
-        this.items++;
+        this.items.push(el);
+        this.size++;
         chunk--;
       }
       if (chunk === 0) {
@@ -56,7 +56,7 @@ class HTMLSpecViewer extends VirtualListElement {
   }
 
   onRangechange(range) {
-    if (range.last >= this.items - 4) {
+    if (range.last >= this.size - 4) {
       this.addNextChunk();
     }
   }
