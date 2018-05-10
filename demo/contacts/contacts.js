@@ -5,8 +5,6 @@ const scrollMethod = document.createElement('div').scrollIntoViewIfNeeded ?
     'scrollIntoViewIfNeeded' :
     'scrollIntoView';
 
-export const strip = str => str.replace(/^\s*/, '').replace(/\s*$/, '');
-
 export const itemType = item => item.image ? 'contact' : 'header';
 
 export class Sample {
@@ -139,19 +137,16 @@ export class Sample {
   _commitChange(idx, prop, newVal) {
     if (idx === -1)
       return;
-    // Strip leading and trailing whitespace to hack around some demo issues
-    const prevVal = strip(this.items[idx][prop]);
-    newVal = strip(newVal);
+    const prevVal = this.items[idx][prop];
     if (newVal !== prevVal) {
-      setTimeout(() => {
-        this.items[idx][prop] = newVal;
-        // HACK(valdrin) force reset by altering the items length (render() is
-        // overridden in lit-html/preact versions).
-        this.items.push(this.resetValue);
-        this.render();
-        this.items.pop();
-        this.render();
-      }, 0);
+      this.items[idx][prop] = newVal;
+      // HACK(valdrin) Ideally we'd only do this.list.requestReset(),
+      // but since lit-repeater & preact-repeater don't give access to that
+      // method, we force reset by altering the items length.
+      this.items.length++;
+      this.render();
+      this.items.length--;
+      this.render();
     }
   }
 
