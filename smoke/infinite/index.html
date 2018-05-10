@@ -8,16 +8,13 @@
     }
 
     virtual-list {
-      margin: 8px;
-      height: calc(100vh - 18px);
-      border: 1px solid;
+      height: 100vh;
     }
 
     div {
       box-sizing: border-box;
-      padding: 0 5px;
+      padding-left: 10px;
       line-height: 40px;
-      height: 40px;
       border-bottom: 1px solid #eee;
     }
   </style>
@@ -27,7 +24,7 @@
 
     const nodePool = [];
     virtualList.newChild = () => nodePool.pop() || document.createElement('div');
-    virtualList.updateChild = (elem, i) => elem.textContent = `item ${i}`;
+    virtualList.updateChild = (elem, i) => elem.textContent = i;
     virtualList.recycleChild = (elem) => nodePool.push(elem);
     // Render as many items as possible --> infinite scrolling!
     virtualList.items = Number.MAX_SAFE_INTEGER;
