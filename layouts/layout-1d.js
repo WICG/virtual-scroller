@@ -21,7 +21,7 @@ export default class Layout extends Layout1dBase {
     this._estimate = true;
   }
 
-  updateBounds(sizes) {
+  updateSizes(sizes) {
     Object.keys(sizes).forEach((key) => {
       const metrics = sizes[key], mi = this._getMetrics(key),
             prevSize = mi[this._sizeDim];
@@ -55,13 +55,13 @@ export default class Layout extends Layout1dBase {
     if (!this._nMeasured) {
       console.warn(`No items measured yet.`);
     } else {
-      this._updateBounds();
+      this._updateItemSize();
       this._scheduleReflow();
     }
   }
 
-  _updateBounds() {
-    this._itemBounds[this._sizeDim] = this._tMeasured / this._nMeasured;
+  _updateItemSize() {
+    this._itemSize[this._sizeDim] = this._tMeasured / this._nMeasured;
   }
 
   //
@@ -151,7 +151,7 @@ export default class Layout extends Layout1dBase {
   }
 
   _getActiveItems() {
-    if (this._viewDim1 === 0 || this._size === 0) {
+    if (this._viewDim1 === 0 || this._totalItems === 0) {
       this._clearItems();
     } else {
       const upper = Math.min(
@@ -225,7 +225,7 @@ export default class Layout extends Layout1dBase {
       }
     }
 
-    while (this._physicalMax < upper && this._last < this._size) {
+    while (this._physicalMax < upper && this._last < this._totalItems) {
       let size = this._getSize(this._last);
       if (size === undefined) {
         this._stable = false;

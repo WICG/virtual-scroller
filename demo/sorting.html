@@ -52,7 +52,7 @@
     let myContacts = null;
     fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {
       myContacts = contacts;
-      virtualList.size = myContacts.length;
+      virtualList.totalItems = myContacts.length;
     });
 
     function moveContact(contact, offset) {

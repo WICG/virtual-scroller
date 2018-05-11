@@ -20,8 +20,8 @@ export const list = (config = {}) => directive(async part => {
     list = new LitList({part, template, layout});
     partToList.set(part, list);
   }
-  list.size = config.size;
+  list.totalItems = config.totalItems;
 });
 
-export const virtualList = (size, template, direction = 'vertical') =>
-    list({size, template, direction});
+export const virtualList = (totalItems, template, direction = 'vertical') =>
+    list({totalItems, template, direction});

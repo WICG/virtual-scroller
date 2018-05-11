@@ -59,7 +59,7 @@ export class Sample {
   }
 
   render() {
-    this.list.size = this.items.length;
+    this.list.totalItems = this.items.length;
   }
 
   async search() {

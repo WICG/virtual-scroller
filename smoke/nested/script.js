@@ -21,8 +21,8 @@ function listForContainer(container, items) {
 
   const pool = [];
   const list = new VirtualList({
-    size: items.length,
-    layout: new Layout({itemBounds: {width: innerWidth, height: innerHeight}}),
+    totalItems: items.length,
+    layout: new Layout({itemSize: {width: innerWidth, height: innerHeight}}),
     container,
     newChild: (idx) => {
       let child = pool.pop();
@@ -50,7 +50,7 @@ function listForContainer(container, items) {
 
       child._title.textContent = `${idx} - ${items[idx].name}`;
       if (child._container._list) {
-        child._container._list.size = item.items.length;
+        child._container._list.totalItems = item.items.length;
       }
     },
     recycleChild: (child) => {

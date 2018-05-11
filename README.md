@@ -29,7 +29,7 @@ The (tentative) API design choices made here, as well as the list's capabilities
 
   // This will automatically cause a render of the visible children
   // (i.e., those that fit on the screen).
-  list.size = myItems.length;
+  list.totalItems = myItems.length;
 </script>
 ```
 
@@ -54,7 +54,7 @@ Set this property to configure the virtual list with a function that will update
 If set, this property is invoked in two scenarios:
 
 * The user scrolls the list, changing which items' elements are visible. In this case, `updateChild` is called for all of the newly-visible elements.
-* The developer changes the `size` property.
+* The developer changes the `totalItems` property.
 * The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
 
 For more on the interplay between `newChild` and `updateChild`, and when each is appropriate, see [the example below](#using-newchild-and-updatechild)
@@ -77,13 +77,13 @@ Set this property to provide a custom identifier for the element corresponding t
 
 This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-childkey).
 
-### `size` property
+### `totalItems` property
 
 Type: `number`
 
 Set this property to control how many items the list will display. The items are mapped to elements via the `newChild` property, so this controls the total number of times `newChild` could be called, as the user scrolls to reveal all the times.
 
-Can also be set as an attribute on the element, e.g. `<virtual-list size="10"></virtual-list>`
+Can also be set as an attribute (all lower-case) on the element, e.g. `<virtual-list totalitems="10"></virtual-list>`
 
 ### `layout` property
 
@@ -102,7 +102,7 @@ Can also be set as an attribute on the element, e.g. `<virtual-list layout="hori
 
 This re-renders all of the currently-displayed elements, updating them from their source data using `updateChild`.
 
-This can be useful when you mutate data without changing the `size`. Also see [the example below](#data-manipulation-using-requestreset).
+This can be useful when you mutate data without changing the `totalItems`. Also see [the example below](#data-manipulation-using-requestreset).
 
 _We are discussing the naming of this API, as well as whether it should exist at all, in [#26](https://github.com/valdrinkoshi/virtual-list/issues/26). The aforementioned [#29](https://github.com/valdrinkoshi/virtual-list/issues/29) is also relevant._
 
@@ -138,7 +138,7 @@ list.newChild = index => {
 };
 
 // Calls newChild four times (assuming the screen is big enough)
-list.size = myItems.length;
+list.totalItems = myItems.length;
 ```
 
 In this example, we are statically displaying a virtual list with four items, which we never plan to update. This can be useful for use cases where you would otherwise use static HTML, but want to get the performance benefits of virtualization. (Admittedly, we'd need more than four items to see that happen in reality.)
@@ -168,7 +168,7 @@ list.updateChild = (child, index) => {
 
 let myItems = ['a', 'b', 'c', 'd'];
 // Calls newChild + updateChild four times
-list.size = myItems.length;
+list.totalItems = myItems.length;
 
 // This now works: it calls updateChild four times
 setTimeout(() => {
@@ -206,7 +206,7 @@ The `<virtual-list>` element will automatically rerender the displayed items whe
 
 ```js
 myItems.push('new item');
-list.size++;
+list.totalItems++;
 ```
 
 If you want to keep the same number of items or change an item's properties, you can use `requestReset()` to notify the list about changes, and cause a rerender of currently-displayed items. If you do this, you'll also need to set `updateChild`, since the elements will already be created. For example:
@@ -232,7 +232,7 @@ The default key is the array index, but can be customized through the `childKey`
 Imagine we have a list of 3 contacts:
 ```js
 const myContacts = ['A', 'B', 'C'];
-virtualList.size = myContacts.length;
+virtualList.totalItems = myContacts.length;
 virtualList.newChild = () => document.createElement('div');
 virtualList.updateChild = (div, index) => div.textContent = myContacts[index];
 ```
@@ -283,7 +283,7 @@ list.addEventListener('rangechange', (event) => {
   if (event.first === 0) {
     console.log('rendered first item.');
   }
-  if (event.last === list.size - 1) {
+  if (event.last === list.totalItems - 1) {
     console.log('rendered last item.');
     // Perhaps you would want to load more data for display!
   }

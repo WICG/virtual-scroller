@@ -63,7 +63,7 @@ export class Sample {
             card.appendChild(text);
 
             card.addEventListener(
-                'input', e => this._updateBounds(card['_idx'], e));
+                'input', e => this._updateItemSize(card['_idx'], e));
             text.addEventListener('focus', e => this._scrollToFocused(e));
             text.addEventListener(
                 'blur',
@@ -106,7 +106,7 @@ export class Sample {
   }
 
   render() {
-    this.list.size = this.items.length;
+    this.list.totalItems = this.items.length;
   }
 
   async load(data) {
@@ -127,8 +127,8 @@ export class Sample {
   }
 
   // Quick and dirty support for updating data, scrolling to a physical child,
-  // and informing layout of a change in child size, to demo/test related use
-  // cases
+  // and informing layout of a change in child totalItems, to demo/test related
+  // use cases
 
   _scrollToFocused({target}) {
     setTimeout(() => target.parentNode[scrollMethod](true), 0);
@@ -150,8 +150,8 @@ export class Sample {
     }
   }
 
-  _updateBounds(idx, {currentTarget}) {
-    this.layout.updateBounds({
+  _updateItemSize(idx, {currentTarget}) {
+    this.layout.updateSizes({
       [idx]: {
         width: currentTarget.offsetWidth,
         height: currentTarget.offsetHeight

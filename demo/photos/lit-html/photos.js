@@ -24,7 +24,7 @@ export class Sample extends BaseSample {
     render(
         html`
                 ${list({
-          size: items.length,
+          totalItems: items.length,
           layout,
           template
         })}

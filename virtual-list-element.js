@@ -64,11 +64,15 @@ export class VirtualListElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['layout', 'size'];
+    return ['layout', 'totalitems'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    this[name] = newVal;
+    if (name === 'totalitems') {
+      this.totalItems = newVal;
+    } else {
+      this[name] = newVal;
+    }
   }
 
   get newChild() {
@@ -115,13 +119,12 @@ export class VirtualListElement extends HTMLElement {
     }
   }
 
-  get size() {
-    return +this.getAttribute('size');
+  get totalItems() {
+    return +this.getAttribute('totalitems');
   }
-
-  set size(v) {
-    if (this.size !== +v) {
-      this.setAttribute('size', +v);
+  set totalItems(v) {
+    if (this.totalItems !== +v) {
+      this.setAttribute('totalitems', +v);
       this[_scheduleRender]();
     }
   }
@@ -156,8 +159,9 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const {newChild, updateChild, recycleChild, childKey, size} = this;
-    Object.assign(list, {newChild, updateChild, recycleChild, childKey, size});
+    const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
+    Object.assign(
+        list, {newChild, updateChild, recycleChild, childKey, totalItems});
 
     const Layout = await importLayoutClass(
         this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');

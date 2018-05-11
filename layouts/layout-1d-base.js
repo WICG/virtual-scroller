@@ -10,7 +10,7 @@ export default class Layout extends EventTarget {
 
     this._latestCoords = {left: 0, top: 0};
 
-    this._itemBounds = {width: 100, height: 100};
+    this._itemSize = {width: 100, height: 100};
     this._spacing = 0;
 
     this._virtualScroll = false;
@@ -23,7 +23,7 @@ export default class Layout extends EventTarget {
 
     this._scrollPosition = 0;
     this._viewportSize = {width: 0, height: 0};
-    this._size = 0;
+    this._totalItems = 0;
 
     this._scrollSize = 1;
 
@@ -53,9 +53,9 @@ export default class Layout extends EventTarget {
     return this._spacing;
   }
 
-  set itemBounds(dims) {
+  set itemSize(dims) {
     const {_itemDim1, _itemDim2} = this;
-    Object.assign(this._itemBounds, dims);
+    Object.assign(this._itemSize, dims);
     if (_itemDim1 !== this._itemDim1 || _itemDim2 !== this._itemDim2) {
       if (_itemDim2 !== this._itemDim2) {
         this._itemDim2Changed();
@@ -74,15 +74,15 @@ export default class Layout extends EventTarget {
   }
 
   get _itemDim1() {
-    return this._itemBounds[this._sizeDim];
+    return this._itemSize[this._sizeDim];
   }
 
   get _itemDim2() {
-    return this._itemBounds[this._secondarySizeDim];
+    return this._itemSize[this._secondarySizeDim];
   }
 
-  get itemBounds() {
-    return this._itemBounds;
+  get itemSize() {
+    return this._itemSize;
   }
 
   set direction(dir) {
@@ -130,16 +130,16 @@ export default class Layout extends EventTarget {
     return this._viewportSize;
   }
 
-  set size(num) {
-    if (num !== this._size) {
-      this._size = num;
+  set totalItems(num) {
+    if (num !== this._totalItems) {
+      this._totalItems = num;
       this._maxIdx = num - 1;
       this._scheduleReflow();
     }
   }
 
-  get size() {
-    return this._size;
+  get totalItems() {
+    return this._totalItems;
   }
 
   // private properties
@@ -201,7 +201,7 @@ export default class Layout extends EventTarget {
   _updateScrollSize() {
     // Ensure we have at least 1px - this allows getting at least 1 item to be
     // rendered.
-    this._scrollSize = Math.max(1, this._size * this._delta);
+    this._scrollSize = Math.max(1, this._totalItems * this._delta);
   }
 
   _checkThresholds() {

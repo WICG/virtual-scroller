@@ -39,13 +39,13 @@ class HTMLSpecViewer extends VirtualListElement {
       return;
     }
     this._adding = true;
-    const stream = this._htmlSpec.advance(this.items[this.size - 1]);
+    const stream = this._htmlSpec.advance(this.items[this.totalItems - 1]);
     for await (const el of iterateStream(stream)) {
       if (/^(style|link|script)$/.test(el.localName)) {
         this._htmlSpec.head.appendChild(el);
       } else {
         this.items.push(el);
-        this.size++;
+        this.totalItems++;
         chunk--;
       }
       if (chunk === 0) {
@@ -56,7 +56,7 @@ class HTMLSpecViewer extends VirtualListElement {
   }
 
   onRangechange(range) {
-    if (range.last >= this.size - 4) {
+    if (range.last >= this.totalItems - 4) {
       this.addNextChunk();
     }
   }

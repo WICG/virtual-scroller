@@ -5,7 +5,7 @@ This document gives an overview of various pieces we use to build up the `<virtu
 ## VirtualRepeater (Repeats mixin)
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
-- Given a `size`, it displays `num` elements starting from `first` index.
+- Given a `totalItems` amount, it displays `num` elements starting from `first` index.
 - Delegates DOM creation, update and recycling via `newChild, updateChild, recycleChild`.
 - Delegates DOM layout via `_measureCallback`.
 
@@ -16,7 +16,7 @@ const repeater = new VirtualRepeater({
   /**
    * Total number of items.
    */
-  size: myItems.length,
+  totalItems: myItems.length,
   /**
    * From which index to start.
    */
@@ -77,10 +77,10 @@ const repeater = new VirtualRepeater({
 });
 
 /**
- * Now, when we manipulate `size, first, num` properties,
+ * Now, when we manipulate `totalItems, first, num` properties,
  * the DOM will be recycled.
  */
-repeater.size--;
+repeater.totalItems--;
 repeater.num = 5;
 setTimeout(() => {
   repeater.num = 2;
@@ -90,14 +90,14 @@ setTimeout(() => {
 
 ### Data manipulation
 
-VirtualRepeater will update the DOM when `size` changes. For cases where data changes while keeping the same `size`, or a specific item changes, you can use `requestReset()` to notify of the changes, or force `size` change.
+VirtualRepeater will update the DOM when `totalItems` changes. For cases where data changes while keeping the same `totalItems`, or a specific item changes, you can use `requestReset()` to notify of the changes, or force `totalItems` change.
 
 ```js
 /**
  * Forces change.
  */
-repeater.size--;
-repeater.size++;
+repeater.totalItems--;
+repeater.totalItems++;
 /**
  * You can also use `requestReset()` to notify of changes.
  */
@@ -118,9 +118,9 @@ which will get invoked after each rendering.
 ```js
 repeater._measureCallback = (measuresInfo) => {
   for (const itemIndex in measuresInfo) {
-    const itemBounds = measuresInfo[itemIndex];
+    const itemSize = measuresInfo[itemIndex];
     console.log(`item at index ${itemIndex}`);
-    console.log(`width: ${itemBounds.width}, height: ${itemBounds.height}`);
+    console.log(`width: ${itemSize.width}, height: ${itemSize.height}`);
   }
 };
 ```
@@ -132,7 +132,7 @@ Given a viewport size and total items count, it computes children position, cont
 ```js
 const layout = new Layout({
   viewportSize: {height: 1000},
-  size: 20,
+  totalItems: 20,
   /**
    * Layout direction, vertical (default) or horizontal.
    */
@@ -140,7 +140,7 @@ const layout = new Layout({
   /**
    * Average item size (default).
    */
-  itemBounds: {height: 100},
+  itemSize: {height: 100},
 });
 ```
 
@@ -173,10 +173,10 @@ layout.addEventListener('scrollerrorchange', (event) => {
 });
 ```
 
-Use `layout.updateBounds()` to give layout more information regarding item sizes.
+Use `layout.updateSizes()` to give layout more information regarding item sizes.
 ```js
 // Pass an object with key = item index, value = bounds.
-layout.updateBounds({
+layout.updateSizes({
   0: {height: 300},
   4: {height: 100},
 });
@@ -193,7 +193,7 @@ el.addEventListener('scroll', () => {
 ## VirtualList (RepeatsAndScrolls mixin)
 
 - Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance
-- Exposes a `layout` property, updates the `layout.size`, `layout.viewportSize`, and the scroll position (`layout.scrollTo()`)
+- Exposes a `layout` property, updates the `layout.totalItems`, `layout.viewportSize`, and the scroll position (`layout.scrollTo()`)
 - Subscribes to `layout` updates on range (`first, num`), children position, scrolling position and scrolling size
 - Updates the container size (`min-width/height`) and children positions (`position: absolute`)
 
@@ -211,7 +211,7 @@ const list = new VirtualList({
   /**
    * The total number of items.
    */
-  size: myItems.length,
+  totalItems: myItems.length,
   /**
    * The DOM representing data.
    */
