@@ -202,7 +202,7 @@ Object.assign(list, {
 
 ### Data manipulation using `requestReset()`
 
-The `<virtual-list>` element will automatically rerender the displayed items when `items` changes. For example, to add a new item to the end, you could do:
+The `<virtual-list>` element will automatically rerender the displayed items when `totalItems` changes. For example, to add a new item to the end, you could do:
 
 ```js
 myItems.push('new item');
