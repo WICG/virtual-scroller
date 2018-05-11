@@ -21,10 +21,10 @@ function listForContainer(container, items) {
 
   const pool = [];
   const list = new VirtualList({
-    items,
+    totalItems: items.length,
     layout: new Layout({itemSize: {width: innerWidth, height: innerHeight}}),
     container,
-    newChild: (item, idx) => {
+    newChild: (idx) => {
       let child = pool.pop();
       if (!child) {
         child = document.createElement('div');
@@ -37,23 +37,23 @@ function listForContainer(container, items) {
         // child.id = `section_${idx}`;
         // child._container.id = `innerContainer_${idx}`;
 
-        if (item.items) {
+        if (items[idx].items) {
           child._container.classList.remove('innerContainer');
           listForContainer(child._container, item.items);
         }
       }
       return child;
     },
-    updateChild: (child, item, idx) => {
+    updateChild: (child, idx) => {
       // child.id = `section_${idx}`;
       // child._container.id = `innerContainer_${idx}`;
 
-      child._title.textContent = `${idx} - ${item.name}`;
+      child._title.textContent = `${idx} - ${items[idx].name}`;
       if (child._container._list) {
-        child._container._list.items = item.items;
+        child._container._list.totalItems = item.items.length;
       }
     },
-    recycleChild: (child, item, idx) => {
+    recycleChild: (child) => {
       pool.push(child);
     }
   });

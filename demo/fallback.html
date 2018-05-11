@@ -63,22 +63,23 @@
     const dataSource = new ContactDataSource();
     const virtualList = document.querySelector('virtual-list');
 
-    virtualList.newChild = (contact) => document.createElement('contact-element');
-    virtualList.updateChild = (element, contact) => {
+    virtualList.newChild = () => document.createElement('contact-element');
+    virtualList.updateChild = (element, index) => {
+      const contact = contacts[index];
       element.style.animation = contact.customAnimation || null;
       element.contact = contact;
     };
 
     // Generate enough fallbacks to cover the viewport height.
     const fallbacksCount = Math.ceil(virtualList.offsetHeight / 80);
-    const items = new Array(fallbacksCount);
+    const contacts = new Array(fallbacksCount);
     for (let i = 0; i < fallbacksCount; i++) {
-      items[i] = {
+      contacts[i] = {
         name: 'Loading...',
         customAnimation: `inverse-color 1000ms ${i * 50}ms infinite`,
       };
     }
-    virtualList.items = items;
+    virtualList.totalItems = fallbacksCount;
 
     // Keep track of first fallback index to know when we need to load more contacts.
     let firstFallbackIndex = 0;
@@ -91,14 +92,15 @@
       const newContacts = await dataSource.getContacts(fallbacksCount * 5);
       if (dataSource.loadedAll) {
         // Insert new contacts, remove fallbacks.
-        virtualList.items.splice(firstFallbackIndex, fallbacksCount, ...newContacts);
+        contacts.splice(firstFallbackIndex, fallbacksCount, ...newContacts);
         firstFallbackIndex = Infinity;
+        virtualList.requestReset();
       } else {
         // Insert new contacts while keeping fallbacks at the end of the list.
-        virtualList.items.splice(firstFallbackIndex, 0, ...newContacts);
+        contacts.splice(firstFallbackIndex, 0, ...newContacts);
         firstFallbackIndex += newContacts.length;
+        virtualList.totalItems += newContacts.length;
       }
-      virtualList.requestReset();
     });
 
     window.updateDelay = (delayEl) => {

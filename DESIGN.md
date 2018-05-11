@@ -5,7 +5,7 @@ This document gives an overview of various pieces we use to build up the `<virtu
 ## VirtualRepeater (Repeats mixin)
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
-- Given an `items` array, it displays `num` elements starting from `first` index.
+- Given a `totalItems` amount, it displays `num` elements starting from `first` index.
 - Delegates DOM creation, update and recycling via `newChild, updateChild, recycleChild`.
 - Delegates DOM layout via `_measureCallback`.
 
@@ -14,9 +14,9 @@ This document gives an overview of various pieces we use to build up the `<virtu
 ```js
 const repeater = new VirtualRepeater({
   /**
-   * The data model.
+   * Total number of items.
    */
-  items: new Array(20).fill({name: 'item'}),
+  totalItems: myItems.length,
   /**
    * From which index to start.
    */
@@ -32,9 +32,9 @@ const repeater = new VirtualRepeater({
   /**
    * The DOM representing data.
    */
-  newChild: (item, index) => {
+  newChild: (index) => {
     const child = document.createElement('section');
-    child.textContent = index + ' - ' + item.name;
+    child.textContent = index + ' - ' + myItems[index];
     return child;
   }
 });
@@ -58,29 +58,29 @@ const repeater = new VirtualRepeater({
   /**
    * The DOM representing data.
    */
-  newChild: (item, index) => {
+  newChild: (index) => {
     return pool.pop() || document.createElement('section');
   },
   /**
    * Updates the DOM with data.
    */
-  updateChild: (child, item, index) => {
-    child.textContent = index + ' - ' + item.name;
+  updateChild: (child, index) => {
+    child.textContent = index + ' - ' + myItems[index];
   },
   /**
    * Invoked when the DOM is about to be removed.
    * Here we keep the child in the main document.
    */
-  recycleChild: (child, item, index) => {
+  recycleChild: (child, index) => {
     pool.push(child);
   }
 });
 
 /**
- * Now, when we manipulate `items, first, num` properties,
+ * Now, when we manipulate `totalItems, first, num` properties,
  * the DOM will be recycled.
  */
-repeater.items = new Array(20).fill({name: 'item'});
+repeater.totalItems--;
 repeater.num = 5;
 setTimeout(() => {
   repeater.num = 2;
@@ -90,19 +90,18 @@ setTimeout(() => {
 
 ### Data manipulation
 
-Updates to the `items` array instance will not be captured by VirtualRepeater.
-
-Either set a new array to trigger the update, or use `requestReset()` to notify of changes.
+VirtualRepeater will update the DOM when `totalItems` changes. For cases where data changes while keeping the same `totalItems`, or a specific item changes, you can use `requestReset()` to notify of the changes, or force `totalItems` change.
 
 ```js
 /**
- * You can set a new `items` array.
+ * Forces change.
  */
-repeater.items = repeater.items.concat([{name: 'new item'}]);
+repeater.totalItems--;
+repeater.totalItems++;
 /**
  * You can also use `requestReset()` to notify of changes.
  */
-repeater.items.push({name: 'new item'});
+myItems[0] = 'item 0 changed!';
 repeater.requestReset();
 ```
 
@@ -210,15 +209,15 @@ const list = new VirtualList({
    */
   container: document.body,
   /**
-   * The data model.
+   * The total number of items.
    */
-  items: new Array(20).fill({name: 'item'}),
+  totalItems: myItems.length,
   /**
    * The DOM representing data.
    */
-  newChild: (item, index) => {
+  newChild: (index) => {
     const child = document.createElement('section');
-    child.textContent = index + ' - ' + item.name;
+    child.textContent = index + ' - ' + myItems[index];
     return child;
   }
 });

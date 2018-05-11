@@ -40,18 +40,19 @@
 
     const virtualList = document.querySelector('virtual-list');
 
-    virtualList.newChild = (contact) => {
+    virtualList.newChild = () => {
       const element = document.createElement('contact-element');
       element.setAttribute('sortable', '');
       element.addEventListener('moveup', (event) => moveContact(event.target.contact, -1));
       element.addEventListener('movedown', (event) => moveContact(event.target.contact, 1));
       return element;
     };
-    virtualList.updateChild = (element, contact) => element.contact = contact;
+    virtualList.updateChild = (element, index) => element.contact = myContacts[index];
 
     let myContacts = null;
     fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {
-      myContacts = virtualList.items = contacts;
+      myContacts = contacts;
+      virtualList.totalItems = myContacts.length;
     });
 
     function moveContact(contact, offset) {
@@ -63,7 +64,7 @@
     }
 
     window.toggleChildKey = function toggleChildKey(useGuid) {
-      virtualList.childKey = useGuid ? (contact) => contact.guid : null;
+      virtualList.childKey = useGuid ? (index) => myContacts[index].guid : null;
     };
   </script>
 </body>
