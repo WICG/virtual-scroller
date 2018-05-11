@@ -151,7 +151,7 @@ export class Sample {
   }
 
   _updateItemSize(idx, {currentTarget}) {
-    this.layout.updateSizes({
+    this.layout.updateItemSizes({
       [idx]: {
         width: currentTarget.offsetWidth,
         height: currentTarget.offsetHeight

@@ -113,8 +113,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout = layout;
 
     if (this._layout) {
-      if (typeof this._layout.updateSizes === 'function') {
-        this._measureCallback = this._layout.updateSizes.bind(this._layout);
+      if (typeof this._layout.updateItemSizes === 'function') {
+        this._measureCallback = this._layout.updateItemSizes.bind(this._layout);
       }
       this._layout.addEventListener('scrollsizechange', this);
       this._layout.addEventListener('scrollerrorchange', this);

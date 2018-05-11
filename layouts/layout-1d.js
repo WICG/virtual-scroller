@@ -21,7 +21,7 @@ export default class Layout extends Layout1dBase {
     this._estimate = true;
   }
 
-  updateSizes(sizes) {
+  updateItemSizes(sizes) {
     Object.keys(sizes).forEach((key) => {
       const metrics = sizes[key], mi = this._getMetrics(key),
             prevSize = mi[this._sizeDim];

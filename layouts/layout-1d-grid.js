@@ -6,7 +6,7 @@ export default class Layout extends Layout1dBase {
     this._rolumns = 1;
   }
 
-  updateSizes(sizes) {
+  updateItemSizes(sizes) {
     // Assume all items have the same size.
     const size = Object.values(sizes)[0];
     if (size) {

@@ -173,10 +173,10 @@ layout.addEventListener('scrollerrorchange', (event) => {
 });
 ```
 
-Use `layout.updateSizes()` to give layout more information regarding item sizes.
+Use `layout.updateItemSizes()` to give layout more information regarding item sizes.
 ```js
 // Pass an object with key = item index, value = bounds.
-layout.updateSizes({
+layout.updateItemSizes({
   0: {height: 300},
   4: {height: 100},
 });
