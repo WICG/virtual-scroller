@@ -5,7 +5,7 @@ This document gives an overview of various pieces we use to build up the `<virtu
 ## VirtualRepeater (Repeats mixin)
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
-- Given an `items` amount, it displays `num` elements starting from `first` index.
+- Given a `size`, it displays `num` elements starting from `first` index.
 - Delegates DOM creation, update and recycling via `newChild, updateChild, recycleChild`.
 - Delegates DOM layout via `_measureCallback`.
 
