@@ -1,13 +1,6 @@
+import {default as GridLayout} from './layouts/layout-1d-grid.js';
+import Layout from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
-
-// Lazily loaded Layout classes.
-const dynamicImports = {};
-async function importLayoutClass(url) {
-  if (!dynamicImports[url]) {
-    dynamicImports[url] = import(url).then(module => module.default);
-  }
-  return await dynamicImports[url];
-}
 
 /** Properties */
 const _list = Symbol();
@@ -15,8 +8,6 @@ const _newChild = Symbol();
 const _updateChild = Symbol();
 const _recycleChild = Symbol();
 const _childKey = Symbol();
-const _grid = Symbol();
-const _horizontal = Symbol();
 const _pendingRender = Symbol();
 /** Functions */
 const _render = Symbol();
@@ -31,8 +22,6 @@ export class VirtualListElement extends HTMLElement {
     this[_updateChild] = null;
     this[_recycleChild] = null;
     this[_childKey] = null;
-    this[_grid] = false;
-    this[_horizontal] = false;
     this[_pendingRender] = null;
   }
 
@@ -68,10 +57,6 @@ export class VirtualListElement extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    if (name === 'layout') {
-      this[_horizontal] = newVal.startsWith('horizontal');
-      this[_grid] = newVal.endsWith('-grid');
-    }
     this[_scheduleRender]();
   }
 
@@ -151,17 +136,18 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
+    const klass = this.layout.endsWith('-grid') ? GridLayout : Layout;
+    const direction =
+        this.layout.startsWith('horizontal') ? 'horizontal' : 'vertical';
+    const layout =
+        list.layout instanceof klass && list.layout.direction === direction ?
+        list.layout :
+        new klass({direction});
+
     const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
     Object.assign(
-        list, {newChild, updateChild, recycleChild, childKey, totalItems});
-
-    const Layout = await importLayoutClass(
-        this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');
-    const direction = this[_horizontal] ? 'horizontal' : 'vertical';
-    if (list.layout instanceof Layout === false ||
-        list.layout.direction !== direction) {
-      list.layout = new Layout({direction});
-    }
+        list,
+        {layout, newChild, updateChild, recycleChild, childKey, totalItems});
   }
 }
 customElements.define('virtual-list', VirtualListElement);
