@@ -10,7 +10,6 @@ async function importLayoutClass(url) {
 }
 
 /** Properties */
-const _size = Symbol();
 const _list = Symbol();
 const _newChild = Symbol();
 const _updateChild = Symbol();
@@ -27,7 +26,6 @@ const _scheduleRender = Symbol();
 export class VirtualListElement extends HTMLElement {
   constructor() {
     super();
-    this[_size] = null;
     this[_list] = null;
     this[_newChild] = null;
     this[_updateChild] = null;
@@ -49,7 +47,6 @@ export class VirtualListElement extends HTMLElement {
     height: 150px;
     overflow: auto;
   }
-  :host(:not([layout])) ::slotted(*), 
   :host([layout=vertical]) ::slotted(*) {
     width: 100%;
   }
@@ -58,6 +55,10 @@ export class VirtualListElement extends HTMLElement {
   }
 </style>
 <slot></slot>`;
+      // Default layout.
+      if (!this.layout) {
+        this.layout = 'vertical';
+      }
     }
     this[_scheduleRender]();
   }
@@ -67,11 +68,7 @@ export class VirtualListElement extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    if (name === 'layout') {
-      this.layout = newVal;
-    } else if (name === 'size') {
-      this.size = Number(newVal);
-    }
+    this[name] = newVal;
   }
 
   get newChild() {
@@ -107,28 +104,26 @@ export class VirtualListElement extends HTMLElement {
   }
 
   get layout() {
-    const prefix = this[_horizontal] ? 'horizontal' : 'vertical';
-    const suffix = this[_grid] ? '-grid' : '';
-    return prefix + suffix;
+    return this.getAttribute('layout');
   }
   set layout(layout) {
-    const old = this.layout;
-    this[_horizontal] = layout && layout.startsWith('horizontal');
-    this[_grid] = layout && layout.endsWith('-grid');
-    layout = this.layout;
-    // Reflect to attribute.
-    if (old !== layout) {
+    this[_horizontal] = layout.startsWith('horizontal');
+    this[_grid] = layout.endsWith('-grid');
+    if (this.layout !== layout) {
       this.setAttribute('layout', layout);
+      this[_scheduleRender]();
     }
-    this[_scheduleRender]();
   }
 
   get size() {
-    return this[_size];
+    return +this.getAttribute('size');
   }
-  set size(size) {
-    this[_size] = size;
-    this[_scheduleRender]();
+
+  set size(v) {
+    if (this.size !== +v) {
+      this.setAttribute('size', +v);
+      this[_scheduleRender]();
+    }
   }
 
   requestReset() {
