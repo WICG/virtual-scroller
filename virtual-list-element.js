@@ -68,11 +68,25 @@ export class VirtualListElement extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    if (name === 'totalitems') {
-      this.totalItems = newVal;
-    } else {
-      this[name] = newVal;
+    if (name === 'layout') {
+      this[_horizontal] = newVal.startsWith('horizontal');
+      this[_grid] = newVal.endsWith('-grid');
     }
+    this[_scheduleRender]();
+  }
+
+  get layout() {
+    return this.getAttribute('layout');
+  }
+  set layout(layout) {
+    this.setAttribute('layout', layout);
+  }
+
+  get totalItems() {
+    return +this.getAttribute('totalitems');
+  }
+  set totalItems(v) {
+    this.setAttribute('totalitems', +v);
   }
 
   get newChild() {
@@ -105,28 +119,6 @@ export class VirtualListElement extends HTMLElement {
   set childKey(fn) {
     this[_childKey] = fn;
     this[_scheduleRender]();
-  }
-
-  get layout() {
-    return this.getAttribute('layout');
-  }
-  set layout(layout) {
-    this[_horizontal] = layout.startsWith('horizontal');
-    this[_grid] = layout.endsWith('-grid');
-    if (this.layout !== layout) {
-      this.setAttribute('layout', layout);
-      this[_scheduleRender]();
-    }
-  }
-
-  get totalItems() {
-    return +this.getAttribute('totalitems');
-  }
-  set totalItems(v) {
-    if (this.totalItems !== +v) {
-      this.setAttribute('totalitems', +v);
-      this[_scheduleRender]();
-    }
   }
 
   requestReset() {
