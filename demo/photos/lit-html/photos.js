@@ -4,7 +4,8 @@ import {getDims, getUrl, Sample as BaseSample} from '../photos.js';
 
 export class Sample extends BaseSample {
   _setUp() {
-    this.template = (item, idx) => {
+    this.template = (idx) => {
+      const item = this.items[idx];
       const dim = getDims(item, this.constraint);
       return html`
                 <lazy-image src="${
@@ -19,9 +20,14 @@ export class Sample extends BaseSample {
   }
 
   render() {
+    const {items, layout, template} = this;
     render(
         html`
-                ${list(this)}
+                ${list({
+          totalItems: items.length,
+          layout,
+          template
+        })}
         `,
         document.body);
   }

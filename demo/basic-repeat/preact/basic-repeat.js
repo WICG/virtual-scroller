@@ -6,16 +6,19 @@ export const Sample = RepeaterControl(class extends Component {
   constructor() {
     super();
 
-    this.state = {
+    const state = {
       component: function() {
-        return h('li', null, `${this.props.idx}: ${this.props.item}`);
+        const idx = this.props.idx;
+        const item = state.items[idx];
+        return h('li', null, `${idx}: ${item}`);
       },
       wrapper: 'ul'
-    }
+    };
+    this.state = state;
   }
 
   render() {
     const {items, first, num, component, wrapper} = this.state;
-    return h(Repeat, {items, first, num, component, wrapper});
+    return h(Repeat, {totalItems: items.length, first, num, component, wrapper});
   }
 });

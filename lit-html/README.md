@@ -1,15 +1,15 @@
 # virtualList(items, template, direction)
 
 `virtualList` directive can be configured with 3 properties:
-- `items (Array)`, the data model.
+- `totalItems (number)`, the total number of items.
 - `template (Function)`, generates the DOM for each data item.
 - `direction (string)` (optional), layout direction, can be set to "vertical" (default) or "horizontal".
 
 ```js
 const render = () => html`
   <ul>
-    ${virtualList(items, (i, index) => html`
-      <li>${index}: ${i.name}</li>`)}
+    ${virtualList(items.length, (index) => html`
+      <li>${index}: ${items[index].name}</li>`)}
   </ul>
 `;
 ```

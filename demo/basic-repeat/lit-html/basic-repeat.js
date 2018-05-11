@@ -5,8 +5,9 @@ import {Sample as BaseSample} from '../basic-repeat.js';
 export class Sample extends BaseSample {
   render() {
     if (!this.template) {
-      this.template = (item, idx) => html`
-                <li on-click=${() => console.log(item)}>${idx}: ${item}</li>
+      this.template = (idx) => html`
+                <li on-click=${() => console.log(item)}>${idx}: ${
+          this.state.items[idx]}</li>
             `;
     }
     const {first, num, items} = this.state;
@@ -17,7 +18,7 @@ export class Sample extends BaseSample {
                 ${repeat({
           first,
           num,
-          items,
+          totalItems: items.length,
           template
         })}
             </ul>

@@ -10,7 +10,6 @@ async function importLayoutClass(url) {
 }
 
 /** Properties */
-const _items = Symbol();
 const _list = Symbol();
 const _newChild = Symbol();
 const _updateChild = Symbol();
@@ -27,7 +26,6 @@ const _scheduleRender = Symbol();
 export class VirtualListElement extends HTMLElement {
   constructor() {
     super();
-    this[_items] = null;
     this[_list] = null;
     this[_newChild] = null;
     this[_updateChild] = null;
@@ -49,7 +47,6 @@ export class VirtualListElement extends HTMLElement {
     height: 150px;
     overflow: auto;
   }
-  :host(:not([layout])) ::slotted(*), 
   :host([layout=vertical]) ::slotted(*) {
     width: 100%;
   }
@@ -58,18 +55,38 @@ export class VirtualListElement extends HTMLElement {
   }
 </style>
 <slot></slot>`;
+      // Default layout.
+      if (!this.layout) {
+        this.layout = 'vertical';
+      }
     }
     this[_scheduleRender]();
   }
 
   static get observedAttributes() {
-    return ['layout'];
+    return ['layout', 'totalitems'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
     if (name === 'layout') {
-      this.layout = newVal;
+      this[_horizontal] = newVal.startsWith('horizontal');
+      this[_grid] = newVal.endsWith('-grid');
     }
+    this[_scheduleRender]();
+  }
+
+  get layout() {
+    return this.getAttribute('layout');
+  }
+  set layout(layout) {
+    this.setAttribute('layout', layout);
+  }
+
+  get totalItems() {
+    return +this.getAttribute('totalitems');
+  }
+  set totalItems(v) {
+    this.setAttribute('totalitems', +v);
   }
 
   get newChild() {
@@ -104,33 +121,8 @@ export class VirtualListElement extends HTMLElement {
     this[_scheduleRender]();
   }
 
-  get layout() {
-    const prefix = this[_horizontal] ? 'horizontal' : 'vertical';
-    const suffix = this[_grid] ? '-grid' : '';
-    return prefix + suffix;
-  }
-  set layout(layout) {
-    const old = this.layout;
-    this[_horizontal] = layout && layout.startsWith('horizontal');
-    this[_grid] = layout && layout.endsWith('-grid');
-    layout = this.layout;
-    // Reflect to attribute.
-    if (old !== layout) {
-      this.setAttribute('layout', layout);
-    }
-    this[_scheduleRender]();
-  }
-
-  get items() {
-    return this[_items];
-  }
-  set items(items) {
-    this[_items] = items;
-    this[_scheduleRender]();
-  }
-
   requestReset() {
-    if (this[_list]) {
+    if (this[_list] && !this[_pendingRender]) {
       this[_list].requestReset();
     }
   }
@@ -159,8 +151,9 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const {newChild, updateChild, recycleChild, childKey, items} = this;
-    Object.assign(list, {newChild, updateChild, recycleChild, childKey, items});
+    const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
+    Object.assign(
+        list, {newChild, updateChild, recycleChild, childKey, totalItems});
 
     const Layout = await importLayoutClass(
         this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');

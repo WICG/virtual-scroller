@@ -4,7 +4,8 @@ import {itemType, Sample as BaseSample} from '../contacts.js';
 
 export class Sample extends BaseSample {
   _setUp() {
-    this.template = (item, idx) => {
+    this.template = (idx) => {
+      const item = this.items[idx];
       const type = itemType(item);
       if (type === 'contact') {
         // NOTE(valdrin): don't add spaces in `<p contenteditable>` so
@@ -31,26 +32,28 @@ export class Sample extends BaseSample {
     };
   }
 
-  _commitChange(idx, prop, el) {
-    // NOTE(valdrin): ensure lit-html marker comments are always at the right
-    // place. When user deletes all the content and then writes, the new content
-    // goes as the first child. Likewise when the user hits the Return key, new
+  _scrollToFocused(event) {
+    // When user deletes all the content and then writes, the new content goes
+    // as the first child. Likewise when the user hits the Return key, new
     // content is wrapped in a <div>.
-    let startMarker = el.firstChild;
-    while (startMarker.nodeType !== Node.COMMENT_NODE) {
-      startMarker = startMarker.nextSibling;
-    }
-    el.insertBefore(startMarker, el.firstChild);
-    let endMarker = el.lastChild;
-    while (endMarker.nodeType !== Node.COMMENT_NODE) {
-      endMarker = endMarker.previousSibling;
-    }
-    el.appendChild(endMarker);
+    // We save lit-html markers so we can ensure they're at the
+    // right place when the edits are finished.
+    const el = event.target;
+    el._startMarker = el.firstChild;
+    el._endMarker = el.lastChild;
+    super._scrollToFocused(event);
+  }
+
+  _commitChange(idx, prop, el) {
+    // Ensure lit-html markers are always at the right place.
+    el.insertBefore(el._startMarker, el.firstChild);
+    el.appendChild(el._endMarker);
     super._commitChange(idx, prop, el.textContent);
   }
 
   render() {
     const {layout, items, template, container} = this;
-    render(html`${list({layout, items, template})}`, container);
+    render(
+        html`${list({layout, totalItems: items.length, template})}`, container);
   }
 }
