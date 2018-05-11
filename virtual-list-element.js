@@ -1,5 +1,5 @@
-import {default as GridLayout} from './layouts/layout-1d-grid.js';
-import Layout from './layouts/layout-1d.js';
+import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
+import {default as Layout1d} from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
 
 /** Properties */
@@ -136,13 +136,13 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const klass = this.layout.endsWith('-grid') ? GridLayout : Layout;
+    const Layout = this.layout.endsWith('-grid') ? Layout1dGrid : Layout1d;
     const direction =
         this.layout.startsWith('horizontal') ? 'horizontal' : 'vertical';
     const layout =
-        list.layout instanceof klass && list.layout.direction === direction ?
+        list.layout instanceof Layout && list.layout.direction === direction ?
         list.layout :
-        new klass({direction});
+        new Layout({direction});
 
     const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
     Object.assign(
