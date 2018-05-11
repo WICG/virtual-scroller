@@ -1,5 +1,5 @@
-import {default as GridLayout} from './layouts/layout-1d-grid.js';
-import Layout from './layouts/layout-1d.js';
+import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
+import {default as Layout1d} from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
 
 /** Properties */
@@ -8,8 +8,6 @@ const _newChild = Symbol();
 const _updateChild = Symbol();
 const _recycleChild = Symbol();
 const _childKey = Symbol();
-const _grid = Symbol();
-const _horizontal = Symbol();
 const _pendingRender = Symbol();
 /** Functions */
 const _render = Symbol();
@@ -24,8 +22,6 @@ export class VirtualListElement extends HTMLElement {
     this[_updateChild] = null;
     this[_recycleChild] = null;
     this[_childKey] = null;
-    this[_grid] = false;
-    this[_horizontal] = false;
     this[_pendingRender] = null;
   }
 
@@ -61,10 +57,6 @@ export class VirtualListElement extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    if (name === 'layout') {
-      this[_horizontal] = newVal.startsWith('horizontal');
-      this[_grid] = newVal.endsWith('-grid');
-    }
     this[_scheduleRender]();
   }
 
@@ -144,17 +136,18 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const klass = this[_grid] ? GridLayout : Layout;
-    const direction = this[_horizontal] ? 'horizontal' : 'vertical';
+    const Layout = this.layout.endsWith('-grid') ? Layout1dGrid : Layout1d;
+    const direction =
+        this.layout.startsWith('horizontal') ? 'horizontal' : 'vertical';
     const layout =
-        list.layout instanceof klass && list.layout.direction === direction ?
+        list.layout instanceof Layout && list.layout.direction === direction ?
         list.layout :
-        new klass({direction});
+        new Layout({direction});
 
     const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
     Object.assign(
         list,
-        {newChild, updateChild, recycleChild, childKey, totalItems, layout});
+        {layout, newChild, updateChild, recycleChild, childKey, totalItems});
     list.flush();
   }
 }
