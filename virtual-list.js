@@ -120,7 +120,18 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._layout.addEventListener('scrollerrorchange', this);
       this._layout.addEventListener('itempositionchange', this);
       this._layout.addEventListener('rangechange', this);
+      this._layout.totalItems = this.totalItems;
       this._scheduleUpdateView();
+    }
+  }
+
+  get totalItems() {
+    return super.totalItems;
+  }
+  set totalItems(totalItems) {
+    super.totalItems = totalItems;
+    if (this._layout) {
+      this._layout.totalItems = this.totalItems;
     }
   }
 
@@ -162,28 +173,29 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
   }
 
-  requestReset() {
-    super.requestReset();
-    this._scheduleUpdateView();
+  render() {
+    // console.timeStamp('render start');
+    if (this._pendingUpdateView) {
+      this._pendingUpdateView = null;
+      this._updateView();
+    }
+    // Ensures layout updates positions.
+    this._layout.reflow();
+    while (this._pendingRender) {
+      this._pendingRender = null;
+      this._render();
+      // Ensures layout updates measures.
+      this._layout.reflow();
+    }
+    // console.timeStamp('render end');
   }
 
-  flush() {
-    this._forceSync = Boolean(this._pendingUpdateView || this._pendingRender);
-    while (this._forceSync) {
-      // viewport + scroll position
-      if (this._pendingUpdateView) {
-        this._updateView();
-      }
-      // render + measure
-      if (this._pendingRender) {
-        this._render();
-      }
-      // triggers first, num, position updates
-      if (this.layout._pendingReflow) {
-        this.layout._reflow();
-      }
-      // Keep forcing sync rendering until we are stable.
-      this._forceSync = this._incremental;
+  _asyncRender() {
+    if (!this._rAF) {
+      this._rAF = requestAnimationFrame(() => {
+        this._rAF = null;
+        this.render();
+      });
     }
   }
 
@@ -196,10 +208,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       case 'scroll':
         if (!this._scrollTarget || event.target === this._scrollTarget) {
           this._scheduleUpdateView();
+          this._asyncRender();
         }
         break;
       case 'resize':
         this._scheduleUpdateView();
+        this._asyncRender();
         break;
       case 'scrollsizechange':
         this._sizeContainer(event.detail);
@@ -245,22 +259,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _scheduleUpdateView() {
-    if (!this._pendingUpdateView && this._container && this._layout) {
-      this._pendingUpdateView = Promise.resolve().then(() => {
-        if (this._pendingUpdateView) {
-          this._updateView();
-        }
-      });
-    }
+    this._pendingUpdateView = Boolean(this._container && this._layout);
   }
   /**
    * @private
    */
   _updateView() {
-    this._pendingUpdateView = null;
-
-    this._layout.totalItems = this.totalItems;
-
     const listBounds = this._containerElement.getBoundingClientRect();
     // Avoid updating viewport if container is not visible.
     this._isContainerVisible = Boolean(
@@ -304,6 +308,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout.viewportSize = {width, height};
 
     this._layout.scrollTo({top, left});
+    this._layout.reflow();
   }
   /**
    * @private
@@ -322,10 +327,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   /**
    * @private
    */
-  async _positionChildren(pos) {
-    if (!this._forceSync) {
-      await Promise.resolve();
-    }
+  _positionChildren(pos) {
     const kids = this._kids;
     Object.keys(pos).forEach(key => {
       const idx = key - this._first;

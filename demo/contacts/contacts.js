@@ -107,6 +107,7 @@ export class Sample {
 
   render() {
     this.list.totalItems = this.items.length;
+    this.list.render();
   }
 
   async load(data) {
@@ -157,5 +158,6 @@ export class Sample {
         height: currentTarget.offsetHeight
       }
     });
+    this.render();
   }
 }

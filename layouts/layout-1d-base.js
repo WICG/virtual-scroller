@@ -170,7 +170,12 @@ export default class Layout extends EventTarget {
     // Override
   }
 
-  // TODO: Does this need to be public?
+  reflow() {
+    if (this._pendingReflow) {
+      this._pendingReflow = null;
+      this._reflow();
+    }
+  }
   _reflow() {
     const {_first, _last, _scrollSize} = this;
 
@@ -189,17 +194,10 @@ export default class Layout extends EventTarget {
       this._emitRange();
       this._emitChildPositions();
     }
-    this._pendingReflow = null;
   }
 
   _scheduleReflow() {
-    if (!this._pendingReflow) {
-      this._pendingReflow = Promise.resolve().then(() => {
-        if (this._pendingReflow) {
-          this._reflow();
-        }
-      });
-    }
+    this._pendingReflow = true;
   }
 
   _updateScrollSize() {

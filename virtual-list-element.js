@@ -109,6 +109,7 @@ export class VirtualListElement extends HTMLElement {
   requestReset() {
     if (this[_list] && !this[_pendingRender]) {
       this[_list].requestReset();
+      this[_list].render();
     }
   }
 
@@ -148,7 +149,7 @@ export class VirtualListElement extends HTMLElement {
     Object.assign(
         list,
         {layout, newChild, updateChild, recycleChild, childKey, totalItems});
-    list.flush();
+    list.render();
   }
 }
 customElements.define('virtual-list', VirtualListElement);

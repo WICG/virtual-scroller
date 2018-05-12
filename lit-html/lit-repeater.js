@@ -98,4 +98,5 @@ export const repeat = (config = {}) => directive(async part => {
   }
   const {first, num, totalItems} = config;
   Object.assign(repeater, {first, num, totalItems});
+  repeater.render();
 });

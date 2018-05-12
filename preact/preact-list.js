@@ -14,6 +14,7 @@ export class List extends Repeat {
 
   _updateRepeater(props) {
     this._repeater.totalItems = props.totalItems;
+    this._repeater.render();
   }
 }
 
