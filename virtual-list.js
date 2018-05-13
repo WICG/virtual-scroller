@@ -220,6 +220,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         break;
       case 'itempositionchange':
         this._childrenPos = event.detail;
+        this._scheduleRender();
         break;
       case 'rangechange':
         this._adjustRange(event.detail);
