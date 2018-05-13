@@ -202,6 +202,9 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
+  /**
+   * @private
+   */
   _flushRender() {
     if (this._pendingRender) {
       cancelAnimationFrame(this._pendingRender);

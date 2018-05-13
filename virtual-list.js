@@ -174,6 +174,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
   }
 
+  /**
+   * @protected
+   */
   _render() {
     if (this._needsUpdateView) {
       this._needsUpdateView = false;
