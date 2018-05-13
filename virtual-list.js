@@ -37,6 +37,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._sizer = null;
     // We keep track of the scroll size to support changing container.
     this._scrollSize = null;
+    this._childrenPos = null;
 
     if (config) {
       Object.assign(this, config);
@@ -174,7 +175,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   _render() {
-    // console.time('_render()');
     if (this._needsUpdateView) {
       this._needsUpdateView = false;
       this._updateView();
@@ -182,19 +182,16 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (!this._isContainerVisible) {
       return;
     }
-    // Render and reflow until there are
-    // no more pending renders.
-    while (true) {
-      super._render();
-      this._layout.reflow();
-      if (this._pendingRender) {
-        cancelAnimationFrame(this._pendingRender);
-        this._pendingRender = null;
-      } else {
-        break;
-      }
+    // We need to first render, then position, and
+    // finally reflow.
+    super._render();
+    if (this._childrenPos) {
+      this._positionChildren(this._childrenPos);
+      this._childrenPos = null;
     }
-    // console.timeEnd('_render()');
+    this._layout.reflow();
+
+    this._flushRender();
   }
 
   /**
@@ -219,7 +216,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         this._correctScrollError(event.detail);
         break;
       case 'itempositionchange':
-        this._positionChildren(event.detail);
+        this._childrenPos = event.detail;
         break;
       case 'rangechange':
         this._adjustRange(event.detail);
@@ -305,6 +302,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout.viewportSize = {width, height};
 
     this._layout.scrollTo({top, left});
+    this._layout.reflow();
   }
   /**
    * @private
@@ -330,8 +328,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       const child = kids[idx];
       if (child) {
         const {top, left} = pos[key];
-        // console.debug(`_positionChild #${this._container.id} > #${child.id}:
-        // top ${top}`);
+        // console.debug(`_positionChild #${this._container.id} >
+        // #${child.id}: top ${top}`);
         child.style.position = 'absolute';
         child.style.transform = `translate(${left}px, ${top}px)`;
       }

@@ -197,12 +197,17 @@ export const Repeats = Superclass => class extends Superclass {
     if (this._pendingRender) {
       return;
     }
-    this._pendingRender = requestAnimationFrame(() => {
+    this._pendingRender = requestAnimationFrame(() => this._flushRender());
+  }
+
+  _flushRender() {
+    if (this._pendingRender) {
+      cancelAnimationFrame(this._pendingRender);
       this._pendingRender = null;
       if (this._shouldRender()) {
         this._render();
       }
-    });
+    }
   }
 
   /**
