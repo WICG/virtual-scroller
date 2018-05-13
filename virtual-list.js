@@ -24,7 +24,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._prevFirst = -1;
     this._prevLast = -1;
 
-    this._pendingUpdateView = null;
+    this._needsUpdateView = false;
     this._isContainerVisible = false;
     this._containerElement = null;
     this._layout = null;
@@ -106,7 +106,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       // Reset container size so layout can get correct viewport size.
       if (this._containerElement) {
         this._sizeContainer();
-        this.requestRemeasure();
       }
     }
 
@@ -115,6 +114,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (this._layout) {
       if (typeof this._layout.updateItemSizes === 'function') {
         this._measureCallback = this._layout.updateItemSizes.bind(this._layout);
+        this.requestRemeasure();
       }
       this._layout.addEventListener('scrollsizechange', this);
       this._layout.addEventListener('scrollerrorchange', this);
@@ -173,30 +173,28 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
   }
 
-  render() {
-    // console.timeStamp('render start');
-    if (this._pendingUpdateView) {
-      this._pendingUpdateView = null;
+  _render() {
+    // console.time('_render()');
+    if (this._needsUpdateView) {
+      this._needsUpdateView = false;
       this._updateView();
     }
-    // Ensures layout updates positions.
-    this._layout.reflow();
-    while (this._pendingRender) {
-      this._pendingRender = null;
-      this._render();
-      // Ensures layout updates measures.
+    if (!this._isContainerVisible) {
+      return;
+    }
+    // Render and reflow until there are
+    // no more pending renders.
+    while (true) {
+      super._render();
       this._layout.reflow();
+      if (this._pendingRender) {
+        cancelAnimationFrame(this._pendingRender);
+        this._pendingRender = null;
+      } else {
+        break;
+      }
     }
-    // console.timeStamp('render end');
-  }
-
-  _asyncRender() {
-    if (!this._rAF) {
-      this._rAF = requestAnimationFrame(() => {
-        this._rAF = null;
-        this.render();
-      });
-    }
+    // console.timeEnd('_render()');
   }
 
   /**
@@ -208,12 +206,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       case 'scroll':
         if (!this._scrollTarget || event.target === this._scrollTarget) {
           this._scheduleUpdateView();
-          this._asyncRender();
         }
         break;
       case 'resize':
         this._scheduleUpdateView();
-        this._asyncRender();
         break;
       case 'scrollsizechange':
         this._sizeContainer(event.detail);
@@ -259,7 +255,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _scheduleUpdateView() {
-    this._pendingUpdateView = Boolean(this._container && this._layout);
+    this._needsUpdateView = true;
+    this._scheduleRender();
   }
   /**
    * @private
@@ -308,7 +305,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout.viewportSize = {width, height};
 
     this._layout.scrollTo({top, left});
-    this._layout.reflow();
   }
   /**
    * @private
@@ -358,8 +354,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _shouldRender() {
-    return Boolean(
-        this._isContainerVisible && this._layout && super._shouldRender());
+    return Boolean(this._layout && super._shouldRender());
   }
   /**
    * @private

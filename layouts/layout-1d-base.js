@@ -197,7 +197,14 @@ export default class Layout extends EventTarget {
   }
 
   _scheduleReflow() {
-    this._pendingReflow = true;
+    if (!this._pendingReflow) {
+      this._pendingReflow = Promise.resolve().then(() => {
+        if (this._pendingReflow) {
+          this._pendingReflow = null;
+          this._reflow();
+        }
+      });
+    }
   }
 
   _updateScrollSize() {

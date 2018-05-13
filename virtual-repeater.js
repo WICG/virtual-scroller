@@ -9,7 +9,7 @@ export const Repeats = Superclass => class extends Superclass {
 
     this._measureCallback = null;
 
-    this._totalItems = -1;
+    this._totalItems = 0;
     // Consider renaming this. firstVisibleIndex?
     this._first = 0;
     // Consider renaming this. count? visibleElements?
@@ -187,14 +187,22 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this.totalItems !== -1 && this.container && this.newChild);
+    return Boolean(this.container && this.newChild);
   }
 
   /**
    * @private
    */
   _scheduleRender() {
-    this._pendingRender = this._shouldRender();
+    if (this._pendingRender) {
+      return;
+    }
+    this._pendingRender = requestAnimationFrame(() => {
+      this._pendingRender = null;
+      if (this._shouldRender()) {
+        this._render();
+      }
+    });
   }
 
   /**
@@ -230,13 +238,6 @@ export const Repeats = Superclass => class extends Superclass {
           return out;
         }, {}));
     this._measureCallback(mm);
-  }
-
-  render() {
-    if (this._pendingRender) {
-      this._pendingRender = null;
-      this._render();
-    }
   }
 
   /**

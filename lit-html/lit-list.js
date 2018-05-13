@@ -21,7 +21,6 @@ export const list = (config = {}) => directive(async part => {
     partToList.set(part, list);
   }
   list.totalItems = config.totalItems;
-  list.render();
 });
 
 export const virtualList = (totalItems, template, direction = 'vertical') =>

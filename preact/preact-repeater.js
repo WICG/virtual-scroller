@@ -13,7 +13,6 @@ export class Repeat extends Component {
   _updateRepeater(props) {
     const {first, num, totalItems} = props;
     Object.assign(this._repeater, {first, num, totalItems});
-    this._repeater.render();
   }
 
   componentWillReceiveProps(nextProps) {

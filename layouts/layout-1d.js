@@ -274,7 +274,7 @@ export default class Layout extends Layout1dBase {
   }
 
   // TODO: Can this be made to inherit from base, with proper hooks?
-  reflow() {
+  _reflow() {
     const {_first, _last, _scrollSize} = this;
 
     this._updateScrollSize();

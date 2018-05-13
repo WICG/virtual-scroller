@@ -8,10 +8,8 @@ const _newChild = Symbol();
 const _updateChild = Symbol();
 const _recycleChild = Symbol();
 const _childKey = Symbol();
-const _pendingRender = Symbol();
 /** Functions */
 const _render = Symbol();
-const _scheduleRender = Symbol();
 
 
 export class VirtualListElement extends HTMLElement {
@@ -22,7 +20,6 @@ export class VirtualListElement extends HTMLElement {
     this[_updateChild] = null;
     this[_recycleChild] = null;
     this[_childKey] = null;
-    this[_pendingRender] = null;
   }
 
   connectedCallback() {
@@ -49,7 +46,7 @@ export class VirtualListElement extends HTMLElement {
         this.layout = 'vertical';
       }
     }
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   static get observedAttributes() {
@@ -57,7 +54,7 @@ export class VirtualListElement extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   get layout() {
@@ -79,7 +76,7 @@ export class VirtualListElement extends HTMLElement {
   }
   set newChild(fn) {
     this[_newChild] = fn;
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   get updateChild() {
@@ -87,7 +84,7 @@ export class VirtualListElement extends HTMLElement {
   }
   set updateChild(fn) {
     this[_updateChild] = fn;
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   get recycleChild() {
@@ -95,7 +92,7 @@ export class VirtualListElement extends HTMLElement {
   }
   set recycleChild(fn) {
     this[_recycleChild] = fn;
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   get childKey() {
@@ -103,26 +100,16 @@ export class VirtualListElement extends HTMLElement {
   }
   set childKey(fn) {
     this[_childKey] = fn;
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   requestReset() {
-    if (this[_list] && !this[_pendingRender]) {
+    if (this[_list]) {
       this[_list].requestReset();
-      this[_list].render();
     }
   }
 
-  [_scheduleRender]() {
-    if (!this[_pendingRender]) {
-      this[_pendingRender] = requestAnimationFrame(() => {
-        this[_pendingRender] = null;
-        this[_render]();
-      });
-    }
-  }
-
-  async[_render]() {
+  [_render]() {
     if (!this.newChild) {
       return;
     }
@@ -149,7 +136,6 @@ export class VirtualListElement extends HTMLElement {
     Object.assign(
         list,
         {layout, newChild, updateChild, recycleChild, childKey, totalItems});
-    list.render();
   }
 }
 customElements.define('virtual-list', VirtualListElement);

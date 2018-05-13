@@ -75,6 +75,5 @@ export const Sample = RepeaterControl(Stateful(class {
     }
     const {items, num, first} = this.state;
     Object.assign(this._repeater, {totalItems: items.length, num, first});
-    this._repeater.render();
   }
 }));
