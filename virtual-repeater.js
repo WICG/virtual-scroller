@@ -195,10 +195,8 @@ export const Repeats = Superclass => class extends Superclass {
    */
   _scheduleRender() {
     if (!this._pendingRender && this._shouldRender()) {
-      this._pendingRender = requestAnimationFrame(() => {
-        this._pendingRender = null;
-        this._render();
-      });
+      this._pendingRender =
+          requestAnimationFrame(() => this._flushPendingRender());
     }
   }
 
