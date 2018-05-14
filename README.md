@@ -147,14 +147,13 @@ Note that even if we invoke `requestReset()`, nothing new would render in this c
 
 ```js
 // Does nothing
-setTimeout(() => {
+requestAnimationFrame(() => {
   myItems = ['A', 'B', 'C', 'D'];
   list.requestReset();
-}, 100);
+});
 ```
 
-_Note: see [#15](https://github.com/valdrinkoshi/virtual-list/issues/51) for why we included a `setTimeout` here._
-
+_Note: we include `requestAnimationFrame` here to wait for `<virtual-list>` rendering._
 If you plan to update your items, you're likely better off using `newChild` to set up the "template" for each item, and using `updateChild` to fill in the data. Like so:
 
 ```js
@@ -171,10 +170,10 @@ let myItems = ['a', 'b', 'c', 'd'];
 list.totalItems = myItems.length;
 
 // This now works: it calls updateChild four times
-setTimeout(() => {
+requestAnimationFrame(() => {
   myItems = ['A', 'B', 'C', 'D'];
   list.requestReset();
-}, 100);
+});
 ```
 
 ### DOM recycling using `recycleChild`
