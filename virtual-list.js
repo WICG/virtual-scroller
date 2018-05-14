@@ -185,16 +185,27 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (!this._isContainerVisible) {
       return;
     }
-    // We need to first render, then position, and
-    // finally reflow.
+    // 1. render DOM
+    // 2. position DOM (_didRender)
+    // 3. measure DOM
+    // 4. reflow layout
     super._render();
+    this._layout.flushPendingReflow();
+
+    this._flushPendingRender();
+  }
+
+  /**
+   * Position children before they get measured.
+   * Measuring will force relayout, so by positioning
+   * them first, we reduce computations.
+   * @protected
+   */
+  _didRender() {
     if (this._childrenPos) {
       this._positionChildren(this._childrenPos);
       this._childrenPos = null;
     }
-    this._layout.reflow();
-
-    this._flushRender();
   }
 
   /**
@@ -306,7 +317,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout.viewportSize = {width, height};
 
     this._layout.scrollTo({top, left});
-    this._layout.reflow();
+    this._layout.flushPendingReflow();
   }
   /**
    * @private

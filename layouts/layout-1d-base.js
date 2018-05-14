@@ -170,7 +170,7 @@ export default class Layout extends EventTarget {
     // Override
   }
 
-  reflow() {
+  flushPendingReflow() {
     if (this._pendingReflow) {
       cancelAnimationFrame(this._pendingReflow);
       this._pendingReflow = null;

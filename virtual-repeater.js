@@ -205,7 +205,7 @@ export const Repeats = Superclass => class extends Superclass {
   /**
    * @private
    */
-  _flushRender() {
+  _flushPendingRender() {
     if (this._pendingRender) {
       cancelAnimationFrame(this._pendingRender);
       this._pendingRender = null;
@@ -271,6 +271,7 @@ export const Repeats = Superclass => class extends Superclass {
         }
       }
     }
+    this._didRender();
     if (this._needsRemeasure || this._needsReset) {
       this._indexToMeasure = {};
     }
@@ -295,6 +296,13 @@ export const Repeats = Superclass => class extends Superclass {
     this._prevNum = this._num;
     this._needsReset = false;
     this._needsRemeasure = false;
+  }
+
+  /**
+   * Invoked after DOM is updated, and before it gets measured.
+   * @protected
+   */
+  _didRender() {
   }
 
   /**
