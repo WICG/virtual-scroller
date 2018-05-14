@@ -170,13 +170,6 @@ export default class Layout extends EventTarget {
     // Override
   }
 
-  flushPendingReflow() {
-    if (this._pendingReflow) {
-      cancelAnimationFrame(this._pendingReflow);
-      this._pendingReflow = null;
-      this._reflow();
-    }
-  }
   _reflow() {
     const {_first, _last, _scrollSize} = this;
 
@@ -199,10 +192,15 @@ export default class Layout extends EventTarget {
 
   _scheduleReflow() {
     if (!this._pendingReflow) {
-      this._pendingReflow = requestAnimationFrame(() => {
-        this._pendingReflow = null;
-        this._reflow();
-      });
+      this._pendingReflow =
+          Promise.resolve().then(() => this.flushPendingReflow());
+    }
+  }
+
+  flushPendingReflow() {
+    if (this._pendingReflow) {
+      this._pendingReflow = null;
+      this._reflow();
     }
   }
 
