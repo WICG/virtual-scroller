@@ -172,6 +172,7 @@ export default class Layout extends EventTarget {
 
   reflow() {
     if (this._pendingReflow) {
+      cancelAnimationFrame(this._pendingReflow);
       this._pendingReflow = null;
       this._reflow();
     }
@@ -198,11 +199,9 @@ export default class Layout extends EventTarget {
 
   _scheduleReflow() {
     if (!this._pendingReflow) {
-      this._pendingReflow = Promise.resolve().then(() => {
-        if (this._pendingReflow) {
-          this._pendingReflow = null;
-          this._reflow();
-        }
+      this._pendingReflow = requestAnimationFrame(() => {
+        this._pendingReflow = null;
+        this._reflow();
       });
     }
   }
