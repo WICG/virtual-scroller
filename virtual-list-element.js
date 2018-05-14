@@ -36,6 +36,12 @@ export class VirtualListElement extends HTMLElement {
     height: 150px;
     overflow: auto;
   }
+  :host([hidden]) {
+    display: none;
+  }
+  ::slotted(*) {
+    box-sizing: border-box;
+  }
   :host([layout=vertical]) ::slotted(*) {
     width: 100%;
   }
