@@ -12,6 +12,7 @@ export class Sample {
     this.layout = new Layout();
 
     document.body.style.margin = 0;
+    document.body.style.height = '100vh';
 
     window.addEventListener('hashchange', () => this.search());
     window.addEventListener('resize', () => this._setDirection());
