@@ -173,6 +173,27 @@ layout.addEventListener('scrollerrorchange', (event) => {
 });
 ```
 
+Reflowing is done asynchronously to avoid expensive computations at each property change.
+
+Use `layout.reflowIfNeeded()` to execute any pending reflow synchronously.
+```js
+Object.assign(layout, {
+  viewportSize: {width: 100},
+  totalItems: 10,
+  direction: 'horizontal',
+  itemSize: {width: 50},
+});
+
+let range = null;
+layout.addEventListener('rangechange', (event) => {
+  range = event.detail;
+}, {once: true});
+
+layout.reflowIfNeeded();
+
+console.log(range);
+```
+
 Use `layout.updateItemSizes()` to give layout more information regarding item sizes.
 ```js
 // Pass an object with key = item index, value = bounds.

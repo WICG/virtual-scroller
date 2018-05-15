@@ -164,7 +164,7 @@ export default class Layout extends EventTarget {
 
   // public methods
 
-  flushPendingReflow() {
+  reflowIfNeeded() {
     if (this._pendingReflow) {
       this._pendingReflow = null;
       this._reflow();

@@ -175,7 +175,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._needsUpdateView = false;
       this._updateView();
     }
-    this._layout.flushPendingReflow();
+    this._layout.reflowIfNeeded();
     // Keep rendering until there is no more scheduled renders.
     while (true) {
       if (this._pendingRender) {
@@ -192,7 +192,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       }
       // Position children (_didRender()), and provide their measures to layout.
       super._render();
-      this._layout.flushPendingReflow();
+      this._layout.reflowIfNeeded();
       // If layout reflow did not provoke another render, we're done.
       if (!this._pendingRender) {
         break;
