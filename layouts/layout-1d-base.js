@@ -182,14 +182,13 @@ export default class Layout extends EventTarget {
   }
 
   /**
-   * Throttles reflow of a microtask to allow multi-property changes.
-   * Pending reflow can be triggered synchronously with `flushPendingReflow()`.
+   * Throttle reflow to allow multi-property changes.
+   * Pending reflow can be triggered synchronously with `reflowIfNeeded()`.
    * @private
    */
   _scheduleReflow() {
     if (!this._pendingReflow) {
-      this._pendingReflow =
-          Promise.resolve().then(() => this.flushPendingReflow());
+      this._pendingReflow = Promise.resolve().then(() => this.reflowIfNeeded());
     }
   }
 
