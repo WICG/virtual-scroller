@@ -29,7 +29,7 @@ export default class Layout extends EventTarget {
 
     this._overhang = 150;
 
-    this._pendingReflow = null;
+    this._pendingReflow = false;
 
     Object.assign(this, config);
   }
@@ -166,7 +166,7 @@ export default class Layout extends EventTarget {
 
   reflowIfNeeded() {
     if (this._pendingReflow) {
-      this._pendingReflow = null;
+      this._pendingReflow = false;
       this._reflow();
     }
   }
@@ -181,15 +181,8 @@ export default class Layout extends EventTarget {
     // Override
   }
 
-  /**
-   * Throttle reflow to allow multi-property changes.
-   * Pending reflow can be triggered synchronously with `reflowIfNeeded()`.
-   * @private
-   */
   _scheduleReflow() {
-    if (!this._pendingReflow) {
-      this._pendingReflow = Promise.resolve().then(() => this.reflowIfNeeded());
-    }
+    this._pendingReflow = true;
   }
 
   _reflow() {

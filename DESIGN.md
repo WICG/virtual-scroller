@@ -144,6 +144,8 @@ const layout = new Layout({
 });
 ```
 
+Apply changes by invoking `layout.reflowIfNeeded()`.
+
 It notifies subscribers about changes on range (e.g. `first, num`), item position, scroll size, scroll error. It's up to the listeners to take action on these.
 
 ```js
@@ -171,27 +173,8 @@ layout.addEventListener('scrollerrorchange', (event) => {
   const error = event.detail;
   console.log(`account for scroll error of ${error.top}`);
 });
-```
-
-Reflowing is done asynchronously to avoid expensive computations at each property change.
-
-Use `layout.reflowIfNeeded()` to execute any pending reflow synchronously.
-```js
-Object.assign(layout, {
-  viewportSize: {width: 100},
-  totalItems: 10,
-  direction: 'horizontal',
-  itemSize: {width: 50},
-});
-
-let range = null;
-layout.addEventListener('rangechange', (event) => {
-  range = event.detail;
-}, {once: true});
 
 layout.reflowIfNeeded();
-
-console.log(range);
 ```
 
 Use `layout.updateItemSizes()` to give layout more information regarding item sizes.
@@ -208,6 +191,7 @@ Set `layout.viewportScroll` to move the range across the container size.
 const el = document.scrollingElement;
 el.addEventListener('scroll', () => {
   layout.viewportScroll = {top: el.scrollTop};
+  layout.reflowIfNeeded();
 });
 ```
 
