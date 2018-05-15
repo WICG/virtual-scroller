@@ -194,20 +194,13 @@ export const Repeats = Superclass => class extends Superclass {
    * @private
    */
   _scheduleRender() {
-    if (!this._pendingRender && this._shouldRender()) {
-      this._pendingRender =
-          requestAnimationFrame(() => this._flushPendingRender());
-    }
-  }
-
-  /**
-   * @private
-   */
-  _flushPendingRender() {
-    if (this._pendingRender) {
-      cancelAnimationFrame(this._pendingRender);
-      this._pendingRender = null;
-      this._render();
+    if (!this._pendingRender) {
+      this._pendingRender = requestAnimationFrame(() => {
+        this._pendingRender = null;
+        if (this._shouldRender()) {
+          this._render();
+        }
+      });
     }
   }
 
@@ -250,11 +243,9 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _render() {
-    // 1. create DOM
-    // 2. measure DOM
-    // 3. recycle DOM
     const rangeChanged =
         this._first !== this._prevFirst || this._num !== this._prevNum;
+    // Create/update/recycle DOM.
     if (rangeChanged || this._needsReset) {
       this._last =
           this._first + Math.min(this._num, this._totalItems - this._first) - 1;
@@ -269,31 +260,33 @@ export const Repeats = Superclass => class extends Superclass {
         }
       }
     }
-    this._didRender();
     if (this._needsRemeasure || this._needsReset) {
       this._indexToMeasure = {};
     }
+    // Retrieve DOM to be measured.
+    // Do it right before cleanup and reset of properties.
     const shouldMeasure = this._num > 0 && this._measureCallback &&
         (rangeChanged || this._needsRemeasure || this._needsReset);
-    // console.debug(`#${this._container.id} _render: ${this._num}/${
-    //     this._totalItems} ${this._first} -> ${this._last}
-    //     (${this._prevNum}/${this._totalItems} ${this._prevFirst} ->
-    //     ${this._prevLast}) measure=${shouldMeasure}`);
-    if (shouldMeasure) {
-      this._measureChildren(this._toMeasure);
-    }
+    const toMeasure = shouldMeasure ? this._toMeasure : null;
 
-    // Cleanup
+    // Cleanup.
     if (!this._incremental) {
       this._prevActive.forEach((idx, child) => this._unassignChild(child, idx));
       this._prevActive.clear();
     }
-
+    // Reset internal properties.
     this._prevFirst = this._first;
     this._prevLast = this._last;
     this._prevNum = this._num;
     this._needsReset = false;
     this._needsRemeasure = false;
+
+    // Notify render completed.
+    this._didRender();
+    // Measure DOM.
+    if (toMeasure) {
+      this._measureChildren(toMeasure);
+    }
   }
 
   /**

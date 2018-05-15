@@ -29,6 +29,8 @@ export default class Layout extends EventTarget {
 
     this._overhang = 150;
 
+    this._pendingReflow = null;
+
     Object.assign(this, config);
   }
 
@@ -142,6 +144,15 @@ export default class Layout extends EventTarget {
     return this._totalItems;
   }
 
+  get viewportScroll() {
+    return this._latestCoords;
+  }
+
+  set viewportScroll(coords) {
+    this._latestCoords = coords;
+    this._scroll();
+  }
+
   // private properties
 
   get _num() {
@@ -153,12 +164,12 @@ export default class Layout extends EventTarget {
 
   // public methods
 
-  scrollTo(coords) {
-    this._latestCoords = coords;
-    this._scroll();
+  flushPendingReflow() {
+    if (this._pendingReflow) {
+      this._pendingReflow = null;
+      this._reflow();
+    }
   }
-
-  //
 
   _scroll() {
     this._scrollPosition = this._latestCoords[this._positionDim];
@@ -168,6 +179,18 @@ export default class Layout extends EventTarget {
 
   _getActiveItems() {
     // Override
+  }
+
+  /**
+   * Throttles reflow of a microtask to allow multi-property changes.
+   * Pending reflow can be triggered synchronously with `flushPendingReflow()`.
+   * @private
+   */
+  _scheduleReflow() {
+    if (!this._pendingReflow) {
+      this._pendingReflow =
+          Promise.resolve().then(() => this.flushPendingReflow());
+    }
   }
 
   _reflow() {
@@ -187,20 +210,6 @@ export default class Layout extends EventTarget {
         this._spacingChanged) {
       this._emitRange();
       this._emitChildPositions();
-    }
-  }
-
-  _scheduleReflow() {
-    if (!this._pendingReflow) {
-      this._pendingReflow =
-          Promise.resolve().then(() => this.flushPendingReflow());
-    }
-  }
-
-  flushPendingReflow() {
-    if (this._pendingReflow) {
-      this._pendingReflow = null;
-      this._reflow();
     }
   }
 

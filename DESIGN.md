@@ -182,18 +182,18 @@ layout.updateItemSizes({
 });
 ```
 
-Use `layout.scrollTo()` to move the range across the container size.
+Set `layout.viewportScroll` to move the range across the container size.
 ```js
 const el = document.scrollingElement;
 el.addEventListener('scroll', () => {
-  layout.scrollTo({top: el.scrollTop});
+  layout.viewportScroll = {top: el.scrollTop};
 });
 ```
 
 ## VirtualList (RepeatsAndScrolls mixin)
 
 - Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance
-- Exposes a `layout` property, updates the `layout.totalItems`, `layout.viewportSize`, and the scroll position (`layout.scrollTo()`)
+- Exposes a `layout` property, updates the `layout.totalItems`, `layout.viewportSize`, and `layout.viewportScroll`.
 - Subscribes to `layout` updates on range (`first, num`), children position, scrolling position and scrolling size
 - Updates the container size (`min-width/height`) and children positions (`position: absolute`)
 
