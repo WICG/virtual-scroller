@@ -1,8 +1,7 @@
-import '../lib/lazy-image.js';
-
+import './lazy-image.js';
 import Layout from '../../layouts/layout-1d.js';
 import {VirtualList} from '../../virtual-list.js';
-import {getDims, getUrl, searchFlickr} from '../lib/flickr.js';
+import {getDims, getUrl, searchFlickr} from './flickr.js';
 
 export {getDims, getUrl, searchFlickr};
 
