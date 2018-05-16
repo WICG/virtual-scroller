@@ -1,15 +1,3 @@
-const template = document.createElement('template');
-template.innerHTML = `
-    <style>
-        :host { position: relative; background: #DDD; }
-        img { height: 100%; width: 100%; opacity: 0; transition: unset; }
-        img.loaded { opacity: 1; transition: opacity 0.5s; }
-        ::slotted() { z-index: 1; color: white; }
-    </style>
-    <img />
-    <slot></slot>
-`;
-
 class LazyImage extends HTMLElement {
   constructor() {
     super();
@@ -17,7 +5,15 @@ class LazyImage extends HTMLElement {
     this._pendingLoad = null;
     this._load = this._load.bind(this);
     this._root = this.attachShadow({mode: 'open'});
-    this._root.appendChild(document.importNode(template.content, true));
+    this._root.innerHTML = `
+    <style>
+        :host { position: relative; background: #DDD; }
+        img { height: 100%; width: 100%; opacity: 0; transition: unset; }
+        img.loaded { opacity: 1; transition: opacity 0.5s; }
+        ::slotted() { z-index: 1; color: white; }
+    </style>
+    <img />
+    <slot></slot>`;
     this._img = this._root.querySelector('img');
     this._img.addEventListener('load', e => this._loaded());
   }
