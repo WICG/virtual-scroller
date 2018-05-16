@@ -1,4 +1,4 @@
-import {list} from '../../../lit-html/lit-list.js';
+import {scroller} from '../../../lit-html/lit-scroller.js';
 import {html, render} from '../../../node_modules/lit-html/lib/lit-extended.js';
 import {getDims, getUrl, Sample as BaseSample} from '../photos.js';
 
@@ -22,13 +22,7 @@ export class Sample extends BaseSample {
   render() {
     const {items, layout, template} = this;
     render(
-        html`
-                ${list({
-          totalItems: items.length,
-          layout,
-          template
-        })}
-        `,
+        html`${scroller({totalItems: items.length, layout, template})}`,
         document.body);
   }
 }

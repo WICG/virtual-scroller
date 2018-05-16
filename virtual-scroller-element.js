@@ -1,9 +1,9 @@
 import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
 import {default as Layout1d} from './layouts/layout-1d.js';
-import {VirtualList} from './virtual-list.js';
+import {VirtualScroller} from './virtual-scroller.js';
 
 /** Properties */
-const _list = Symbol();
+const _scroller = Symbol();
 const _newChild = Symbol();
 const _updateChild = Symbol();
 const _recycleChild = Symbol();
@@ -12,10 +12,10 @@ const _childKey = Symbol();
 const _render = Symbol();
 
 
-export class VirtualListElement extends HTMLElement {
+export class VirtualScrollerElement extends HTMLElement {
   constructor() {
     super();
-    this[_list] = null;
+    this[_scroller] = null;
     this[_newChild] = null;
     this[_updateChild] = null;
     this[_recycleChild] = null;
@@ -110,8 +110,8 @@ export class VirtualListElement extends HTMLElement {
   }
 
   requestReset() {
-    if (this[_list]) {
-      this[_list].requestReset();
+    if (this[_scroller]) {
+      this[_scroller].requestReset();
     }
   }
 
@@ -119,29 +119,30 @@ export class VirtualListElement extends HTMLElement {
     if (!this.newChild) {
       return;
     }
-    // Delay init to first connected as list needs to measure
+    // Delay init to first connected as scroller needs to measure
     // sizes of container and children.
-    if (!this[_list] && !this.isConnected) {
+    if (!this[_scroller] && !this.isConnected) {
       return;
     }
 
-    if (!this[_list]) {
-      this[_list] = new VirtualList({container: this, scrollTarget: this});
+    if (!this[_scroller]) {
+      this[_scroller] =
+          new VirtualScroller({container: this, scrollTarget: this});
     }
-    const list = this[_list];
+    const scroller = this[_scroller];
 
     const Layout = this.layout.endsWith('-grid') ? Layout1dGrid : Layout1d;
     const direction =
         this.layout.startsWith('horizontal') ? 'horizontal' : 'vertical';
-    const layout =
-        list.layout instanceof Layout && list.layout.direction === direction ?
-        list.layout :
+    const layout = scroller.layout instanceof Layout &&
+            scroller.layout.direction === direction ?
+        scroller.layout :
         new Layout({direction});
 
     const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
     Object.assign(
-        list,
+        scroller,
         {layout, newChild, updateChild, recycleChild, childKey, totalItems});
   }
 }
-customElements.define('virtual-list', VirtualListElement);
+customElements.define('virtual-scroller', VirtualScrollerElement);

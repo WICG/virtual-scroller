@@ -1,6 +1,6 @@
 import './lazy-image.js';
 import Layout from '../../layouts/layout-1d.js';
-import {VirtualList} from '../../virtual-list.js';
+import {VirtualScroller} from '../../virtual-scroller.js';
 import {getDims, getUrl, searchFlickr} from './flickr.js';
 
 export {getDims, getUrl, searchFlickr};
@@ -32,7 +32,7 @@ export class Sample {
   }
 
   _setUp() {
-    this.list = new VirtualList({
+    this.scroller = new VirtualScroller({
       layout: this.layout,
       container: document.body,
       newChild: () => {
@@ -59,7 +59,7 @@ export class Sample {
   }
 
   render() {
-    this.list.totalItems = this.items.length;
+    this.scroller.totalItems = this.items.length;
   }
 
   async search() {

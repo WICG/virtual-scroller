@@ -1,9 +1,9 @@
-import {VirtualListElement} from 'std:virtual-list';
+import {VirtualScrollerElement} from 'std:virtual-scroller';
 
 import {HtmlSpec} from '../../node_modules/streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js';
 
-class HTMLSpecViewer extends VirtualListElement {
+class HTMLSpecViewer extends VirtualScrollerElement {
   connectedCallback() {
     super.connectedCallback();
     if (!this._htmlSpec) {
