@@ -1,0 +1,104 @@
+<html>
+
+<head>
+  <title>Fallback element</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      margin: 0;
+    }
+
+    virtual-list {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    header {
+      padding: 10px;
+      box-sizing: border-box;
+      width: 100%;
+      color: #333;
+      background-color: #ddd;
+    }
+  </style>
+</head>
+
+<body>
+
+  <virtual-list></virtual-list>
+
+  <script type="module">
+    import '../virtual-list-element.js';
+    import './contacts/contact-element.js';
+
+    const virtualList = document.querySelector('virtual-list');
+    let contacts = [];
+
+    /**
+     * The items array come in 2 shapes: 
+     * contacts = {name, image, color, ...otherProps}
+     * groups = {group: true, title, count}
+     * 
+     * In each of the following functions we handle the data differently, and we have
+     * dedicated node pools for recycling among them.
+     */
+    const nodePool = { group: [], contact: [] };
+    virtualList.newChild = (index) => {
+      let element;
+      const item = contacts[index];
+      if (item.group) {
+        element = nodePool.group.pop() || document.createElement('header');
+      } else {
+        element = nodePool.contact.pop() || document.createElement('contact-element');
+      }
+      return element;
+    };
+    virtualList.updateChild = (element, index) => {
+      const item = contacts[index];
+      if (item.group) {
+        element.textContent = `${item.title} (${item.count})`;
+      } else {
+        element.contact = item;
+      }
+    };
+    virtualList.recycleChild = (element, index) => {
+      const item = contacts[index];
+      if (item.group) {
+        nodePool.group.push(element);
+      } else {
+        nodePool.contact.push(element);
+      }
+    };
+
+    // Get contacts, sort and group by name.
+    (async () => {
+      // We get an array of contact objects {name, image, color, ...otherProps}.
+      const response = await fetch('contacts/contacts.json');
+      // Keeps track of the last group created.
+      let group = null;
+      // We sort the contacts by name and insert group objects within.
+      contacts = (await response.json())
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .reduce((contacts, contact) => {
+          const title = contact.name[0];
+          if (group && group.title === title) {
+            group.count++;
+          } else {
+            group = {
+              group: true,
+              count: 1,
+              title,
+            };
+            contacts.push(group);
+          }
+          contacts.push(contact);
+          return contacts;
+        }, []);
+      virtualList.totalItems = contacts.length;
+    })();
+  </script>
+</body>
+
+</html>

@@ -11,8 +11,8 @@ export class Repeat extends Component {
   }
 
   _updateRepeater(props) {
-    const {first, num, items} = props;
-    Object.assign(this._repeater, {first, num, items});
+    const {first, num, totalItems} = props;
+    Object.assign(this._repeater, {first, num, totalItems});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -42,8 +42,8 @@ export const PreactMixin = Superclass => class extends Superclass {
         }
         return child;
       },
-      updateChild: (child, item, idx) => {
-        child.vNode.attributes = {item, idx};
+      updateChild: (child, idx) => {
+        child.vNode.attributes = {idx};
         render(child.vNode, this.container, child.instance.base);
       },
       recycleChild: (child) => pool.push(child),

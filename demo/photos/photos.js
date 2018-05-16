@@ -1,8 +1,7 @@
-import '../lib/lazy-image.js';
-
+import './lazy-image.js';
 import Layout from '../../layouts/layout-1d.js';
 import {VirtualList} from '../../virtual-list.js';
-import {getDims, getUrl, searchFlickr} from '../lib/flickr.js';
+import {getDims, getUrl, searchFlickr} from './flickr.js';
 
 export {getDims, getUrl, searchFlickr};
 
@@ -12,6 +11,7 @@ export class Sample {
     this.layout = new Layout();
 
     document.body.style.margin = 0;
+    document.body.style.height = '100vh';
 
     window.addEventListener('hashchange', () => this.search());
     window.addEventListener('resize', () => this._setDirection());
@@ -44,7 +44,8 @@ export class Sample {
         img.appendChild(h);
         return img;
       },
-      updateChild: (child, item, idx) => {
+      updateChild: (child, idx) => {
+        const item = this.items[idx];
         const dim = getDims(item, this.constraint);
         child.src = getUrl(item);
         Object.assign(child.style, {
@@ -58,7 +59,7 @@ export class Sample {
   }
 
   render() {
-    this.list.items = this.items;
+    this.list.totalItems = this.items.length;
   }
 
   async search() {

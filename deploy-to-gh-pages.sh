@@ -14,7 +14,7 @@
 # dependencies to gh-pages.
 
 # Run in a clean directory passing in a GitHub org and repo name
-org="PolymerLabs"
+org="valdrinkoshi"
 repo="virtual-list"
 branch="master" # default to master when branch isn't specified
 

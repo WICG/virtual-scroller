@@ -16,8 +16,8 @@ export const LitMixin = Superclass => class extends Superclass {
         new NodePart(this._hostPart.instance, null, null);
   }
 
-  updateChild(part, item, idx) {
-    part.setValue(this._template(item, idx));
+  updateChild(part, idx) {
+    part.setValue(this._template(idx));
   }
 
   recycleChild(part) {
@@ -96,6 +96,6 @@ export const repeat = (config = {}) => directive(async part => {
     repeater = new LitRepeater({part, template: config.template});
     partToRepeater.set(part, repeater);
   }
-  const {first, num, items} = config;
-  Object.assign(repeater, {first, num, items});
+  const {first, num, totalItems} = config;
+  Object.assign(repeater, {first, num, totalItems});
 });

@@ -1,6 +1,7 @@
+import {VirtualListElement} from 'std:virtual-list';
+
 import {HtmlSpec} from '../../node_modules/streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js';
-import {VirtualListElement} from '../../virtual-list-element.js';
 
 class HTMLSpecViewer extends VirtualListElement {
   connectedCallback() {
@@ -9,7 +10,7 @@ class HTMLSpecViewer extends VirtualListElement {
       const style = document.createElement('style');
       style.textContent = `
   :host {
-    position: fixed;
+    position: absolute;
     top: 0px;
     left: 0px;
     right: 0px;
@@ -27,7 +28,7 @@ class HTMLSpecViewer extends VirtualListElement {
       this.appendChild(this._htmlSpec.head);
 
       this.items = [];
-      this.newChild = (idx) => this.items[idx];
+      this.newChild = (item) => item;
       this.addNextChunk();
       this.addEventListener(
           'rangechange', (event) => this.onRangechange(event));
@@ -39,16 +40,16 @@ class HTMLSpecViewer extends VirtualListElement {
       return;
     }
     this._adding = true;
-    const stream = this._htmlSpec.advance(this.items[this.totalItems - 1]);
+    const stream = this._htmlSpec.advance(this.items[this.items.length - 1]);
     for await (const el of iterateStream(stream)) {
       if (/^(style|link|script)$/.test(el.localName)) {
         this._htmlSpec.head.appendChild(el);
       } else {
         this.items.push(el);
-        this.totalItems++;
         chunk--;
       }
       if (chunk === 0) {
+        this.requestReset();
         break;
       }
     }
@@ -56,7 +57,7 @@ class HTMLSpecViewer extends VirtualListElement {
   }
 
   onRangechange(range) {
-    if (range.last >= this.totalItems - 4) {
+    if (range.last >= this.items.length - 4) {
       this.addNextChunk();
     }
   }

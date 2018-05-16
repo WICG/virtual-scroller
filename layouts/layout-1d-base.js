@@ -29,6 +29,8 @@ export default class Layout extends EventTarget {
 
     this._overhang = 150;
 
+    this._pendingReflow = false;
+
     Object.assign(this, config);
   }
 
@@ -142,6 +144,15 @@ export default class Layout extends EventTarget {
     return this._totalItems;
   }
 
+  get viewportScroll() {
+    return this._latestCoords;
+  }
+
+  set viewportScroll(coords) {
+    this._latestCoords = coords;
+    this._scroll();
+  }
+
   // private properties
 
   get _num() {
@@ -153,12 +164,12 @@ export default class Layout extends EventTarget {
 
   // public methods
 
-  scrollTo(coords) {
-    this._latestCoords = coords;
-    this._scroll();
+  reflowIfNeeded() {
+    if (this._pendingReflow) {
+      this._pendingReflow = false;
+      this._reflow();
+    }
   }
-
-  //
 
   _scroll() {
     this._scrollPosition = this._latestCoords[this._positionDim];
@@ -170,7 +181,10 @@ export default class Layout extends EventTarget {
     // Override
   }
 
-  // TODO: Does this need to be public?
+  _scheduleReflow() {
+    this._pendingReflow = true;
+  }
+
   _reflow() {
     const {_first, _last, _scrollSize} = this;
 
@@ -188,13 +202,6 @@ export default class Layout extends EventTarget {
         this._spacingChanged) {
       this._emitRange();
       this._emitChildPositions();
-    }
-    this._pendingReflow = null;
-  }
-
-  _scheduleReflow() {
-    if (!this._pendingReflow) {
-      this._pendingReflow = Promise.resolve().then(() => this._reflow());
     }
   }
 

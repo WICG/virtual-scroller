@@ -5,8 +5,6 @@ const scrollMethod = document.createElement('div').scrollIntoViewIfNeeded ?
     'scrollIntoViewIfNeeded' :
     'scrollIntoView';
 
-export const strip = str => str.replace(/^\s*/, '').replace(/\s*$/, '');
-
 export const itemType = item => item.image ? 'contact' : 'header';
 
 export class Sample {
@@ -46,7 +44,8 @@ export class Sample {
     const listProps = {
       layout: this.layout,
       container: this.container,
-      newChild: (item, idx) => {
+      newChild: (idx) => {
+        const item = this.items[idx];
         const type = itemType(item);
         const pool = this._pool[type] || (this._pool[type] = []);
         const recycled = pool.pop();
@@ -80,7 +79,8 @@ export class Sample {
           }
         }
       },
-      updateChild: (child, item, idx) => {
+      updateChild: (child, idx) => {
+        const item = this.items[idx];
         if (itemType(item) === 'contact') {
           child._idx = idx;
           child.querySelector('b').textContent =
@@ -90,10 +90,13 @@ export class Sample {
           child.textContent = item.title;
         }
       },
-      recycleChild: (child, item, idx) => {
+      recycleChild: (child, idx) => {
+        const item = this.items[idx];
         const type = itemType(item);
         if (type === 'contact') {
-          listProps.updateChild(child, this.resetValue, -1);
+          child._idx = -1;
+          child.querySelector('b').textContent = '';
+          child.querySelector('p').textContent = '';
         }
         this._pool[type].push(child);
       },
@@ -103,7 +106,7 @@ export class Sample {
   }
 
   render() {
-    this.list.items = this.items;
+    this.list.totalItems = this.items.length;
   }
 
   async load(data) {
@@ -124,8 +127,8 @@ export class Sample {
   }
 
   // Quick and dirty support for updating data, scrolling to a physical child,
-  // and informing layout of a change in child size, to demo/test related use
-  // cases
+  // and informing layout of a change in child totalItems, to demo/test related
+  // use cases
 
   _scrollToFocused({target}) {
     setTimeout(() => target.parentNode[scrollMethod](true), 0);
@@ -134,15 +137,16 @@ export class Sample {
   _commitChange(idx, prop, newVal) {
     if (idx === -1)
       return;
-    // Strip leading and trailing whitespace to hack around some demo issues
-    const prevVal = strip(this.items[idx][prop]);
-    newVal = strip(newVal);
+    const prevVal = this.items[idx][prop];
     if (newVal !== prevVal) {
-      setTimeout(() => {
-        this.items[idx] = Object.assign({}, this.items[idx], {[prop]: newVal});
-        this.items = this.items.slice();
-        this.render();
-      }, 0);
+      this.items[idx][prop] = newVal;
+      // HACK(valdrin) Ideally we'd only do this.list.requestReset(),
+      // but since lit-repeater & preact-repeater don't give access to that
+      // method, we force reset by altering the items length.
+      this.items.length++;
+      this.render();
+      this.items.length--;
+      this.render();
     }
   }
 
@@ -153,5 +157,6 @@ export class Sample {
         height: currentTarget.offsetHeight
       }
     });
+    this.layout.reflowIfNeeded();
   }
 }

@@ -1,41 +1,25 @@
+import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
+import {default as Layout1d} from './layouts/layout-1d.js';
 import {VirtualList} from './virtual-list.js';
 
-// Lazily loaded Layout classes.
-const dynamicImports = {};
-async function importLayoutClass(url) {
-  if (!dynamicImports[url]) {
-    dynamicImports[url] = import(url).then(module => module.default);
-  }
-  return await dynamicImports[url];
-}
-
 /** Properties */
-const _items = Symbol();
 const _list = Symbol();
 const _newChild = Symbol();
 const _updateChild = Symbol();
 const _recycleChild = Symbol();
-const _itemKey = Symbol();
-const _grid = Symbol();
-const _horizontal = Symbol();
-const _pendingRender = Symbol();
+const _childKey = Symbol();
 /** Functions */
 const _render = Symbol();
-const _scheduleRender = Symbol();
 
 
 export class VirtualListElement extends HTMLElement {
   constructor() {
     super();
-    this[_items] = null;
     this[_list] = null;
     this[_newChild] = null;
     this[_updateChild] = null;
     this[_recycleChild] = null;
-    this[_itemKey] = null;
-    this[_grid] = false;
-    this[_horizontal] = false;
-    this[_pendingRender] = null;
+    this[_childKey] = null;
   }
 
   connectedCallback() {
@@ -46,31 +30,51 @@ export class VirtualListElement extends HTMLElement {
     display: block;
     position: relative;
     contain: strict;
-    width: 300px;
     height: 150px;
     overflow: auto;
   }
-  :host(:not([layout])) ::slotted(*), 
+  :host([hidden]) {
+    display: none;
+  }
+  ::slotted(*) {
+    box-sizing: border-box;
+  }
   :host([layout=vertical]) ::slotted(*) {
-    max-width: 100%;
+    width: 100%;
   }
   :host([layout=horizontal]) ::slotted(*) {
-    max-height: 100%;
+    height: 100%;
   }
 </style>
 <slot></slot>`;
+      // Default layout.
+      if (!this.layout) {
+        this.layout = 'vertical';
+      }
     }
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   static get observedAttributes() {
-    return ['layout'];
+    return ['layout', 'totalitems'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
-    if (name === 'layout') {
-      this.layout = newVal;
-    }
+    this[_render]();
+  }
+
+  get layout() {
+    return this.getAttribute('layout');
+  }
+  set layout(layout) {
+    this.setAttribute('layout', layout);
+  }
+
+  get totalItems() {
+    return +this.getAttribute('totalitems');
+  }
+  set totalItems(v) {
+    this.setAttribute('totalitems', +v);
   }
 
   get newChild() {
@@ -78,7 +82,7 @@ export class VirtualListElement extends HTMLElement {
   }
   set newChild(fn) {
     this[_newChild] = fn;
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   get updateChild() {
@@ -86,7 +90,7 @@ export class VirtualListElement extends HTMLElement {
   }
   set updateChild(fn) {
     this[_updateChild] = fn;
-    this[_scheduleRender]();
+    this[_render]();
   }
 
   get recycleChild() {
@@ -94,40 +98,15 @@ export class VirtualListElement extends HTMLElement {
   }
   set recycleChild(fn) {
     this[_recycleChild] = fn;
-    this[_scheduleRender]();
+    this[_render]();
   }
 
-  get itemKey() {
-    return this[_itemKey];
+  get childKey() {
+    return this[_childKey];
   }
-  set itemKey(fn) {
-    this[_itemKey] = fn;
-    this[_scheduleRender]();
-  }
-
-  get layout() {
-    const prefix = this[_horizontal] ? 'horizontal' : 'vertical';
-    const suffix = this[_grid] ? '-grid' : '';
-    return prefix + suffix;
-  }
-  set layout(layout) {
-    const old = this.layout;
-    this[_horizontal] = layout && layout.startsWith('horizontal');
-    this[_grid] = layout && layout.endsWith('-grid');
-    layout = this.layout;
-    // Reflect to attribute.
-    if (old !== layout) {
-      this.setAttribute('layout', layout);
-    }
-    this[_scheduleRender]();
-  }
-
-  get items() {
-    return this[_items];
-  }
-  set items(items) {
-    this[_items] = items;
-    this[_scheduleRender]();
+  set childKey(fn) {
+    this[_childKey] = fn;
+    this[_render]();
   }
 
   requestReset() {
@@ -136,16 +115,7 @@ export class VirtualListElement extends HTMLElement {
     }
   }
 
-  [_scheduleRender]() {
-    if (!this[_pendingRender]) {
-      this[_pendingRender] = Promise.resolve().then(() => {
-        this[_pendingRender] = null;
-        this[_render]();
-      });
-    }
-  }
-
-  async[_render]() {
+  [_render]() {
     if (!this.newChild) {
       return;
     }
@@ -160,16 +130,18 @@ export class VirtualListElement extends HTMLElement {
     }
     const list = this[_list];
 
-    const {newChild, updateChild, recycleChild, itemKey, items} = this;
-    Object.assign(list, {newChild, updateChild, recycleChild, itemKey, items});
+    const Layout = this.layout.endsWith('-grid') ? Layout1dGrid : Layout1d;
+    const direction =
+        this.layout.startsWith('horizontal') ? 'horizontal' : 'vertical';
+    const layout =
+        list.layout instanceof Layout && list.layout.direction === direction ?
+        list.layout :
+        new Layout({direction});
 
-    const Layout = await importLayoutClass(
-        this[_grid] ? './layouts/layout-1d-grid.js' : './layouts/layout-1d.js');
-    const direction = this[_horizontal] ? 'horizontal' : 'vertical';
-    if (list.layout instanceof Layout === false ||
-        list.layout.direction !== direction) {
-      list.layout = new Layout({direction});
-    }
+    const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
+    Object.assign(
+        list,
+        {layout, newChild, updateChild, recycleChild, childKey, totalItems});
   }
 }
 customElements.define('virtual-list', VirtualListElement);

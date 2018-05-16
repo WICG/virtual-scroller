@@ -1,5 +1,5 @@
 import {VirtualRepeater} from '../../virtual-repeater.js';
-import {Stateful} from '../lib/stateful.js';
+import {Stateful} from './stateful.js';
 
 export const RepeaterControl = Superclass => class extends Superclass {
   constructor() {
@@ -66,13 +66,14 @@ export const Sample = RepeaterControl(Stateful(class {
       this._repeater = new VirtualRepeater({
         container: this.ul,
         newChild: () => document.createElement('li'),
-        updateChild: (child, item, idx) => {
+        updateChild: (child, idx) => {
+          const item = this.state.items[idx];
           child.textContent = `${idx}: ${item}`;
           child.onclick = () => console.log(item)
         }
       });
     }
     const {items, num, first} = this.state;
-    Object.assign(this._repeater, {items, num, first});
+    Object.assign(this._repeater, {totalItems: items.length, num, first});
   }
 }));

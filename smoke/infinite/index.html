@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+
+<body>
+  <style>
+    body {
+      margin: 0;
+    }
+
+    virtual-list {
+      height: 100vh;
+    }
+
+    div {
+      box-sizing: border-box;
+      padding-left: 10px;
+      line-height: 40px;
+      border-bottom: 1px solid #eee;
+    }
+  </style>
+  <virtual-list id="virtualList"></virtual-list>
+  <script type="module">
+    import '../../virtual-list-element.js';
+
+    const nodePool = [];
+    virtualList.newChild = () => nodePool.pop() || document.createElement('div');
+    virtualList.updateChild = (elem, i) => elem.textContent = i;
+    virtualList.recycleChild = (elem) => nodePool.push(elem);
+    // Render as many items as possible --> infinite scrolling!
+    virtualList.totalItems = Number.MAX_SAFE_INTEGER;
+  </script>
+</body>
+
+</html>

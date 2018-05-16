@@ -284,22 +284,19 @@ export default class Layout extends Layout1dBase {
       this._emitScrollSize();
     }
 
+    this._emitRange();
     if (this._first === -1 && this._last === -1) {
-      this._emitRange();
       this._resetReflowState();
     } else if (
         this._first !== _first || this._last !== _last ||
         this._needsRemeasure) {
-      this._emitRange();
-      this._emitScrollError();
       this._emitChildPositions();
+      this._emitScrollError();
     } else {
-      this._emitRange();
-      this._emitScrollError();
       this._emitChildPositions();
+      this._emitScrollError();
       this._resetReflowState();
     }
-    this._pendingReflow = null;
   }
 
   _resetReflowState() {
