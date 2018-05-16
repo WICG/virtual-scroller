@@ -9,7 +9,7 @@ export const Repeats = Superclass => class extends Superclass {
 
     this._measureCallback = null;
 
-    this._totalItems = -1;
+    this._totalItems = 0;
     // Consider renaming this. firstVisibleIndex?
     this._first = 0;
     // Consider renaming this. count? visibleElements?
@@ -187,15 +187,20 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this.totalItems !== -1 && this.container && this.newChild);
+    return Boolean(this.container && this.newChild);
   }
 
   /**
    * @private
    */
   _scheduleRender() {
-    if (!this._pendingRender && this._shouldRender()) {
-      this._pendingRender = Promise.resolve().then(() => this._render());
+    if (!this._pendingRender) {
+      this._pendingRender = requestAnimationFrame(() => {
+        this._pendingRender = null;
+        if (this._shouldRender()) {
+          this._render();
+        }
+      });
     }
   }
 
@@ -223,20 +228,9 @@ export const Repeats = Superclass => class extends Superclass {
    * the `_measureCallback`
    * @private
    */
-  async _measureChildren({indices, children}) {
-    // We debounce the measurement of a microtask, as some
-    // child might have just been added to the DOM. This
-    // plays nice with browser timing and avoids forcing
-    // layout, while still being executed within a frame.
-    const id = ++this._measuringId;
-    await Promise.resolve();
-    // Avoid relayouts.
-    if (id !== this._measuringId) {
-      return;
-    }
-    this._measuringId = -1;
-    const pm = await Promise.all(children.map(
-        (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c)));
+  _measureChildren({indices, children}) {
+    let pm = children.map(
+        (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c));
     const mm = /** @type {{ number: { width: number, height: number } }} */
         (pm.reduce((out, cur, i) => {
           out[indices[i]] = this._indexToMeasure[indices[i]] = cur;
@@ -249,11 +243,9 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _render() {
-    // 1. create DOM
-    // 2. measure DOM
-    // 3. recycle DOM
     const rangeChanged =
         this._first !== this._prevFirst || this._num !== this._prevNum;
+    // Create/update/recycle DOM.
     if (rangeChanged || this._needsReset) {
       this._last =
           this._first + Math.min(this._num, this._totalItems - this._first) - 1;
@@ -271,28 +263,37 @@ export const Repeats = Superclass => class extends Superclass {
     if (this._needsRemeasure || this._needsReset) {
       this._indexToMeasure = {};
     }
+    // Retrieve DOM to be measured.
+    // Do it right before cleanup and reset of properties.
     const shouldMeasure = this._num > 0 && this._measureCallback &&
         (rangeChanged || this._needsRemeasure || this._needsReset);
-    // console.debug(`#${this._container.id} _render: ${this._num}/${
-    //     this._totalItems} ${this._first} -> ${this._last}
-    //     (${this._prevNum}/${this._totalItems} ${this._prevFirst} ->
-    //     ${this._prevLast}) measure=${shouldMeasure}`);
-    if (shouldMeasure) {
-      this._measureChildren(this._toMeasure);
-    }
+    const toMeasure = shouldMeasure ? this._toMeasure : null;
 
-    // Cleanup
+    // Cleanup.
     if (!this._incremental) {
       this._prevActive.forEach((idx, child) => this._unassignChild(child, idx));
       this._prevActive.clear();
     }
-
+    // Reset internal properties.
     this._prevFirst = this._first;
     this._prevLast = this._last;
     this._prevNum = this._num;
     this._needsReset = false;
     this._needsRemeasure = false;
-    this._pendingRender = null;
+
+    // Notify render completed.
+    this._didRender();
+    // Measure DOM.
+    if (toMeasure) {
+      this._measureChildren(toMeasure);
+    }
+  }
+
+  /**
+   * Invoked after DOM is updated, and before it gets measured.
+   * @protected
+   */
+  _didRender() {
   }
 
   /**

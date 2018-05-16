@@ -24,8 +24,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._prevFirst = -1;
     this._prevLast = -1;
 
-    this._pendingUpdateView = null;
-    this._isContainerVisible = false;
+    this._needsUpdateView = false;
     this._containerElement = null;
     this._layout = null;
     this._scrollTarget = null;
@@ -35,8 +34,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     // A sentinel element that sizes the container when
     // it is a scrolling element.
     this._sizer = null;
-    // We keep track of the scroll size to support changing container.
+    // Layout provides these values, we set them on _render().
     this._scrollSize = null;
+    this._scrollErr = null;
+    this._childrenPos = null;
 
     if (config) {
       Object.assign(this, config);
@@ -84,7 +85,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         this._sizer = this._sizer || this._createContainerSizer();
         this._container.prepend(this._sizer);
       }
-      this._sizeContainer(this._scrollSize);
       this._scheduleUpdateView();
     }
   }
@@ -106,7 +106,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       // Reset container size so layout can get correct viewport size.
       if (this._containerElement) {
         this._sizeContainer();
-        this.requestRemeasure();
       }
     }
 
@@ -115,6 +114,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (this._layout) {
       if (typeof this._layout.updateItemSizes === 'function') {
         this._measureCallback = this._layout.updateItemSizes.bind(this._layout);
+        this.requestRemeasure();
       }
       this._layout.addEventListener('scrollsizechange', this);
       this._layout.addEventListener('scrollerrorchange', this);
@@ -162,9 +162,57 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
   }
 
-  requestReset() {
-    super.requestReset();
-    this._scheduleUpdateView();
+  /**
+   * @protected
+   */
+  _render() {
+    // console.time(`#${this._containerElement.id} render`);
+
+    // Update layout properties before rendering to have correct
+    // first, num, scroll size, children positions.
+    this._layout.totalItems = this.totalItems;
+    if (this._needsUpdateView) {
+      this._needsUpdateView = false;
+      this._updateView();
+    }
+    this._layout.reflowIfNeeded();
+    // Keep rendering until there is no more scheduled renders.
+    while (true) {
+      if (this._pendingRender) {
+        cancelAnimationFrame(this._pendingRender);
+        this._pendingRender = null;
+      }
+      // Update scroll size and correct scroll error before rendering.
+      this._sizeContainer(this._scrollSize);
+      if (this._scrollErr) {
+        // This triggers a 'scroll' event (async) which triggers another
+        // _updateView().
+        this._correctScrollError(this._scrollErr);
+        this._scrollErr = null;
+      }
+      // Position children (_didRender()), and provide their measures to layout.
+      super._render();
+      this._layout.reflowIfNeeded();
+      // If layout reflow did not provoke another render, we're done.
+      if (!this._pendingRender) {
+        break;
+      }
+    }
+
+    // console.timeEnd(`#${this._containerElement.id} render`);
+  }
+
+  /**
+   * Position children before they get measured.
+   * Measuring will force relayout, so by positioning
+   * them first, we reduce computations.
+   * @protected
+   */
+  _didRender() {
+    if (this._childrenPos) {
+      this._positionChildren(this._childrenPos);
+      this._childrenPos = null;
+    }
   }
 
   /**
@@ -182,14 +230,16 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         this._scheduleUpdateView();
         break;
       case 'scrollsizechange':
-        this._sizeContainer(event.detail);
         this._scrollSize = event.detail;
+        this._scheduleRender();
         break;
       case 'scrollerrorchange':
-        this._correctScrollError(event.detail);
+        this._scrollErr = event.detail;
+        this._scheduleRender();
         break;
       case 'itempositionchange':
-        this._positionChildren(event.detail);
+        this._childrenPos = event.detail;
+        this._scheduleRender();
         break;
       case 'rangechange':
         this._adjustRange(event.detail);
@@ -225,28 +275,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _scheduleUpdateView() {
-    if (!this._pendingUpdateView && this._container && this._layout) {
-      this._pendingUpdateView =
-          Promise.resolve().then(() => this._updateView());
-    }
+    this._needsUpdateView = true;
+    this._scheduleRender();
   }
   /**
    * @private
    */
   _updateView() {
-    this._pendingUpdateView = null;
-
-    this._layout.totalItems = this.totalItems;
-
     const listBounds = this._containerElement.getBoundingClientRect();
-    // Avoid updating viewport if container is not visible.
-    this._isContainerVisible = Boolean(
-        listBounds.width || listBounds.height || listBounds.top ||
-        listBounds.left);
-    if (!this._isContainerVisible) {
-      return;
-    }
-
     const scrollBounds = this._scrollTarget ?
         this._scrollTarget.getBoundingClientRect() :
         {top: 0, left: 0, width: innerWidth, height: innerHeight};
@@ -279,8 +315,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       top = Math.max(0, -(listBounds.y - scrollBounds.top));
     }
     this._layout.viewportSize = {width, height};
-
-    this._layout.scrollTo({top, left});
+    this._layout.viewportScroll = {top, left};
   }
   /**
    * @private
@@ -289,7 +324,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (this._scrollTarget === this._containerElement) {
       const left = size && size.width ? size.width - 1 : 0;
       const top = size && size.height ? size.height - 1 : 0;
-      this._sizer.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+      this._sizer.style.transform = `translate(${left}px, ${top}px)`;
     } else {
       const style = this._containerElement.style;
       style.minWidth = size && size.width ? size.width + 'px' : null;
@@ -299,16 +334,15 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   /**
    * @private
    */
-  async _positionChildren(pos) {
-    await Promise.resolve();
+  _positionChildren(pos) {
     const kids = this._kids;
     Object.keys(pos).forEach(key => {
       const idx = key - this._first;
       const child = kids[idx];
       if (child) {
         const {top, left} = pos[key];
-        // console.debug(`_positionChild #${this._container.id} > #${child.id}:
-        // top ${top}`);
+        // console.debug(`_positionChild #${this._container.id} >
+        // #${child.id}: top ${top}`);
         child.style.position = 'absolute';
         child.style.transform = `translate(${left}px, ${top}px)`;
       }
@@ -328,11 +362,19 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
   }
   /**
+   * TODO(valdrin) use ResizeObserver to compute container visibility.
+   * @private
+   */
+  get _isContainerVisible() {
+    const bounds = this._containerElement.getBoundingClientRect();
+    return Boolean(bounds.width || bounds.height || bounds.top || bounds.left);
+  }
+  /**
    * @protected
    */
   _shouldRender() {
     return Boolean(
-        this._isContainerVisible && this._layout && super._shouldRender());
+        super._shouldRender() && this._layout && this._isContainerVisible);
   }
   /**
    * @private

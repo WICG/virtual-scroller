@@ -157,5 +157,6 @@ export class Sample {
         height: currentTarget.offsetHeight
       }
     });
+    this.layout.reflowIfNeeded();
   }
 }
