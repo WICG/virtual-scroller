@@ -24,6 +24,7 @@
 
     contact-element {
       height: 80px;
+      transition: transform 200ms, height 200ms;
     }
 
     @keyframes inverse-color {
@@ -68,6 +69,11 @@
       const contact = contacts[index];
       element.style.animation = contact.customAnimation || null;
       element.contact = contact;
+      element.style.height = contact.expanded ? '160px' : null;
+      element.onclick = () => {
+        contact.expanded = !contact.expanded;
+        element.style.height = contact.expanded ? '160px' : null;
+      };
     };
 
     // Generate enough fallbacks to cover the viewport height.
