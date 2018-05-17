@@ -7,7 +7,7 @@
       margin: 0;
     }
 
-    virtual-list {
+    virtual-scroller {
       height: 100vh;
     }
 
@@ -18,16 +18,16 @@
       border-bottom: 1px solid #eee;
     }
   </style>
-  <virtual-list id="virtualList"></virtual-list>
+  <virtual-scroller id="virtualScroller"></virtual-scroller>
   <script type="module">
-    import '../../virtual-list-element.js';
+    import '../../virtual-scroller-element.js';
 
     const nodePool = [];
-    virtualList.newChild = () => nodePool.pop() || document.createElement('div');
-    virtualList.updateChild = (elem, i) => elem.textContent = i;
-    virtualList.recycleChild = (elem) => nodePool.push(elem);
+    virtualScroller.newChild = () => nodePool.pop() || document.createElement('div');
+    virtualScroller.updateChild = (elem, i) => elem.textContent = i;
+    virtualScroller.recycleChild = (elem) => nodePool.push(elem);
     // Render as many items as possible --> infinite scrolling!
-    virtualList.totalItems = Number.MAX_SAFE_INTEGER;
+    virtualScroller.totalItems = Number.MAX_SAFE_INTEGER;
   </script>
 </body>
 

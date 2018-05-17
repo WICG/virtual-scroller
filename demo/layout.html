@@ -1,7 +1,7 @@
 <html>
 
 <head>
-  <title>Virtual List</title>
+  <title>Virtual Scroller</title>
   <style>
     nav {
       position: fixed;
@@ -21,7 +21,7 @@
       flex-direction: row;
     }
 
-    virtual-list {
+    virtual-scroller {
       outline: 1px solid;
       flex: 1;
       height: 100%;
@@ -73,21 +73,21 @@
     </label>
   </nav>
   <main>
-    <virtual-list id="list"></virtual-list>
-    <virtual-list id="recycler"></virtual-list>
+    <virtual-scroller id="scroller"></virtual-scroller>
+    <virtual-scroller id="recycler"></virtual-scroller>
   </main>
 
   <script type="module">
-    import '../virtual-list-element.js';
+    import '../virtual-scroller-element.js';
 
     const main = document.querySelector('main');
-    const list = document.querySelector('#list');
+    const scroller = document.querySelector('#scroller');
     const recycler = document.querySelector('#recycler');
     let myItems = [];
 
-    list.newChild = () =>
+    scroller.newChild = () =>
       document.createElement('section');
-    list.updateChild = (child, index) =>
+    scroller.updateChild = (child, index) =>
       child.textContent = index + ' - ' + myItems[index];
 
     const pool = [];
@@ -120,14 +120,14 @@
       for (let i = 0; i < count; i++) {
         myItems[i] = `item${i}`;
       }
-      list.totalItems = recycler.totalItems = count;
+      scroller.totalItems = recycler.totalItems = count;
     };
 
     function updateLayout(layoutEl) {
       const layout = layoutEl.value;
       main.classList.toggle('horizontal', layout.startsWith('horizontal'));
       main.classList.toggle('grid', layout.endsWith('grid'));
-      list.layout = recycler.layout = layout;
+      scroller.layout = recycler.layout = layout;
     };
   </script>
 

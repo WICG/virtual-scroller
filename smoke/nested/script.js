@@ -1,7 +1,7 @@
 import Layout from '../../layouts/layout-1d.js';
-import {list} from '../../lit-html/lit-list.js';
+import {scroller} from '../../lit-html/lit-scroller.js';
 import {html, render} from '../../node_modules/lit-html/lit-html.js';
-import {VirtualList} from '../../virtual-list.js';
+import {VirtualScroller} from '../../virtual-scroller.js';
 
 const items = new Array(40).fill({
   name: 'item',
@@ -13,14 +13,14 @@ const items = new Array(40).fill({
   })
 });
 const container = document.getElementById('root');
-listForContainer(container, items);
+scrollerForContainer(container, items);
 
 
-function listForContainer(container, items) {
-  container.classList.add('list');
+function scrollerForContainer(container, items) {
+  container.classList.add('scroller');
 
   const pool = [];
-  const list = new VirtualList({
+  const scroller = new VirtualScroller({
     totalItems: items.length,
     layout: new Layout({itemSize: {width: innerWidth, height: innerHeight}}),
     container,
@@ -39,7 +39,7 @@ function listForContainer(container, items) {
 
         if (items[idx].items) {
           child._container.classList.remove('innerContainer');
-          listForContainer(child._container, item.items);
+          scrollerForContainer(child._container, item.items);
         }
       }
       return child;
@@ -49,15 +49,15 @@ function listForContainer(container, items) {
       // child._container.id = `innerContainer_${idx}`;
 
       child._title.textContent = `${idx} - ${items[idx].name}`;
-      if (child._container._list) {
-        child._container._list.totalItems = item.items.length;
+      if (child._container._scroller) {
+        child._container._scroller.totalItems = item.items.length;
       }
     },
     recycleChild: (child) => {
       pool.push(child);
     }
   });
-  container._list = list;
+  container._scroller = scroller;
 }
 
 
@@ -67,10 +67,11 @@ function listForContainer(container, items) {
 //   <section>
 //     <h3 class="title">${idx} - ${item.name}</h3>
 //     <div class="innerContainer">
-//       ${list(item.items, (innerItem, innerIdx) => html`
+//       ${scroller(item.items, (innerItem, innerIdx) => html`
 //         <div>${idx}.${innerIdx} - ${innerItem.name}</div>
 //       `)}
 //     </div>
 //   </section>`;
-// render(html`${list(items, template)}`, container);
-// setTimeout(() => render(html `${list(items, template)}`, container), 1000);
+// render(html`${scroller(items, template)}`, container);
+// setTimeout(() => render(html `${scroller(items, template)}`, container),
+// 1000);

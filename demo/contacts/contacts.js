@@ -1,5 +1,5 @@
 import Layout from '../../layouts/layout-1d.js';
-import {VirtualList} from '../../virtual-list.js';
+import {VirtualScroller} from '../../virtual-scroller.js';
 
 const scrollMethod = document.createElement('div').scrollIntoViewIfNeeded ?
     'scrollIntoViewIfNeeded' :
@@ -41,7 +41,7 @@ export class Sample {
   }
 
   _setUp() {
-    const listProps = {
+    this.scroller = new VirtualScroller({
       layout: this.layout,
       container: this.container,
       newChild: (idx) => {
@@ -99,12 +99,11 @@ export class Sample {
         this._pool[type].push(child);
       },
       // resetValue: this.resetValue
-    };
-    this.list = new VirtualList(listProps);
+    });
   }
 
   render() {
-    this.list.totalItems = this.items.length;
+    this.scroller.totalItems = this.items.length;
   }
 
   async load(data) {
@@ -138,7 +137,7 @@ export class Sample {
     const prevVal = this.items[idx][prop];
     if (newVal !== prevVal) {
       this.items[idx][prop] = newVal;
-      // HACK(valdrin) Ideally we'd only do this.list.requestReset(),
+      // HACK(valdrin) Ideally we'd only do this.scroller.requestReset(),
       // but since lit-repeater & preact-repeater don't give access to that
       // method, we force reset by altering the items length.
       this.items.length++;

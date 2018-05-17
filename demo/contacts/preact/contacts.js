@@ -1,5 +1,5 @@
 import {h, render} from '../../../node_modules/preact/dist/preact.esm.js';
-import {List} from '../../../preact/preact-list.js';
+import {Scroller} from '../../../preact/preact-scroller.js';
 import {itemType, Sample as BaseSample} from '../contacts.js';
 
 export class Sample extends BaseSample {
@@ -58,7 +58,7 @@ export class Sample extends BaseSample {
   render() {
     const {layout, items, component, resetValue} = this;
     render(
-        h(List, {
+        h(Scroller, {
           layout,
           totalItems: items.length,
           component,
