@@ -54,7 +54,7 @@ export class Sample extends BaseSample {
             // preact-list wraps the rendered content in a div while the
             // sizing styles are applied to body by BaseSample, so
             // we copy the body styles to _root.
-            this._root.style.setAttribute(
+            this._root.setAttribute(
                 'style', document.body.getAttribute('style'));
             document.body.removeAttribute('style');
           }
