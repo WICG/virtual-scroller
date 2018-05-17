@@ -57,10 +57,8 @@ class ContactElement extends HTMLElement {
 
     this.contact && this._render();
     // Animate only after the first render.
-    if (this.hasAttribute('sortable')) {
-      this.style.transition = 'none';
-      window.requestIdleCallback(() => this.style.transition = null);
-    }
+    this.style.transition = 'none';
+    window.requestIdleCallback(() => this.style.transition = null);
   }
   get contact() {
     return this._contact;

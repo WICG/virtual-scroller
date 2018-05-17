@@ -1,14 +1,14 @@
 import Layout from '../../layouts/layout-1d.js';
-import {list} from '../../lit-html/lit-list.js';
+import {scroller} from '../../lit-html/lit-scroller.js';
 import {html, render} from '../../node_modules/lit-html/lib/lit-extended.js';
-import {VirtualList} from '../../virtual-list.js';
+import {VirtualScroller} from '../../virtual-scroller.js';
 
 const items = new Array(200).fill({name: 'item'});
 const container = document.getElementById('container');
 
 const layout = new Layout({itemSize: {height: 50}});
 // render(
-//     html`${list({
+//     html`${scroller({
 //       items,
 //       template: (item, idx) => html`
 //         <section><div class="title">${idx} - ${item.name}</div></section>
@@ -41,14 +41,14 @@ const config = {
     pool.push(section);
   }
 };
-window.vlist = new VirtualList(config);
+window.scroller = new VirtualScroller(config);
 
 // document.body.style.minHeight = (innerHeight * 100) + 'px'
 
 // container.style.display = 'none';
 // setTimeout(() => {
 //   container.style.display = '';
-//   vlist.requestReset();
+//   scroller.requestReset();
 // }, 1000);
 
 // setInterval(() => {
@@ -58,5 +58,5 @@ window.vlist = new VirtualList(config);
 // }, 2000);
 
 // setTimeout(() => {
-//   vlist.splice(0, 0, {name: 'new'});
+//   scroller.splice(0, 0, {name: 'new'});
 // }, 1000);

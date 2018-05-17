@@ -1,8 +1,8 @@
 import {HtmlSpec} from '../../node_modules/streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js';
-import {VirtualListElement} from '../../virtual-list-element.js';
+import {VirtualScrollerElement} from '../../virtual-scroller-element.js';
 
-class HTMLSpecViewer extends VirtualListElement {
+class HTMLSpecViewer extends VirtualScrollerElement {
   constructor() {
     super();
     this.onRangechange = this.onRangechange.bind(this);

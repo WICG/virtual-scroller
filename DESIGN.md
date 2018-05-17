@@ -1,6 +1,6 @@
-# Virtual list pieces
+# Virtual Scroller pieces
 
-This document gives an overview of various pieces we use to build up the `<virtual-list>` element. For now we are considering these implementation details. A future proposal may expose these building blocks more directly, but only after significant refinement.
+This document gives an overview of various pieces we use to build up the `<virtual-scroller>` element. For now we are considering these implementation details. A future proposal may expose these building blocks more directly, but only after significant refinement.
 
 ## VirtualRepeater (Repeats mixin)
 
@@ -26,7 +26,7 @@ const repeater = new VirtualRepeater({
    */
   num: 5,
   /**
-   * Where to render the list items.
+   * Where to render the items.
    */
   container: document.body,
   /**
@@ -195,7 +195,7 @@ el.addEventListener('scroll', () => {
 });
 ```
 
-## VirtualList (RepeatsAndScrolls mixin)
+## VirtualScroller (RepeatsAndScrolls mixin)
 
 - Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance
 - Exposes a `layout` property, updates the `layout.totalItems`, `layout.viewportSize`, and `layout.viewportScroll`.
@@ -203,14 +203,14 @@ el.addEventListener('scroll', () => {
 - Updates the container size (`min-width/height`) and children positions (`position: absolute`)
 
 ```js
-const list = new VirtualList({
+const scroller = new VirtualScroller({
   /**
    * The layout in charge of computing `first, num`,
    * children position, scrolling position and scrolling size.
    */
   layout: new Layout(),
   /**
-   * Where to render the list items.
+   * Where to render the items.
    */
   container: document.body,
   /**

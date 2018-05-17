@@ -13,7 +13,7 @@
       flex-direction: column;
     }
 
-    virtual-list {
+    virtual-scroller {
       width: 100%;
       height: 100%;
       flex: 1;
@@ -24,6 +24,7 @@
 
     contact-element {
       height: 80px;
+      transition: height 200ms;
     }
 
     @keyframes inverse-color {
@@ -43,10 +44,10 @@
     </label>
   </p>
 
-  <virtual-list></virtual-list>
+  <virtual-scroller></virtual-scroller>
 
   <script type="module">
-    import '../virtual-list-element.js';
+    import '../virtual-scroller-element.js';
     import './contacts/contact-element.js';
     import { ContactDataSource } from './contacts/contact-data-source.js';
 
@@ -61,17 +62,23 @@
      */
 
     const dataSource = new ContactDataSource();
-    const virtualList = document.querySelector('virtual-list');
+    const virtualScroller = document.querySelector('virtual-scroller');
 
-    virtualList.newChild = () => document.createElement('contact-element');
-    virtualList.updateChild = (element, index) => {
+    virtualScroller.newChild = () => document.createElement('contact-element');
+    virtualScroller.updateChild = (element, index) => {
       const contact = contacts[index];
       element.style.animation = contact.customAnimation || null;
       element.contact = contact;
+      element.style.height = contact.expanded ? '160px' : null;
+      // Expand/collapse only on loaded contacts.
+      element.onclick = contact.customAnimation ? null : () => {
+        contact.expanded = !contact.expanded;
+        element.style.height = contact.expanded ? '160px' : null;
+      };
     };
 
     // Generate enough fallbacks to cover the viewport height.
-    const fallbacksCount = Math.ceil(virtualList.offsetHeight / 80);
+    const fallbacksCount = Math.ceil(virtualScroller.offsetHeight / 80);
     const contacts = new Array(fallbacksCount);
     for (let i = 0; i < fallbacksCount; i++) {
       contacts[i] = {
@@ -79,11 +86,11 @@
         customAnimation: `inverse-color 1000ms ${i * 50}ms infinite`,
       };
     }
-    virtualList.totalItems = fallbacksCount;
+    virtualScroller.totalItems = fallbacksCount;
 
     // Keep track of first fallback index to know when we need to load more contacts.
     let firstFallbackIndex = 0;
-    virtualList.addEventListener('rangechange', async (range) => {
+    virtualScroller.addEventListener('rangechange', async (range) => {
       if (dataSource.loading || dataSource.loadedAll || firstFallbackIndex > range.last) {
         return;
       }
@@ -94,12 +101,12 @@
         // Insert new contacts, remove fallbacks.
         contacts.splice(firstFallbackIndex, fallbacksCount, ...newContacts);
         firstFallbackIndex = Infinity;
-        virtualList.requestReset();
+        virtualScroller.requestReset();
       } else {
-        // Insert new contacts while keeping fallbacks at the end of the list.
+        // Insert new contacts while keeping fallbacks at the end of the array.
         contacts.splice(firstFallbackIndex, 0, ...newContacts);
         firstFallbackIndex += newContacts.length;
-        virtualList.totalItems += newContacts.length;
+        virtualScroller.totalItems += newContacts.length;
       }
     });
 

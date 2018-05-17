@@ -1,10 +1,10 @@
-import {VirtualList} from '../virtual-list.js';
+import {VirtualScroller} from '../virtual-scroller.js';
 
 import {PreactMixin, Repeat} from './preact-repeater.js';
 
-export class List extends Repeat {
+export class Scroller extends Repeat {
   componentDidMount() {
-    this._repeater = new PreactList({
+    this._repeater = new PreactScroller({
       container: this._wrapper.base,
       component: this.props.component,
       layout: this.props.layout
@@ -17,4 +17,4 @@ export class List extends Repeat {
   }
 }
 
-export const PreactList = PreactMixin(VirtualList);
+export const PreactScroller = PreactMixin(VirtualScroller);
