@@ -49,10 +49,7 @@ export class Sample extends BaseSample {
           totalItems: items.length,
           component,
           resetValue,
-          ref: c => {
-            this._root = c.base;
-            this._root.style.cssText = document.body.style.cssText;
-          }
+          ref: c => this._root = c.base
         }),
         document.body,
         _root);
