@@ -418,9 +418,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     if (this._skipNextChildrenSizeChanged) {
       this._skipNextChildrenSizeChanged = false;
     } else {
-      // Sync rendering.
-      this._needsRemeasure = true;
-      this._render();
+      this.requestRemeasure();
     }
   }
 };
