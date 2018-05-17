@@ -39,6 +39,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._scrollErr = null;
     this._childrenPos = null;
 
+    this._isContainerVisible = undefined;
+
     this._containerRO = new ResizeObserver(
         (entries) => this._containerSizeChanged(entries[0].contentRect));
 
@@ -68,7 +70,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
 
     this._containerRO.disconnect();
-    this._isContainerVisible = false;
+    this._isContainerVisible = undefined;
 
     if (oldEl) {
       if (this._containerInlineStyle) {
@@ -94,6 +96,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         this._sizer = this._sizer || this._createContainerSizer();
         this._container.prepend(this._sizer);
       }
+      this._scheduleUpdateView();
       this._containerRO.observe(newEl);
     }
   }
@@ -175,7 +178,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _render() {
-    // console.time(`#${this._containerElement.id} render`);
+    // console.time(`render ${this._containerElement.localName}#${
+    //     this._containerElement.id}`);
 
     this._childrenRO.disconnect();
 
@@ -214,7 +218,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._skipNextChildrenSizeChanged = true;
     this._kids.forEach(child => this._childrenRO.observe(child));
 
-    // console.timeEnd(`#${this._containerElement.id} render`);
+    // console.timeEnd(`render ${this._containerElement.localName}#${
+    //     this._containerElement.id}`);
   }
 
   /**
@@ -377,6 +382,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _shouldRender() {
+    // NOTE: we're about to render, but the ResizeObserver didn't execute yet.
+    // Since we want to keep rAF timing, we compute _isContainerVisible now.
+    // Would be nice to have a way to flush ResizeObservers
+    if (this._isContainerVisible === undefined && this._containerElement) {
+      const bounds = this._containerElement.getBoundingClientRect();
+      this._isContainerVisible =
+          Boolean(bounds.width || bounds.height || bounds.top || bounds.left);
+    }
     return Boolean(
         super._shouldRender() && this._layout && this._isContainerVisible);
   }
