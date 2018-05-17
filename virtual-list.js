@@ -417,14 +417,9 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _containerSizeChanged(size) {
-    // Include also padding; ResizeObserver gives this info
-    // in the left/right & top/bottom properties:
-    // left is padding-left
-    // right is width + padding-right
-    const width = size.left + size.right;
-    const height = size.top + size.bottom;
-    // console.debug('container changed size', {width, height});
+    const {width, height} = size;
     this._containerSize = {width, height};
+    // console.debug('container changed size', this._containerSize);
     this._scheduleUpdateView();
   }
   /**
