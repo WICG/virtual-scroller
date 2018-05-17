@@ -42,6 +42,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._containerRO = new ResizeObserver(
         (entries) => this._containerSizeChanged(entries[0].contentRect));
 
+    this._skipNextChildrenSizeChanged = false;
+    this._childrenRO =
+        new ResizeObserver((entries) => this._childrenSizeChanged(entries));
+
     if (config) {
       Object.assign(this, config);
     }
@@ -173,6 +177,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   _render() {
     // console.time(`#${this._containerElement.id} render`);
 
+    this._childrenRO.disconnect();
+
     // Update layout properties before rendering to have correct
     // first, num, scroll size, children positions.
     this._layout.totalItems = this.totalItems;
@@ -203,6 +209,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         break;
       }
     }
+    // We want to skip the first ResizeObserver callback call as we already
+    // measured the children.
+    this._skipNextChildrenSizeChanged = true;
+    this._kids.forEach(child => this._childrenRO.observe(child));
 
     // console.timeEnd(`#${this._containerElement.id} render`);
   }
@@ -400,6 +410,18 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     // console.debug('container changed size', {width, height});
     this._isContainerVisible = width > 0 || height > 0;
     this._scheduleUpdateView();
+  }
+  /**
+   * @private
+   */
+  _childrenSizeChanged() {
+    if (this._skipNextChildrenSizeChanged) {
+      this._skipNextChildrenSizeChanged = false;
+    } else {
+      // Sync rendering.
+      this._needsRemeasure = true;
+      this._render();
+    }
   }
 };
 
