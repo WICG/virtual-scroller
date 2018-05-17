@@ -10,7 +10,7 @@
       margin: 0;
     }
 
-    virtual-list {
+    virtual-scroller {
       width: 100vw;
       height: 100vh;
     }
@@ -27,13 +27,13 @@
 
 <body>
 
-  <virtual-list></virtual-list>
+  <virtual-scroller></virtual-scroller>
 
   <script type="module">
-    import '../virtual-list-element.js';
+    import '../virtual-scroller-element.js';
     import './contacts/contact-element.js';
 
-    const virtualList = document.querySelector('virtual-list');
+    const virtualScroller = document.querySelector('virtual-scroller');
     let contacts = [];
 
     /**
@@ -45,7 +45,7 @@
      * dedicated node pools for recycling among them.
      */
     const nodePool = { group: [], contact: [] };
-    virtualList.newChild = (index) => {
+    virtualScroller.newChild = (index) => {
       let element;
       const item = contacts[index];
       if (item.group) {
@@ -55,7 +55,7 @@
       }
       return element;
     };
-    virtualList.updateChild = (element, index) => {
+    virtualScroller.updateChild = (element, index) => {
       const item = contacts[index];
       if (item.group) {
         element.textContent = `${item.title} (${item.count})`;
@@ -63,7 +63,7 @@
         element.contact = item;
       }
     };
-    virtualList.recycleChild = (element, index) => {
+    virtualScroller.recycleChild = (element, index) => {
       const item = contacts[index];
       if (item.group) {
         nodePool.group.push(element);
@@ -96,7 +96,7 @@
           contacts.push(contact);
           return contacts;
         }, []);
-      virtualList.totalItems = contacts.length;
+      virtualScroller.totalItems = contacts.length;
     })();
   </script>
 </body>

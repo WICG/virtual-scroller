@@ -15,7 +15,7 @@
 
 # Run in a clean directory passing in a GitHub org and repo name
 org="valdrinkoshi"
-repo="virtual-list"
+repo="virtual-scroller"
 branch="master" # default to master when branch isn't specified
 
 # make folder (same as input, no checking!)

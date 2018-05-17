@@ -1,4 +1,4 @@
-import {list} from '../../../lit-html/lit-list.js';
+import {scroller} from '../../../lit-html/lit-scroller.js';
 import {html, render} from '../../../node_modules/lit-html/lib/lit-extended.js';
 import {itemType, Sample as BaseSample} from '../contacts.js';
 
@@ -54,6 +54,7 @@ export class Sample extends BaseSample {
   render() {
     const {layout, items, template, container} = this;
     render(
-        html`${list({layout, totalItems: items.length, template})}`, container);
+        html`${scroller({layout, totalItems: items.length, template})}`,
+        container);
   }
 }

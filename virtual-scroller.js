@@ -282,7 +282,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _updateView() {
-    const listBounds = this._containerElement.getBoundingClientRect();
+    const containerBounds = this._containerElement.getBoundingClientRect();
     const scrollBounds = this._scrollTarget ?
         this._scrollTarget.getBoundingClientRect() :
         {top: 0, left: 0, width: innerWidth, height: innerHeight};
@@ -296,23 +296,25 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       const scrollerWidth = scrollBounds.width;
       const scrollerHeight = scrollBounds.height;
       const xMin = Math.max(
-          0, Math.min(scrollerWidth, listBounds.left - scrollBounds.left));
+          0, Math.min(scrollerWidth, containerBounds.left - scrollBounds.left));
       const yMin = Math.max(
-          0, Math.min(scrollerHeight, listBounds.top - scrollBounds.top));
+          0, Math.min(scrollerHeight, containerBounds.top - scrollBounds.top));
       const xMax = this._layout.direction === 'vertical' ?
           Math.max(
               0,
-              Math.min(scrollerWidth, listBounds.right - scrollBounds.left)) :
+              Math.min(
+                  scrollerWidth, containerBounds.right - scrollBounds.left)) :
           scrollerWidth;
       const yMax = this._layout.direction === 'vertical' ?
           scrollerHeight :
           Math.max(
               0,
-              Math.min(scrollerHeight, listBounds.bottom - scrollBounds.top));
+              Math.min(
+                  scrollerHeight, containerBounds.bottom - scrollBounds.top));
       width = xMax - xMin;
       height = yMax - yMin;
-      left = Math.max(0, -(listBounds.x - scrollBounds.left));
-      top = Math.max(0, -(listBounds.y - scrollBounds.top));
+      left = Math.max(0, -(containerBounds.x - scrollBounds.left));
+      top = Math.max(0, -(containerBounds.y - scrollBounds.top));
     }
     this._layout.viewportSize = {width, height};
     this._layout.viewportScroll = {top, left};
@@ -398,4 +400,4 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 };
 
-export const VirtualList = RepeatsAndScrolls(class {});
+export const VirtualScroller = RepeatsAndScrolls(class {});

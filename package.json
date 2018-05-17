@@ -1,9 +1,9 @@
 {
-  "name": "virtual-list",
+  "name": "virtual-scroller",
   "version": "0.0.1",
-  "description": "A virtual list that optimizes the rendering of DOM according to the visible area and available data.",
-  "main": "virtual-list.js",
-  "module": "virtual-list.js",
+  "description": "A virtual scroller that optimizes the rendering of DOM according to the visible area and available data.",
+  "main": "virtual-scroller.js",
+  "module": "virtual-scroller.js",
   "flat": true,
   "directories": {},
   "devDependencies": {
@@ -19,12 +19,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/valdrinkoshi/virtual-list.git"
+    "url": "git+https://github.com/valdrinkoshi/virtual-scroller.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/valdrinkoshi/virtual-list/issues"
+    "url": "https://github.com/valdrinkoshi/virtual-scroller/issues"
   },
-  "homepage": "https://github.com/valdrinkoshi/virtual-list#readme"
+  "homepage": "https://github.com/valdrinkoshi/virtual-scroller#readme"
 }
