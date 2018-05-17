@@ -49,7 +49,15 @@ export class Sample extends BaseSample {
           totalItems: items.length,
           component,
           resetValue,
-          ref: c => this._root = c.base
+          ref: c => {
+            this._root = c.base;
+            // preact-list wraps the rendered content in a div while the
+            // sizing styles are applied to body by BaseSample, so
+            // we copy the body styles to _root.
+            this._root.setAttribute(
+                'style', document.body.getAttribute('style'));
+            document.body.removeAttribute('style');
+          }
         }),
         document.body,
         _root);
