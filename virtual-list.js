@@ -39,8 +39,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._scrollErr = null;
     this._childrenPos = null;
 
-    this._isContainerVisible = undefined;
-
+    this._containerSize = null;
     this._containerRO = new ResizeObserver(
         (entries) => this._containerSizeChanged(entries[0].contentRect));
 
@@ -70,7 +69,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
 
     this._containerRO.disconnect();
-    this._isContainerVisible = undefined;
+    this._containerSize = null;
 
     if (oldEl) {
       if (this._containerInlineStyle) {
@@ -299,17 +298,17 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @private
    */
   _updateView() {
-    const listBounds = this._containerElement.getBoundingClientRect();
-    const scrollBounds = this._scrollTarget ?
-        this._scrollTarget.getBoundingClientRect() :
-        {top: 0, left: 0, width: innerWidth, height: innerHeight};
     let width, height, top, left;
     if (this._scrollTarget === this._containerElement) {
-      width = scrollBounds.width;
-      height = scrollBounds.height;
-      left = this._scrollTarget.scrollLeft;
-      top = this._scrollTarget.scrollTop;
+      width = this._containerSize.width;
+      height = this._containerSize.height;
+      left = this._containerElement.scrollLeft;
+      top = this._containerElement.scrollTop;
     } else {
+      const listBounds = this._containerElement.getBoundingClientRect();
+      const scrollBounds = this._scrollTarget ?
+          this._scrollTarget.getBoundingClientRect() :
+          {top: 0, left: 0, width: innerWidth, height: innerHeight};
       const scrollerWidth = scrollBounds.width;
       const scrollerHeight = scrollBounds.height;
       const xMin = Math.max(
@@ -383,15 +382,15 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    */
   _shouldRender() {
     // NOTE: we're about to render, but the ResizeObserver didn't execute yet.
-    // Since we want to keep rAF timing, we compute _isContainerVisible now.
+    // Since we want to keep rAF timing, we compute _containerSize now.
     // Would be nice to have a way to flush ResizeObservers
-    if (this._isContainerVisible === undefined && this._containerElement) {
-      const bounds = this._containerElement.getBoundingClientRect();
-      this._isContainerVisible =
-          Boolean(bounds.width || bounds.height || bounds.top || bounds.left);
+    if (this._containerSize === null && this._containerElement) {
+      const {width, height} = this._containerElement.getBoundingClientRect();
+      this._containerSize = {width, height};
     }
     return Boolean(
-        super._shouldRender() && this._layout && this._isContainerVisible);
+        super._shouldRender() && this._layout &&
+        (this._containerSize.width > 0 || this._containerSize.height > 0));
   }
   /**
    * @private
@@ -421,7 +420,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     const width = size.left + size.right;
     const height = size.top + size.bottom;
     // console.debug('container changed size', {width, height});
-    this._isContainerVisible = width > 0 || height > 0;
+    this._containerSize = {width, height};
     this._scheduleUpdateView();
   }
   /**
