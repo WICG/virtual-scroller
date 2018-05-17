@@ -381,16 +381,17 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _shouldRender() {
+    if (!super._shouldRender() || !this._layout) {
+      return false;
+    }
     // NOTE: we're about to render, but the ResizeObserver didn't execute yet.
     // Since we want to keep rAF timing, we compute _containerSize now.
     // Would be nice to have a way to flush ResizeObservers
-    if (this._containerSize === null && this._containerElement) {
+    if (this._containerSize === null) {
       const {width, height} = this._containerElement.getBoundingClientRect();
       this._containerSize = {width, height};
     }
-    return Boolean(
-        super._shouldRender() && this._layout &&
-        (this._containerSize.width > 0 || this._containerSize.height > 0));
+    return this._containerSize.width > 0 || this._containerSize.height > 0;
   }
   /**
    * @private
