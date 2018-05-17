@@ -3,9 +3,13 @@ import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js'
 import {VirtualListElement} from '../../virtual-list-element.js';
 
 class HTMLSpecViewer extends VirtualListElement {
+  constructor() {
+    super();
+    this.onRangechange = this.onRangechange.bind(this);
+  }
   connectedCallback() {
     super.connectedCallback();
-    if (!this._htmlSpec) {
+    if (!this.htmlSpec) {
       const style = document.createElement('style');
       style.textContent = `
   :host {
@@ -22,15 +26,37 @@ class HTMLSpecViewer extends VirtualListElement {
         document.rootScroller = this;
       }
 
-      this._htmlSpec = new HtmlSpec();
-      this._htmlSpec.head.style.display = 'none';
-      this.appendChild(this._htmlSpec.head);
+      this.htmlSpec = new HtmlSpec();
+      this.htmlSpec.head.style.display = 'none';
+      this.appendChild(this.htmlSpec.head);
 
+      // The number of nodes that we'll load dynamically
+      // as the user scrolls.
+      this.totalItems = 9312;
       this.items = [];
-      this.newChild = (idx) => this.items[idx];
-      this.addNextChunk();
-      this.addEventListener(
-          'rangechange', (event) => this.onRangechange(event));
+      this.placeholders = [];
+      for (let i = 0; i < 2; i++) {
+        const el = document.createElement('div');
+        el.style.lineHeight = '100vh';
+        this.placeholders.push(el);
+      }
+      this.newChild = (idx) => {
+        return idx >= this.items.length ?
+            this.placeholders[idx % this.placeholders.length] :
+            this.items[idx];
+      };
+      this.updateChild = (child, idx) => {
+        if (idx >= this.items.length) {
+          child.textContent = `Loading (index ${idx}, loaded ${
+              this.items.length} / ${this.totalItems})`;
+        }
+      };
+      this.childKey = (idx) => {
+        return idx >= this.items.length ?
+            `placeholder-${idx % this.placeholders.length}` :
+            idx;
+      };
+      this.addEventListener('rangechange', this.onRangechange);
     }
   }
 
@@ -39,13 +65,15 @@ class HTMLSpecViewer extends VirtualListElement {
       return;
     }
     this._adding = true;
-    const stream = this._htmlSpec.advance(this.items[this.totalItems - 1]);
+
+    await new Promise(resolve => requestIdleCallback(resolve));
+
+    const stream = this.htmlSpec.advance(this.items[this.items.length - 1]);
     for await (const el of iterateStream(stream)) {
       if (/^(style|link|script)$/.test(el.localName)) {
-        this._htmlSpec.head.appendChild(el);
+        this.htmlSpec.head.appendChild(el);
       } else {
         this.items.push(el);
-        this.totalItems++;
         chunk--;
       }
       if (chunk === 0) {
@@ -53,10 +81,20 @@ class HTMLSpecViewer extends VirtualListElement {
       }
     }
     this._adding = false;
+    if (chunk > 0) {
+      // YOU REACHED THE END OF THE SPEC \o/
+      this.totalItems = this.items.length;
+      this.newChild = (idx) => this.items[idx];
+      this.updateChild = this.recycleChild = this.childKey = null;
+      this.placeholders = null;
+      this.removeEventListener('rangechange', this.onRangechange);
+    } else {
+      this.requestReset();
+    }
   }
 
   onRangechange(range) {
-    if (range.last >= this.totalItems - 4) {
+    if (range.last >= this.items.length) {
       this.addNextChunk();
     }
   }

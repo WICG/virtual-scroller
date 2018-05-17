@@ -426,7 +426,7 @@ export const Repeats = Superclass => class extends Superclass {
       this._active.delete(child);
       if (this.recycleChild) {
         this.recycleChild(child, idx);
-      } else {
+      } else if (this._node(child).parentNode) {
         this._removeChild(child);
       }
     }
@@ -437,7 +437,9 @@ export const Repeats = Superclass => class extends Superclass {
    * @private
    */
   get _firstChild() {
-    return this._ordered.length ? this._node(this._ordered[0]) : null;
+    return this._ordered.length && this._childIsAttached(this._ordered[0]) ?
+        this._node(this._ordered[0]) :
+        null;
   }
 
   // Overridable abstractions for child manipulation
