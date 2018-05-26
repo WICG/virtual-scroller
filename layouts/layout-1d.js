@@ -18,10 +18,23 @@ export default class Layout extends Layout1dBase {
     this._nMeasured = 0;
     this._tMeasured = 0;
 
+    this._anchorItem = null;
+
     this._estimate = true;
   }
 
   updateItemSizes(sizes) {
+    // Store the anchor item information before updating the sizes,
+    // so that it can be restored on the next reflow.
+    if (this._stable) {
+      let index = this._first;
+      let item = this._getPhysicalItem(index);
+      while (item && item.pos + item.size <= this._scrollPosition) {
+        item = this._getPhysicalItem(++index);
+      }
+      this._anchorItem =
+          item ? {index, offset: this._scrollPosition - item.pos} : null;
+    }
     Object.keys(sizes).forEach((key) => {
       const metrics = sizes[key], mi = this._getMetrics(key),
             prevSize = mi[this._sizeDim];
@@ -188,6 +201,8 @@ export default class Layout extends Layout1dBase {
       anchorSize = this._itemDim1;
     }
 
+    // Anchor might be outside bounds, so prefer correcting the error and keep
+    // that anchorIdx.
     let anchorErr = 0;
 
     if (this._anchorPos + anchorSize + this._spacing < lower) {
@@ -241,6 +256,7 @@ export default class Layout extends Layout1dBase {
 
     this._last--;
 
+    // This handles the cases where we were relying on estimated sizes.
     const extentErr = this._calculateError();
     if (extentErr) {
       this._physicalMin -= extentErr;
@@ -279,6 +295,20 @@ export default class Layout extends Layout1dBase {
 
     this._updateScrollSize();
     this._getActiveItems();
+    // Restore the anchor item in case its position
+    // was modified by size changes.
+    if (this._anchorItem && this._stable) {
+      const {index, offset} = this._anchorItem;
+      const diff = this._scrollPosition - this._getPosition(index) - offset;
+      this._scrollPosition -= diff;
+      this._scrollError += diff;
+      this._anchorItem = null;
+    }
+    // NOTE(valdrin): subpixel changes are ignored by scrollTop (e.g.
+    // scrollTop += 0.99 === scrollTop), so we round.
+    const normalizedError = Math.round(this._scrollError);
+    this._scrollPosition += (normalizedError - this._scrollError);
+    this._scrollError = normalizedError;
 
     if (this._scrollSize !== _scrollSize) {
       this._emitScrollSize();

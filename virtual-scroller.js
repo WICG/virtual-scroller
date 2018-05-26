@@ -400,8 +400,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    */
   _correctScrollError(err) {
     if (this._scrollTarget) {
-      this._scrollTarget.scrollTop += err.top;
-      this._scrollTarget.scrollLeft += err.left;
+      this._scrollTarget.scrollTop -= err.top;
+      this._scrollTarget.scrollLeft -= err.left;
     } else {
       window.scroll(window.scrollX - err.left, window.scrollY - err.top);
     }
