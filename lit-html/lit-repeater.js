@@ -11,7 +11,7 @@ export const LitMixin = Superclass => class extends Superclass {
     this._hostPart = part;
   }
 
-  newChild() {
+  createElement() {
     return this._pool.pop() ||
         new NodePart(this._hostPart.instance, null, null);
   }

@@ -27,7 +27,7 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       this.appendChild(this._htmlSpec.head);
 
       this.items = [];
-      this.newChild = (idx) => this.items[idx];
+      this.createElement = (idx) => this.items[idx];
       this.addNextChunk();
       this.addEventListener(
           'rangechange', (event) => this.onRangechange(event));

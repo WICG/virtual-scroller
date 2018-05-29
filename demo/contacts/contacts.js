@@ -44,7 +44,7 @@ export class Sample {
     this.scroller = new VirtualScroller({
       layout: this.layout,
       container: this.container,
-      newChild: (idx) => {
+      createElement: (idx) => {
         const item = this.items[idx];
         const type = itemType(item);
         const pool = this._pool[type] || (this._pool[type] = []);

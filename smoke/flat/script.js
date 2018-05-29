@@ -21,7 +21,7 @@ const config = {
   totalItems: items.length,
   container,
   layout,
-  newChild: (idx) => {
+  createElement: (idx) => {
     let section = pool.pop();
     if (!section) {
       section = document.createElement('section');

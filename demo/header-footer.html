@@ -45,7 +45,7 @@
      * dedicated node pools for recycling among them.
      */
     const nodePool = { group: [], contact: [] };
-    virtualScroller.newChild = (index) => {
+    virtualScroller.createElement = (index) => {
       let element;
       const item = contacts[index];
       if (item.group) {

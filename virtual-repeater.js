@@ -2,7 +2,7 @@ export const Repeats = Superclass => class extends Superclass {
   constructor(config) {
     super();
 
-    this._newChildFn = null;
+    this._createElementFn = null;
     this._updateChildFn = null;
     this._recycleChildFn = null;
     this._childKeyFn = null;
@@ -76,12 +76,12 @@ export const Repeats = Superclass => class extends Superclass {
     this.requestReset();
   }
 
-  get newChild() {
-    return this._newChildFn;
+  get createElement() {
+    return this._createElementFn;
   }
-  set newChild(fn) {
-    if (fn !== this._newChildFn) {
-      this._newChildFn = fn;
+  set createElement(fn) {
+    if (fn !== this._createElementFn) {
+      this._createElementFn = fn;
       this._keyToChild.clear();
       this.requestReset();
     }
@@ -187,7 +187,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this.container && this.newChild);
+    return Boolean(this.container && this.createElement);
   }
 
   /**
@@ -400,7 +400,7 @@ export const Repeats = Superclass => class extends Superclass {
     if (child = this._keyToChild.get(key)) {
       this._prevActive.delete(child);
     } else {
-      child = this.newChild(idx);
+      child = this.createElement(idx);
       this._keyToChild.set(key, child);
       this._childToKey.set(child, key);
     }

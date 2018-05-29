@@ -40,7 +40,7 @@
 
     const virtualScroller = document.querySelector('virtual-scroller');
 
-    virtualScroller.newChild = () => {
+    virtualScroller.createElement = () => {
       const element = document.createElement('contact-element');
       element.setAttribute('sortable', '');
       element.addEventListener('moveup', (event) => moveContact(event.target.contact, -1));

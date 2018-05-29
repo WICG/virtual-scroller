@@ -20,7 +20,7 @@ The (tentative) API design choices made here, as well as the element's capabilit
   const myItems = new Array(200).fill('item');
 
   // Setting this is required; without it the scroller does not function.
-  scroller.newChild = (index) => {
+  scroller.createElement = (index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + myItems[index];
     child.onclick = () => console.log(`clicked item #${index}`);
@@ -37,7 +37,7 @@ Checkout more examples in [demo/index.html](./demo/index.html).
 
 ## API
 
-### `newChild` property
+### `createElement` property
 
 Type: `function(itemIndex: number) => Element`
 
@@ -57,7 +57,7 @@ If set, this property is invoked in two scenarios:
 * The developer changes the `totalItems` property.
 * The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
 
-For more on the interplay between `newChild` and `updateChild`, and when each is appropriate, see [the example below](#using-newchild-and-updatechild)
+For more on the interplay between `createElement` and `updateChild`, and when each is appropriate, see [the example below](#using-createElement-and-updatechild)
 
 ### `recycleChild` property
 
@@ -81,7 +81,7 @@ This is often used for more efficient re-ordering, as seen in [the example below
 
 Type: `number`
 
-Set this property to control how many items the scroller will display. The items are mapped to elements via the `newChild` property, so this controls the total number of times `newChild` could be called, as the user scrolls to reveal all the times.
+Set this property to control how many items the scroller will display. The items are mapped to elements via the `createElement` property, so this controls the total number of times `createElement` could be called, as the user scrolls to reveal all the times.
 
 Can also be set as an attribute (all lower-case) on the element, e.g. `<virtual-scroller totalitems="10"></virtual-scroller>`
 
@@ -119,25 +119,25 @@ Also see [the example below](#performing-actions-as-the-scroller-scrolls-using-t
 
 ## More examples
 
-### Using `newChild` and `updateChild`
+### Using `createElement` and `updateChild`
 
 The rule of thumb for these two options is:
 
-* You always have to set `newChild`. It is responsible for actually creating the DOM elements corresponding to each item.
+* You always have to set `createElement`. It is responsible for actually creating the DOM elements corresponding to each item.
 * You should set `updateChild` if you ever plan on updating the data items.
 
-Thus, for completely static lists, you only need to set `newChild`:
+Thus, for completely static lists, you only need to set `createElement`:
 
 ```js
 let myItems = ['a', 'b', 'c', 'd'];
 
-scroller.newChild = index => {
+scroller.createElement = index => {
   const child = document.createElement('div');
   child.textContent = myItems[index];
   return child;
 };
 
-// Calls newChild four times (assuming the screen is big enough)
+// Calls createElement four times (assuming the screen is big enough)
 scroller.totalItems = myItems.length;
 ```
 
@@ -155,10 +155,10 @@ requestAnimationFrame(() => {
 
 _Note: we include `requestAnimationFrame` here to wait for `<virtual-scroller>` rendering._
 
-If you plan to update your items, you're likely better off using `newChild` to set up the "template" for each item, and using `updateChild` to fill in the data. Like so:
+If you plan to update your items, you're likely better off using `createElement` to set up the "template" for each item, and using `updateChild` to fill in the data. Like so:
 
 ```js
-scroller.newChild = () => {
+scroller.createElement = () => {
   return document.createElement('div');
 };
 
@@ -167,7 +167,7 @@ scroller.updateChild = (child, index) => {
 };
 
 let myItems = ['a', 'b', 'c', 'd'];
-// Calls newChild + updateChild four times
+// Calls createElement + updateChild four times
 scroller.totalItems = myItems.length;
 
 // This now works: it calls updateChild four times
@@ -179,7 +179,7 @@ requestAnimationFrame(() => {
 
 ### DOM recycling using `recycleChild`
 
-You can recycle DOM by using the `recycleChild` function to collect DOM, and reuse it in `newChild`.
+You can recycle DOM by using the `recycleChild` function to collect DOM, and reuse it in `createElement`.
 
 When doing this, be sure to perform DOM updates in `updateChild`, as recycled children will otherwise have the data from the previous item.
 
@@ -188,7 +188,7 @@ const myItems = ['a', 'b', 'c', 'd'];
 const nodePool = [];
 
 Object.assign(scroller, {
-  newChild() {
+  createElement() {
     return nodePool.pop() || document.createElement('div');
   },
   updateChild(child, index) {
@@ -221,7 +221,7 @@ myItems[0] = 'item 0 changed!';
 scroller.requestReset();
 ```
 
-In this case, `newChild` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items indexes.
+In this case, `createElement` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items indexes.
 
 ### Efficient re-ordering using `childKey`
 
@@ -233,7 +233,7 @@ Imagine we have a list of 3 contacts:
 ```js
 const myContacts = ['A', 'B', 'C'];
 virtualScroller.totalItems = myContacts.length;
-virtualScroller.newChild = () => document.createElement('div');
+virtualScroller.createElement = () => document.createElement('div');
 virtualScroller.updateChild = (div, index) => div.textContent = myContacts[index];
 ```
 This renders 3 contacts, and the `<virtual-scroller>` key/Element map is:

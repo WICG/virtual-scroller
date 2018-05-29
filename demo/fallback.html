@@ -64,7 +64,7 @@
     const dataSource = new ContactDataSource();
     const virtualScroller = document.querySelector('virtual-scroller');
 
-    virtualScroller.newChild = () => document.createElement('contact-element');
+    virtualScroller.createElement = () => document.createElement('contact-element');
     virtualScroller.updateChild = (element, index) => {
       const contact = contacts[index];
       element.style.animation = contact.customAnimation || null;

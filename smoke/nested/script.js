@@ -24,7 +24,7 @@ function scrollerForContainer(container, items) {
     totalItems: items.length,
     layout: new Layout({itemSize: {width: innerWidth, height: innerHeight}}),
     container,
-    newChild: (idx) => {
+    createElement: (idx) => {
       let child = pool.pop();
       if (!child) {
         child = document.createElement('div');

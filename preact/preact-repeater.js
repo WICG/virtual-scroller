@@ -34,7 +34,7 @@ export const PreactMixin = Superclass => class extends Superclass {
     const component = config.component;
     const pool = [];
     Object.assign(config, {
-      newChild: () => {
+      createElement: () => {
         let child = pool.pop();
         if (!child) {
           child = {vNode: h(component, {ref: n => child.instance = n})};
