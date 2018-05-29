@@ -59,13 +59,13 @@ If set, this property is invoked in two scenarios:
 
 For more on the interplay between `createElement` and `updateElement`, and when each is appropriate, see [the example below](#using-createElement-and-updateElement)
 
-### `recycleChild` property
+### `recycleElement` property
 
 Type: `function(child: Element, itemIndex: number)`
 
 Set this property to replace the default behavior of removing an item's element from the DOM when it is no longer visible.
 
-This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling-using-recyclechild).
+This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling-using-recycleElement).
 
 _We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-scroller/issues/25)._
 
@@ -177,9 +177,9 @@ requestAnimationFrame(() => {
 });
 ```
 
-### DOM recycling using `recycleChild`
+### DOM recycling using `recycleElement`
 
-You can recycle DOM by using the `recycleChild` function to collect DOM, and reuse it in `createElement`.
+You can recycle DOM by using the `recycleElement` function to collect DOM, and reuse it in `createElement`.
 
 When doing this, be sure to perform DOM updates in `updateElement`, as recycled children will otherwise have the data from the previous item.
 
@@ -194,7 +194,7 @@ Object.assign(scroller, {
   updateElement(child, index) {
     child.textContent = myItems[index];
   },
-  recycleChild(child) {
+  recycleElement(child) {
     nodePool.push(child);
   }
 };

@@ -96,7 +96,7 @@
         pool.pop() || document.createElement('section'),
       updateElement: (child, index) =>
         child.textContent = index + ' - ' + myItems[index],
-      recycleChild: (child) =>
+      recycleElement: (child) =>
         pool.push(child)
     });
 

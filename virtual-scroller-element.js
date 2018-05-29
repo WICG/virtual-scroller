@@ -6,7 +6,7 @@ import {VirtualScroller} from './virtual-scroller.js';
 const _scroller = Symbol();
 const _createElement = Symbol();
 const _updateElement = Symbol();
-const _recycleChild = Symbol();
+const _recycleElement = Symbol();
 const _childKey = Symbol();
 /** Functions */
 const _render = Symbol();
@@ -18,7 +18,7 @@ export class VirtualScrollerElement extends HTMLElement {
     this[_scroller] = null;
     this[_createElement] = null;
     this[_updateElement] = null;
-    this[_recycleChild] = null;
+    this[_recycleElement] = null;
     this[_childKey] = null;
   }
 
@@ -93,11 +93,11 @@ export class VirtualScrollerElement extends HTMLElement {
     this[_render]();
   }
 
-  get recycleChild() {
-    return this[_recycleChild];
+  get recycleElement() {
+    return this[_recycleElement];
   }
-  set recycleChild(fn) {
-    this[_recycleChild] = fn;
+  set recycleElement(fn) {
+    this[_recycleElement] = fn;
     this[_render]();
   }
 
@@ -139,13 +139,13 @@ export class VirtualScrollerElement extends HTMLElement {
         scroller.layout :
         new Layout({direction});
 
-    const {createElement, updateElement, recycleChild, childKey, totalItems} =
+    const {createElement, updateElement, recycleElement, childKey, totalItems} =
         this;
     Object.assign(scroller, {
       layout,
       createElement,
       updateElement,
-      recycleChild,
+      recycleElement,
       childKey,
       totalItems
     });

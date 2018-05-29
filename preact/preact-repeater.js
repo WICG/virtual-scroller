@@ -46,7 +46,7 @@ export const PreactMixin = Superclass => class extends Superclass {
         child.vNode.attributes = {idx};
         render(child.vNode, this.container, child.instance.base);
       },
-      recycleChild: (child) => pool.push(child),
+      recycleElement: (child) => pool.push(child),
     });
     super(config);
   }

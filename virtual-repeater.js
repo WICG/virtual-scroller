@@ -4,7 +4,7 @@ export const Repeats = Superclass => class extends Superclass {
 
     this._createElementFn = null;
     this._updateElementFn = null;
-    this._recycleChildFn = null;
+    this._recycleElementFn = null;
     this._childKeyFn = null;
 
     this._measureCallback = null;
@@ -97,12 +97,12 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
-  get recycleChild() {
-    return this._recycleChildFn;
+  get recycleElement() {
+    return this._recycleElementFn;
   }
-  set recycleChild(fn) {
-    if (fn !== this._recycleChildFn) {
-      this._recycleChildFn = fn;
+  set recycleElement(fn) {
+    if (fn !== this._recycleElementFn) {
+      this._recycleElementFn = fn;
       this.requestReset();
     }
   }
@@ -424,8 +424,8 @@ export const Repeats = Superclass => class extends Superclass {
       this._childToKey.delete(child);
       this._keyToChild.delete(key);
       this._active.delete(child);
-      if (this.recycleChild) {
-        this.recycleChild(child, idx);
+      if (this.recycleElement) {
+        this.recycleElement(child, idx);
       } else {
         this._removeChild(child);
       }

@@ -88,7 +88,7 @@ export class Sample {
           child.textContent = item.title;
         }
       },
-      recycleChild: (child, idx) => {
+      recycleElement: (child, idx) => {
         const item = this.items[idx];
         const type = itemType(item);
         if (type === 'contact') {

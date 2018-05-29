@@ -53,7 +53,7 @@ function scrollerForContainer(container, items) {
         child._container._scroller.totalItems = item.items.length;
       }
     },
-    recycleChild: (child) => {
+    recycleElement: (child) => {
       pool.push(child);
     }
   });

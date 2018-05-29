@@ -20,7 +20,7 @@ export const LitMixin = Superclass => class extends Superclass {
     part.setValue(this._template(idx));
   }
 
-  recycleChild(part) {
+  recycleElement(part) {
     this._pool.push(part);
   }
 

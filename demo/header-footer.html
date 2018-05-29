@@ -63,7 +63,7 @@
         element.contact = item;
       }
     };
-    virtualScroller.recycleChild = (element, index) => {
+    virtualScroller.recycleElement = (element, index) => {
       const item = contacts[index];
       if (item.group) {
         nodePool.group.push(element);

@@ -37,7 +37,7 @@ const config = {
     section.id = `section_${idx}`;
     section._title.textContent = `${idx} - ${item.name}`;
   },
-  recycleChild: (section) => {
+  recycleElement: (section) => {
     pool.push(section);
   }
 };
