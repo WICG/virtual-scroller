@@ -69,13 +69,13 @@ This is often used for node-recycling scenarios, as seen in [the example below](
 
 _We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-scroller/issues/25)._
 
-### `childKey` property
+### `elementKey` property
 
 Type: `function(itemIndex: number) => any`
 
 Set this property to provide a custom identifier for the element corresponding to a given data index.
 
-This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-childkey).
+This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-elementKey).
 
 ### `totalItems` property
 
@@ -223,11 +223,11 @@ scroller.requestReset();
 
 In this case, `createElement` will be called for the newly-added item once it becomes visible, whereas `updateElement` will every item, including the ones that already had corresponding elements in the old items indexes.
 
-### Efficient re-ordering using `childKey`
+### Efficient re-ordering using `elementKey`
 
 `<virtual-scroller>` keeps track of the generated DOM via an internal key/Element map to limit the number of created nodes.
 
-The default key is the array index, but can be customized through the `childKey` property.
+The default key is the array index, but can be customized through the `elementKey` property.
 
 Imagine we have a list of 3 contacts:
 ```js
@@ -251,7 +251,7 @@ function moveFirstContactToEnd() {
   virtualScroller.requestReset(); // notify virtual-scroller
 }
 ```
-With the default `childKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
+With the default `elementKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
 ```
 0: <div>B</div> (was <div>A</div>)
 1: <div>C</div> (was <div>B</div>)
@@ -259,9 +259,9 @@ With the default `childKey`, we would relayout and repaint all the contacts when
 ```
 This is suboptimal, as we just needed to move the first DOM node to the end.
 
-We can customize the key/Element mapping via `childKey`:
+We can customize the key/Element mapping via `elementKey`:
 ```js
-virtualScroller.childKey = (index) => myContacts[index];
+virtualScroller.elementKey = (index) => myContacts[index];
 ```
 
 This updates the `<virtual-scroller>` key/Element map to:
