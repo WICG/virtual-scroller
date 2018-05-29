@@ -44,7 +44,7 @@ function scrollerForContainer(container, items) {
       }
       return child;
     },
-    updateChild: (child, idx) => {
+    updateElement: (child, idx) => {
       // child.id = `section_${idx}`;
       // child._container.id = `innerContainer_${idx}`;
 

@@ -55,7 +55,7 @@
       }
       return element;
     };
-    virtualScroller.updateChild = (element, index) => {
+    virtualScroller.updateElement = (element, index) => {
       const item = contacts[index];
       if (item.group) {
         element.textContent = `${item.title} (${item.count})`;

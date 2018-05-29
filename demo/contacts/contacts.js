@@ -77,7 +77,7 @@ export class Sample {
           }
         }
       },
-      updateChild: (child, idx) => {
+      updateElement: (child, idx) => {
         const item = this.items[idx];
         if (itemType(item) === 'contact') {
           child._idx = idx;

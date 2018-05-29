@@ -6,7 +6,7 @@ This document gives an overview of various pieces we use to build up the `<virtu
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
 - Given a `totalItems` amount, it displays `num` elements starting from `first` index.
-- Delegates DOM creation, update and recycling via `createElement, updateChild, recycleChild`.
+- Delegates DOM creation, update and recycling via `createElement, updateElement, recycleChild`.
 - Delegates DOM layout via `_measureCallback`.
 
 ### Basic setup
@@ -46,7 +46,7 @@ You can recycle DOM through the `recycleChild`, and use the recycled DOM
 in `createElement`.
 
 If you decide to keep the recycled DOM attached in the main document, perform
-DOM updates in `updateChild`.
+DOM updates in `updateElement`.
 
 ```js
 /**
@@ -64,7 +64,7 @@ const repeater = new VirtualRepeater({
   /**
    * Updates the DOM with data.
    */
-  updateChild: (child, index) => {
+  updateElement: (child, index) => {
     child.textContent = index + ' - ' + myItems[index];
   },
   /**

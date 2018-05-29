@@ -28,11 +28,11 @@ const config = {
       section.innerHTML = `<div class="title"></div>`;
       section._title = section.querySelector('.title');
       // Update it immediately.
-      config.updateChild(section, idx);
+      config.updateElement(section, idx);
     }
     return section;
   },
-  updateChild: (section, idx) => {
+  updateElement: (section, idx) => {
     const item = items[idx];
     section.id = `section_${idx}`;
     section._title.textContent = `${idx} - ${item.name}`;

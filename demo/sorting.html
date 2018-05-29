@@ -47,7 +47,7 @@
       element.addEventListener('movedown', (event) => moveContact(event.target.contact, 1));
       return element;
     };
-    virtualScroller.updateChild = (element, index) => element.contact = myContacts[index];
+    virtualScroller.updateElement = (element, index) => element.contact = myContacts[index];
 
     let myContacts = null;
     fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {

@@ -3,7 +3,7 @@ export const Repeats = Superclass => class extends Superclass {
     super();
 
     this._createElementFn = null;
-    this._updateChildFn = null;
+    this._updateElementFn = null;
     this._recycleChildFn = null;
     this._childKeyFn = null;
 
@@ -87,12 +87,12 @@ export const Repeats = Superclass => class extends Superclass {
     }
   }
 
-  get updateChild() {
-    return this._updateChildFn;
+  get updateElement() {
+    return this._updateElementFn;
   }
-  set updateChild(fn) {
-    if (fn !== this._updateChildFn) {
-      this._updateChildFn = fn;
+  set updateElement(fn) {
+    if (fn !== this._updateElementFn) {
+      this._updateElementFn = fn;
       this.requestReset();
     }
   }
@@ -329,8 +329,8 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, this._firstChild);
         }
       }
-      if (this.updateChild) {
-        this.updateChild(child, idx);
+      if (this.updateElement) {
+        this.updateElement(child, idx);
       }
       this._ordered.unshift(child);
     }
@@ -349,8 +349,8 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, null);
         }
       }
-      if (this.updateChild) {
-        this.updateChild(child, idx);
+      if (this.updateElement) {
+        this.updateElement(child, idx);
       }
       this._ordered.push(child);
     }
@@ -384,8 +384,8 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, null);
         }
       }
-      if (this.updateChild) {
-        this.updateChild(child, idx);
+      if (this.updateElement) {
+        this.updateElement(child, idx);
       }
     }
   }

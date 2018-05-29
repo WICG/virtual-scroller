@@ -87,14 +87,14 @@
 
     scroller.createElement = () =>
       document.createElement('section');
-    scroller.updateChild = (child, index) =>
+    scroller.updateElement = (child, index) =>
       child.textContent = index + ' - ' + myItems[index];
 
     const pool = [];
     Object.assign(recycler, {
       createElement: () =>
         pool.pop() || document.createElement('section'),
-      updateChild: (child, index) =>
+      updateElement: (child, index) =>
         child.textContent = index + ' - ' + myItems[index],
       recycleChild: (child) =>
         pool.push(child)

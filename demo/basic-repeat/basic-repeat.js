@@ -66,7 +66,7 @@ export const Sample = RepeaterControl(Stateful(class {
       this._repeater = new VirtualRepeater({
         container: this.ul,
         createElement: () => document.createElement('li'),
-        updateChild: (child, idx) => {
+        updateElement: (child, idx) => {
           const item = this.state.items[idx];
           child.textContent = `${idx}: ${item}`;
           child.onclick = () => console.log(item)

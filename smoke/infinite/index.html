@@ -24,7 +24,7 @@
 
     const nodePool = [];
     virtualScroller.createElement = () => nodePool.pop() || document.createElement('div');
-    virtualScroller.updateChild = (elem, i) => elem.textContent = i;
+    virtualScroller.updateElement = (elem, i) => elem.textContent = i;
     virtualScroller.recycleChild = (elem) => nodePool.push(elem);
     // Render as many items as possible --> infinite scrolling!
     virtualScroller.totalItems = Number.MAX_SAFE_INTEGER;

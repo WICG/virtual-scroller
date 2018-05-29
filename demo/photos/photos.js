@@ -44,7 +44,7 @@ export class Sample {
         img.appendChild(h);
         return img;
       },
-      updateChild: (child, idx) => {
+      updateElement: (child, idx) => {
         const item = this.items[idx];
         const dim = getDims(item, this.constraint);
         child.src = getUrl(item);

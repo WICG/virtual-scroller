@@ -5,7 +5,7 @@ import {VirtualScroller} from './virtual-scroller.js';
 /** Properties */
 const _scroller = Symbol();
 const _createElement = Symbol();
-const _updateChild = Symbol();
+const _updateElement = Symbol();
 const _recycleChild = Symbol();
 const _childKey = Symbol();
 /** Functions */
@@ -17,7 +17,7 @@ export class VirtualScrollerElement extends HTMLElement {
     super();
     this[_scroller] = null;
     this[_createElement] = null;
-    this[_updateChild] = null;
+    this[_updateElement] = null;
     this[_recycleChild] = null;
     this[_childKey] = null;
   }
@@ -85,11 +85,11 @@ export class VirtualScrollerElement extends HTMLElement {
     this[_render]();
   }
 
-  get updateChild() {
-    return this[_updateChild];
+  get updateElement() {
+    return this[_updateElement];
   }
-  set updateChild(fn) {
-    this[_updateChild] = fn;
+  set updateElement(fn) {
+    this[_updateElement] = fn;
     this[_render]();
   }
 
@@ -139,10 +139,16 @@ export class VirtualScrollerElement extends HTMLElement {
         scroller.layout :
         new Layout({direction});
 
-    const {createElement, updateChild, recycleChild, childKey, totalItems} = this;
-    Object.assign(
-        scroller,
-        {layout, createElement, updateChild, recycleChild, childKey, totalItems});
+    const {createElement, updateElement, recycleChild, childKey, totalItems} =
+        this;
+    Object.assign(scroller, {
+      layout,
+      createElement,
+      updateElement,
+      recycleChild,
+      childKey,
+      totalItems
+    });
   }
 }
 customElements.define('virtual-scroller', VirtualScrollerElement);
