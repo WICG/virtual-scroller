@@ -18,23 +18,50 @@ export default class Layout extends Layout1dBase {
     this._nMeasured = 0;
     this._tMeasured = 0;
 
-    this._anchorItem = null;
-
     this._estimate = true;
+
+    this._itemAnchor = 0;
+    this._viewportAnchor = 0;
+    this._anchorInfo = null;
+  }
+
+  get itemAnchor() {
+    return this._itemAnchor;
+  }
+
+  set itemAnchor(anchor) {
+    if (this._itemAnchor !== anchor) {
+      this._itemAnchor = anchor;
+      this._anchorInfo = null;
+      this._scheduleReflow();
+    }
+  }
+
+  get viewportAnchor() {
+    return this._viewportAnchor;
+  }
+
+  set viewportAnchor(anchor) {
+    if (this._viewportAnchor !== anchor) {
+      this._viewportAnchor = anchor;
+      this._anchorInfo = null;
+      this._scheduleReflow();
+    }
+  }
+
+  scrollTo(index, offset = 0) {
+    if (!Number.isFinite(index) || !Number.isFinite(offset)) {
+      return;
+    }
+    if (!this._anchorInfo || this._anchorInfo.index !== index ||
+        this._anchorInfo.offset !== offset) {
+      this._anchorInfo = {index, offset};
+      this._scheduleReflow();
+      this.reflowIfNeeded();
+    }
   }
 
   updateItemSizes(sizes) {
-    // Store the anchor item information before updating the sizes,
-    // so that it can be restored on the next reflow.
-    if (this._stable) {
-      let index = this._first;
-      let item = this._getPhysicalItem(index);
-      while (item && item.pos + item.size <= this._scrollPosition) {
-        item = this._getPhysicalItem(++index);
-      }
-      this._anchorItem =
-          item ? {index, offset: this._scrollPosition - item.pos} : null;
-    }
     Object.keys(sizes).forEach((key) => {
       const metrics = sizes[key], mi = this._getMetrics(key),
             prevSize = mi[this._sizeDim];
@@ -74,7 +101,8 @@ export default class Layout extends Layout1dBase {
   }
 
   _updateItemSize() {
-    this._itemSize[this._sizeDim] = this._tMeasured / this._nMeasured;
+    this._itemSize[this._sizeDim] =
+        Math.ceil(this._tMeasured / this._nMeasured);
   }
 
   //
@@ -297,18 +325,29 @@ export default class Layout extends Layout1dBase {
     this._getActiveItems();
     // Restore the anchor item in case its position
     // was modified by size changes.
-    if (this._anchorItem && this._stable) {
-      const {index, offset} = this._anchorItem;
-      const diff = this._scrollPosition - this._getPosition(index) - offset;
-      this._scrollPosition -= diff;
-      this._scrollError += diff;
-      this._anchorItem = null;
+    if (this._stable) {
+      if (!this._anchorInfo) {
+        this._getAnchorInfo();
+      } else {
+        const {index, offset} = this._anchorInfo;
+        const item = this._getPhysicalItem(index) ||
+            {pos: this._getPosition(index), size: this._itemDim1};
+
+        const curAnchorPos =
+            this._scrollPosition + this._viewDim1 * this.viewportAnchor;
+        const newAnchorPos = offset + item.pos + item.size * this.itemAnchor;
+        // Ensure correction is an integer and keeps scrollPosition within
+        // scroll bounds.
+        const scrollPosition = Math.max(
+            0, Math.floor(this._scrollPosition - curAnchorPos + newAnchorPos));
+        this._scrollError += this._scrollPosition - scrollPosition;
+        this._scrollPosition = scrollPosition;
+      }
     }
-    // NOTE(valdrin): subpixel changes are ignored by scrollTop (e.g.
-    // scrollTop += 0.99 === scrollTop), so we round.
-    const normalizedError = Math.round(this._scrollError);
-    this._scrollPosition += (normalizedError - this._scrollError);
-    this._scrollError = normalizedError;
+
+    if (!Number.isInteger(this._scrollError)) {
+      console.log(`_scrollError should be integer ${this._scrollError}`);
+    }
 
     if (this._scrollSize !== _scrollSize) {
       this._emitScrollSize();
@@ -352,5 +391,30 @@ export default class Layout extends Layout1dBase {
     const stable = this._stable;
     this._needsRemeasure = false;
     super._emitRange({remeasure, stable});
+  }
+
+  _scroll() {
+    if (this._latestCoords[this._positionDim] !== this._scrollPosition) {
+      this._anchorInfo = null;
+    }
+    super._scroll();
+  }
+
+  _getAnchorInfo() {
+    const scrollPos =
+        this._scrollPosition + this._viewDim1 * this.viewportAnchor;
+    let index = this._first;
+    let item;
+    while ((item = this._getPhysicalItem(index))) {
+      if (item.pos + item.size > scrollPos) {
+        break;
+      } else {
+        index++;
+      }
+    }
+    if (item && item.pos + item.size > scrollPos) {
+      const offset = scrollPos - item.pos - item.size * this.itemAnchor;
+      this._anchorInfo = {index, offset};
+    }
   }
 }

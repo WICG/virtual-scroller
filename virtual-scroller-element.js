@@ -56,11 +56,36 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['layout', 'totalitems'];
+    return ['anchor', 'layout', 'totalitems'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
     this[_render]();
+  }
+
+  /**
+   * Possible values: null (default), "middle", "end".
+   *
+   * Set to null to use the first visible item an anchor and to preserve its
+   * top/left visible position during size changes.
+   *
+   * Set to "middle" to use the item in the center of the viewport as an anchor
+   * and to preserve its middle/center position during size changes.
+   *
+   * Set to "end" to use the last visible item as an anchor and to preserve its
+   * bottom/right visible position during size changes.
+   *
+   * @property {string|null}
+   */
+  get anchor() {
+    return this.getAttribute('anchor') || null;
+  }
+  set anchor(anchor) {
+    if (anchor) {
+      this.setAttribute('anchor', anchor);
+    } else {
+      this.removeAttribute('anchor');
+    }
   }
 
   get layout() {
@@ -115,6 +140,18 @@ export class VirtualScrollerElement extends HTMLElement {
     }
   }
 
+  /**
+   * Scrolls to a specified index, optionally with an offset (pixels).
+   *
+   * @param {number} index
+   * @param {number} offset
+   */
+  scrollTo(index, offset = 0) {
+    if (this[_scroller]) {
+      this[_scroller].layout.scrollTo(index, offset);
+    }
+  }
+
   [_render]() {
     if (!this.newChild) {
       return;
@@ -138,6 +175,9 @@ export class VirtualScrollerElement extends HTMLElement {
             scroller.layout.direction === direction ?
         scroller.layout :
         new Layout({direction});
+    const anchor =
+        this.anchor === 'end' ? 1 : this.anchor === 'middle' ? 0.5 : 0;
+    layout.itemAnchor = layout.viewportAnchor = anchor;
 
     const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
     Object.assign(
