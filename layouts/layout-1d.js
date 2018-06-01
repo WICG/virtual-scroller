@@ -317,6 +317,15 @@ export default class Layout extends Layout1dBase {
     return 0;
   }
 
+  _updateScrollSize() {
+    super._updateScrollSize();
+    const lastItem = this._getPhysicalItem(this._last);
+    if (lastItem) {
+      this._scrollSize =
+          Math.max(this._scrollSize, lastItem.pos + lastItem.size);
+    }
+  }
+
   // TODO: Can this be made to inherit from base, with proper hooks?
   _reflow() {
     const {_first, _last, _scrollSize} = this;
@@ -333,11 +342,13 @@ export default class Layout extends Layout1dBase {
         const item = this._getPhysicalItem(index) ||
             {pos: this._getPosition(index), size: this._itemDim1};
 
-        const curAnchorPos =
-            this._scrollPosition + this._viewDim1 * this.viewportAnchor;
-        const newAnchorPos = offset + item.pos + item.size * this.itemAnchor;
         // Ensure correction is an integer and keeps scrollPosition within
         // scroll bounds.
+        const curAnchorPos = Math.min(
+            this._scrollSize,
+            this._scrollPosition + this._viewDim1 * this.viewportAnchor);
+        const newAnchorPos = Math.min(
+            this._scrollSize, offset + item.pos + item.size * this.itemAnchor);
         const scrollPosition = Math.max(
             0, Math.floor(this._scrollPosition - curAnchorPos + newAnchorPos));
         this._scrollError += this._scrollPosition - scrollPosition;
@@ -394,10 +405,11 @@ export default class Layout extends Layout1dBase {
   }
 
   _scroll() {
-    if (this._latestCoords[this._positionDim] !== this._scrollPosition) {
+    const prevPos = this._scrollPosition;
+    super._scroll();
+    if (prevPos !== this._scrollPosition) {
       this._anchorInfo = null;
     }
-    super._scroll();
   }
 
   _getAnchorInfo() {
