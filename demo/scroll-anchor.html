@@ -91,8 +91,8 @@
     const virtualScroller = document.getElementById('scroller');
     const wrapper = document.getElementById('wrapper');
 
-    virtualScroller.newChild = () => document.createElement('div');
-    virtualScroller.updateChild = (element, index) =>
+    virtualScroller.createElement = () => document.createElement('div');
+    virtualScroller.updateElement = (element, index) =>
       element.textContent = `${index}) ${myContacts[index].longText}`;
 
     let myContacts = null;
