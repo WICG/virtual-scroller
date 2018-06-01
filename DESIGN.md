@@ -6,7 +6,7 @@ This document gives an overview of various pieces we use to build up the `<virtu
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
 - Given a `totalItems` amount, it displays `num` elements starting from `first` index.
-- Delegates DOM creation, update and recycling via `newChild, updateChild, recycleChild`.
+- Delegates DOM creation, update and recycling via `createElement, updateElement, recycleElement`.
 - Delegates DOM layout via `_measureCallback`.
 
 ### Basic setup
@@ -32,7 +32,7 @@ const repeater = new VirtualRepeater({
   /**
    * The DOM representing data.
    */
-  newChild: (index) => {
+  createElement: (index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + myItems[index];
     return child;
@@ -42,11 +42,11 @@ const repeater = new VirtualRepeater({
 
 ### Recycling
 
-You can recycle DOM through the `recycleChild`, and use the recycled DOM
-in `newChild`.
+You can recycle DOM through the `recycleElement`, and use the recycled DOM
+in `createElement`.
 
 If you decide to keep the recycled DOM attached in the main document, perform
-DOM updates in `updateChild`.
+DOM updates in `updateElement`.
 
 ```js
 /**
@@ -58,20 +58,20 @@ const repeater = new VirtualRepeater({
   /**
    * The DOM representing data.
    */
-  newChild: (index) => {
+  createElement: (index) => {
     return pool.pop() || document.createElement('section');
   },
   /**
    * Updates the DOM with data.
    */
-  updateChild: (child, index) => {
+  updateElement: (child, index) => {
     child.textContent = index + ' - ' + myItems[index];
   },
   /**
    * Invoked when the DOM is about to be removed.
    * Here we keep the child in the main document.
    */
-  recycleChild: (child, index) => {
+  recycleElement: (child, index) => {
     pool.push(child);
   }
 });
@@ -220,7 +220,7 @@ const scroller = new VirtualScroller({
   /**
    * The DOM representing data.
    */
-  newChild: (index) => {
+  createElement: (index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + myItems[index];
     return child;

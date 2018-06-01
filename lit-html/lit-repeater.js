@@ -11,16 +11,16 @@ export const LitMixin = Superclass => class extends Superclass {
     this._hostPart = part;
   }
 
-  newChild() {
+  createElement() {
     return this._pool.pop() ||
         new NodePart(this._hostPart.instance, null, null);
   }
 
-  updateChild(part, idx) {
+  updateElement(part, idx) {
     part.setValue(this._template(idx));
   }
 
-  recycleChild(part) {
+  recycleElement(part) {
     this._pool.push(part);
   }
 

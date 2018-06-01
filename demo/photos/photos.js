@@ -35,7 +35,7 @@ export class Sample {
     this.scroller = new VirtualScroller({
       layout: this.layout,
       container: document.body,
-      newChild: () => {
+      createElement: () => {
         const img = document.createElement('lazy-image');
         img.style = 'position: absolute;';
         const h = document.createElement('h2');
@@ -44,7 +44,7 @@ export class Sample {
         img.appendChild(h);
         return img;
       },
-      updateChild: (child, idx) => {
+      updateElement: (child, idx) => {
         const item = this.items[idx];
         const dim = getDims(item, this.constraint);
         child.src = getUrl(item);

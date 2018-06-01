@@ -44,7 +44,7 @@ export class Sample {
     this.scroller = new VirtualScroller({
       layout: this.layout,
       container: this.container,
-      newChild: (idx) => {
+      createElement: (idx) => {
         const item = this.items[idx];
         const type = itemType(item);
         const pool = this._pool[type] || (this._pool[type] = []);
@@ -77,7 +77,7 @@ export class Sample {
           }
         }
       },
-      updateChild: (child, idx) => {
+      updateElement: (child, idx) => {
         const item = this.items[idx];
         if (itemType(item) === 'contact') {
           child._idx = idx;
@@ -88,7 +88,7 @@ export class Sample {
           child.textContent = item.title;
         }
       },
-      recycleChild: (child, idx) => {
+      recycleElement: (child, idx) => {
         const item = this.items[idx];
         const type = itemType(item);
         if (type === 'contact') {

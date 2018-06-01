@@ -2,10 +2,10 @@ export const Repeats = Superclass => class extends Superclass {
   constructor(config) {
     super();
 
-    this._newChildFn = null;
-    this._updateChildFn = null;
-    this._recycleChildFn = null;
-    this._childKeyFn = null;
+    this._createElementFn = null;
+    this._updateElementFn = null;
+    this._recycleElementFn = null;
+    this._elementKeyFn = null;
 
     this._measureCallback = null;
 
@@ -76,43 +76,43 @@ export const Repeats = Superclass => class extends Superclass {
     this.requestReset();
   }
 
-  get newChild() {
-    return this._newChildFn;
+  get createElement() {
+    return this._createElementFn;
   }
-  set newChild(fn) {
-    if (fn !== this._newChildFn) {
-      this._newChildFn = fn;
+  set createElement(fn) {
+    if (fn !== this._createElementFn) {
+      this._createElementFn = fn;
       this._keyToChild.clear();
       this.requestReset();
     }
   }
 
-  get updateChild() {
-    return this._updateChildFn;
+  get updateElement() {
+    return this._updateElementFn;
   }
-  set updateChild(fn) {
-    if (fn !== this._updateChildFn) {
-      this._updateChildFn = fn;
+  set updateElement(fn) {
+    if (fn !== this._updateElementFn) {
+      this._updateElementFn = fn;
       this.requestReset();
     }
   }
 
-  get recycleChild() {
-    return this._recycleChildFn;
+  get recycleElement() {
+    return this._recycleElementFn;
   }
-  set recycleChild(fn) {
-    if (fn !== this._recycleChildFn) {
-      this._recycleChildFn = fn;
+  set recycleElement(fn) {
+    if (fn !== this._recycleElementFn) {
+      this._recycleElementFn = fn;
       this.requestReset();
     }
   }
 
-  get childKey() {
-    return this._childKeyFn;
+  get elementKey() {
+    return this._elementKeyFn;
   }
-  set childKey(fn) {
-    if (fn !== this._childKeyFn) {
-      this._childKeyFn = fn;
+  set elementKey(fn) {
+    if (fn !== this._elementKeyFn) {
+      this._elementKeyFn = fn;
       this._keyToChild.clear();
       this.requestReset();
     }
@@ -187,7 +187,7 @@ export const Repeats = Superclass => class extends Superclass {
    * @protected
    */
   _shouldRender() {
-    return Boolean(this.container && this.newChild);
+    return Boolean(this.container && this.createElement);
   }
 
   /**
@@ -329,8 +329,8 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, this._firstChild);
         }
       }
-      if (this.updateChild) {
-        this.updateChild(child, idx);
+      if (this.updateElement) {
+        this.updateElement(child, idx);
       }
       this._ordered.unshift(child);
     }
@@ -349,8 +349,8 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, null);
         }
       }
-      if (this.updateChild) {
-        this.updateChild(child, idx);
+      if (this.updateElement) {
+        this.updateElement(child, idx);
       }
       this._ordered.push(child);
     }
@@ -384,8 +384,8 @@ export const Repeats = Superclass => class extends Superclass {
           this._insertBefore(child, null);
         }
       }
-      if (this.updateChild) {
-        this.updateChild(child, idx);
+      if (this.updateElement) {
+        this.updateElement(child, idx);
       }
     }
   }
@@ -395,12 +395,12 @@ export const Repeats = Superclass => class extends Superclass {
    * @private
    */
   _assignChild(idx) {
-    const key = this.childKey ? this.childKey(idx) : idx;
+    const key = this.elementKey ? this.elementKey(idx) : idx;
     let child;
     if (child = this._keyToChild.get(key)) {
       this._prevActive.delete(child);
     } else {
-      child = this.newChild(idx);
+      child = this.createElement(idx);
       this._keyToChild.set(key, child);
       this._childToKey.set(child, key);
     }
@@ -424,8 +424,8 @@ export const Repeats = Superclass => class extends Superclass {
       this._childToKey.delete(child);
       this._keyToChild.delete(key);
       this._active.delete(child);
-      if (this.recycleChild) {
-        this.recycleChild(child, idx);
+      if (this.recycleElement) {
+        this.recycleElement(child, idx);
       } else {
         this._removeChild(child);
       }
