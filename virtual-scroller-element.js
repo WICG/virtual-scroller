@@ -8,6 +8,7 @@ const _createElement = Symbol();
 const _updateElement = Symbol();
 const _recycleElement = Symbol();
 const _elementKey = Symbol();
+const _firstConnected = Symbol();
 /** Functions */
 const _render = Symbol();
 
@@ -20,10 +21,11 @@ export class VirtualScrollerElement extends HTMLElement {
     this[_updateElement] = null;
     this[_recycleElement] = null;
     this[_elementKey] = null;
+    this[_firstConnected] = false;
   }
 
   connectedCallback() {
-    if (!this.shadowRoot) {
+    if (!this[_firstConnected]) {
       this.attachShadow({mode: 'open'}).innerHTML = `
 <style>
   :host {
@@ -47,10 +49,15 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 </style>
 <slot></slot>`;
-      // Default layout.
+      // Set default values.
       if (!this.layout) {
         this.layout = 'vertical';
       }
+      if (!this.anchor) {
+        this.anchor = 'start';
+      }
+      // Enables rendering.
+      this[_firstConnected] = true;
     }
     this[_render]();
   }
@@ -63,29 +70,11 @@ export class VirtualScrollerElement extends HTMLElement {
     this[_render]();
   }
 
-  /**
-   * Possible values: null (default), "middle", "end".
-   *
-   * Set to null to use the first visible item an anchor and to preserve its
-   * top/left visible position during size changes.
-   *
-   * Set to "middle" to use the item in the center of the viewport as an anchor
-   * and to preserve its middle/center position during size changes.
-   *
-   * Set to "end" to use the last visible item as an anchor and to preserve its
-   * bottom/right visible position during size changes.
-   *
-   * @property {string|null}
-   */
   get anchor() {
-    return this.getAttribute('anchor') || null;
+    return this.getAttribute('anchor');
   }
   set anchor(anchor) {
-    if (anchor) {
-      this.setAttribute('anchor', anchor);
-    } else {
-      this.removeAttribute('anchor');
-    }
+    this.setAttribute('anchor', anchor);
   }
 
   get layout() {
@@ -140,12 +129,6 @@ export class VirtualScrollerElement extends HTMLElement {
     }
   }
 
-  /**
-   * Scrolls to a specified index, optionally with an offset (pixels).
-   *
-   * @param {number} index
-   * @param {number} offset
-   */
   scrollTo(index, offset = 0) {
     if (this[_scroller]) {
       this[_scroller].layout.scrollAnchor = {index, offset};
@@ -154,30 +137,27 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   [_render]() {
-    if (!this.createElement) {
-      return;
-    }
-    // Delay init to first connected as scroller needs to measure
+    // Wait first connected as scroller needs to measure
     // sizes of container and children.
-    if (!this[_scroller] && !this.isConnected) {
+    if (!this[_firstConnected] || !this.createElement) {
       return;
     }
-
     if (!this[_scroller]) {
       this[_scroller] =
           new VirtualScroller({container: this, scrollTarget: this});
     }
     const scroller = this[_scroller];
 
-    const Layout = this.layout.endsWith('-grid') ? Layout1dGrid : Layout1d;
+    const layoutAttr = this.layout;
+    const Layout = layoutAttr.endsWith('-grid') ? Layout1dGrid : Layout1d;
     const direction =
-        this.layout.startsWith('horizontal') ? 'horizontal' : 'vertical';
+        layoutAttr.startsWith('horizontal') ? 'horizontal' : 'vertical';
     const layout = scroller.layout instanceof Layout &&
             scroller.layout.direction === direction ?
         scroller.layout :
         new Layout({direction});
-    const anchor =
-        this.anchor === 'end' ? 1 : this.anchor === 'middle' ? 0.5 : 0;
+    const anchorAttr = this.anchor;
+    const anchor = anchorAttr === 'end' ? 1 : anchorAttr === 'middle' ? 0.5 : 0;
     layout.itemAnchor = layout.viewportAnchor = anchor;
 
     const {

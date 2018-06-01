@@ -98,6 +98,22 @@ One of:
 
 Can also be set as an attribute on the element, e.g. `<virtual-scroller layout="horizontal-grid"></virtual-scroller>`
 
+### `anchor` property
+
+Type: `string`
+
+Set this property to control which part of the viewport should be used as an anchor during viewport or items size changes.
+
+One of:
+
+* "start" (default): preserve the visible top/left position of the first visible item.
+* "middle": preserve the center position of the item in the center of the viewport.
+* "end": preserve the visible bottom/right position of the last visible item.
+
+Can also be set as an attribute on the element, e.g. `<virtual-scroller anchor="middle"></virtual-scroller>`
+
+See [demo/scroll-anchor.html](demo/scroll-anchor.html) as an example implementation.
+
 ### `requestReset()` method
 
 This re-renders all of the currently-displayed elements, updating them from their source data using `updateElement`.
@@ -105,6 +121,11 @@ This re-renders all of the currently-displayed elements, updating them from thei
 This can be useful when you mutate data without changing the `totalItems`. Also see [the example below](#data-manipulation-using-requestreset).
 
 _We are discussing the naming of this API, as well as whether it should exist at all, in [#26](https://github.com/valdrinkoshi/virtual-scroller/issues/26). The aforementioned [#29](https://github.com/valdrinkoshi/virtual-scroller/issues/29) is also relevant._
+
+### `scrollTo(index: number, offset: number = 0)` method
+
+Scrolls to a specified index, optionally with an offset (pixels).
+See [demo/scroll-anchor.html](demo/scroll-anchor.html) as an example implementation.
 
 ### "`rangechange`" event
 
