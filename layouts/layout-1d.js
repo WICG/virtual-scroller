@@ -331,7 +331,7 @@ export default class Layout extends Layout1dBase {
     // was modified by size changes.
     const {index, offset} = this._scrollAnchor;
     if (index === -1) {
-      this._getAnchorInfo();
+      this._updateScrollAnchor();
     } else {
       // if (index < this._first || index > this._last) {
       //   console.log(
@@ -405,7 +405,7 @@ export default class Layout extends Layout1dBase {
     this._scrollAnchor.index = -1;
   }
 
-  _getAnchorInfo() {
+  _updateScrollAnchor() {
     const scrollPos =
         this._scrollPosition + this._viewDim1 * this.viewportAnchor;
     let index = this._first;
