@@ -318,12 +318,8 @@ export default class Layout extends Layout1dBase {
   }
 
   _updateScrollSize() {
-    super._updateScrollSize();
-    const lastItem = this._getPhysicalItem(this._last);
-    if (lastItem) {
-      this._scrollSize =
-          Math.max(this._scrollSize, lastItem.pos + lastItem.size);
-    }
+    this._scrollSize =
+        Math.max(this._physicalMax, this._totalItems * this._delta);
   }
 
   // TODO: Can this be made to inherit from base, with proper hooks?
