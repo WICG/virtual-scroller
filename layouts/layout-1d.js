@@ -330,31 +330,33 @@ export default class Layout extends Layout1dBase {
     this._getActiveItems();
     // Restore the anchor item in case its position
     // was modified by size changes.
-    if (this._stable) {
-      if (!this._anchorInfo) {
-        this._getAnchorInfo();
-      } else {
-        const {index, offset} = this._anchorInfo;
-        const item = this._getPhysicalItem(index) ||
-            {pos: this._getPosition(index), size: this._itemDim1};
+    if (!this._anchorInfo) {
+      this._getAnchorInfo();
+    } else {
+      const {index, offset} = this._anchorInfo;
+      // if (index < this._first || index > this._last) {
+      //   console.log(
+      //       `anchor ${index} out of bounds ${this._first} - ${this._last}`);
+      // }
+      const item = this._getPhysicalItem(index) ||
+          {pos: this._getPosition(index), size: this._itemDim1};
 
-        // Ensure correction is an integer and keeps scrollPosition within
-        // scroll bounds.
-        const curAnchorPos = Math.min(
-            this._scrollSize,
-            this._scrollPosition + this._viewDim1 * this.viewportAnchor);
-        const newAnchorPos = Math.min(
-            this._scrollSize, offset + item.pos + item.size * this.itemAnchor);
-        const scrollPosition = Math.max(
-            0, Math.floor(this._scrollPosition - curAnchorPos + newAnchorPos));
-        this._scrollError += this._scrollPosition - scrollPosition;
-        this._scrollPosition = scrollPosition;
-      }
+      // Ensure correction is an integer and keeps scrollPosition within
+      // scroll bounds.
+      const curAnchorPos = Math.min(
+          this._scrollSize,
+          this._scrollPosition + this._viewDim1 * this.viewportAnchor);
+      const newAnchorPos = Math.min(
+          this._scrollSize, offset + item.pos + item.size * this.itemAnchor);
+      const scrollPosition = Math.max(
+          0, Math.floor(this._scrollPosition - curAnchorPos + newAnchorPos));
+      this._scrollError += this._scrollPosition - scrollPosition;
+      this._scrollPosition = scrollPosition;
     }
 
-    if (!Number.isInteger(this._scrollError)) {
-      console.log(`_scrollError should be integer ${this._scrollError}`);
-    }
+    // if (!Number.isInteger(this._scrollError)) {
+    //   console.log(`_scrollError should be integer ${this._scrollError}`);
+    // }
 
     if (this._scrollSize !== _scrollSize) {
       this._emitScrollSize();
