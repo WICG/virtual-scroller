@@ -276,8 +276,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       height: '1px',
       margin: 0,
       padding: 0,
-      fontSize: 0,
-      visibility: 'hidden'
+      visibility: 'hidden',
+      fontSize: '1px',
     });
     // When the scrollHeight is large, the height
     // of this element might be ignored. Setting
