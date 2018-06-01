@@ -101,7 +101,7 @@ export default class Layout extends Layout1dBase {
 
   _updateItemSize() {
     this._itemSize[this._sizeDim] =
-        Math.ceil(this._tMeasured / this._nMeasured);
+        Math.round(this._tMeasured / this._nMeasured);
   }
 
   //
@@ -340,15 +340,13 @@ export default class Layout extends Layout1dBase {
       const item = this._getPhysicalItem(index) ||
           {pos: this._getPosition(index), size: this._itemDim1};
 
-      // Ensure correction is an integer and keeps scrollPosition within
-      // scroll bounds.
-      const curAnchorPos = Math.min(
-          this._scrollSize,
-          this._scrollPosition + this._viewDim1 * this.viewportAnchor);
-      const newAnchorPos = Math.min(
-          this._scrollSize, offset + item.pos + item.size * this.itemAnchor);
-      const scrollPosition = Math.max(
-          0, Math.floor(this._scrollPosition - curAnchorPos + newAnchorPos));
+      const curAnchorPos =
+          this._scrollPosition + this._viewDim1 * this.viewportAnchor;
+      const newAnchorPos = offset + item.pos + item.size * this.itemAnchor;
+      // Ensure scroll position is an integer within scroll bounds.
+      const scrollPosition = Math.floor(Math.min(
+          this._scrollSize - this._viewDim1,
+          Math.max(0, this._scrollPosition - curAnchorPos + newAnchorPos)));
       this._scrollError += this._scrollPosition - scrollPosition;
       this._scrollPosition = scrollPosition;
     }
