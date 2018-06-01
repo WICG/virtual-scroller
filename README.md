@@ -110,7 +110,7 @@ One of:
 * "middle": preserve the center position of the item in the center of the viewport.
 * "end": preserve the visible bottom/right position of the last visible item.
 
-Can also be set as an attribute on the element, e.g. `<virtual-scroller anchor="middle"></virtual-scroller>`
+Can also be set as an attribute on the element, e.g. `<virtual-scroller anchor="middle"></virtual-scroller>`.
 
 See [demo/scroll-anchor.html](demo/scroll-anchor.html) as an example implementation.
 
@@ -125,6 +125,7 @@ _We are discussing the naming of this API, as well as whether it should exist at
 ### `scrollTo(index: number, offset: number = 0)` method
 
 Scrolls to a specified index, optionally with an offset (pixels).
+
 See [demo/scroll-anchor.html](demo/scroll-anchor.html) as an example implementation.
 
 ### "`rangechange`" event
