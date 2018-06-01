@@ -28,7 +28,6 @@ export default class Layout extends Layout1dBase {
   get itemAnchor() {
     return this._itemAnchor;
   }
-
   set itemAnchor(anchor) {
     if (this._itemAnchor !== anchor) {
       this._itemAnchor = anchor;
@@ -40,7 +39,6 @@ export default class Layout extends Layout1dBase {
   get viewportAnchor() {
     return this._viewportAnchor;
   }
-
   set viewportAnchor(anchor) {
     if (this._viewportAnchor !== anchor) {
       this._viewportAnchor = anchor;
@@ -49,6 +47,9 @@ export default class Layout extends Layout1dBase {
     }
   }
 
+  get scrollAnchor() {
+    return this._scrollAnchor;
+  }
   set scrollAnchor({index, offset = 0}) {
     if (!Number.isFinite(index) || !Number.isFinite(offset)) {
       return;
