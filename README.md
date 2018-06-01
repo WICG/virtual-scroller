@@ -57,7 +57,7 @@ If set, this property is invoked in two scenarios:
 * The developer changes the `totalItems` property.
 * The developer calls `requestReset()`, which will call `updateElement` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
 
-For more on the interplay between `createElement` and `updateElement`, and when each is appropriate, see [the example below](#using-createElement-and-updateElement)
+For more on the interplay between `createElement` and `updateElement`, and when each is appropriate, see [the example below](#using-createelement-and-updateelement)
 
 ### `recycleElement` property
 
