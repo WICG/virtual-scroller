@@ -4,10 +4,10 @@ import {VirtualScroller} from './virtual-scroller.js';
 
 /** Properties */
 const _scroller = Symbol();
-const _newChild = Symbol();
-const _updateChild = Symbol();
-const _recycleChild = Symbol();
-const _childKey = Symbol();
+const _createElement = Symbol();
+const _updateElement = Symbol();
+const _recycleElement = Symbol();
+const _elementKey = Symbol();
 /** Functions */
 const _render = Symbol();
 
@@ -16,10 +16,10 @@ export class VirtualScrollerElement extends HTMLElement {
   constructor() {
     super();
     this[_scroller] = null;
-    this[_newChild] = null;
-    this[_updateChild] = null;
-    this[_recycleChild] = null;
-    this[_childKey] = null;
+    this[_createElement] = null;
+    this[_updateElement] = null;
+    this[_recycleElement] = null;
+    this[_elementKey] = null;
   }
 
   connectedCallback() {
@@ -77,35 +77,35 @@ export class VirtualScrollerElement extends HTMLElement {
     this.setAttribute('totalitems', +v);
   }
 
-  get newChild() {
-    return this[_newChild];
+  get createElement() {
+    return this[_createElement];
   }
-  set newChild(fn) {
-    this[_newChild] = fn;
+  set createElement(fn) {
+    this[_createElement] = fn;
     this[_render]();
   }
 
-  get updateChild() {
-    return this[_updateChild];
+  get updateElement() {
+    return this[_updateElement];
   }
-  set updateChild(fn) {
-    this[_updateChild] = fn;
+  set updateElement(fn) {
+    this[_updateElement] = fn;
     this[_render]();
   }
 
-  get recycleChild() {
-    return this[_recycleChild];
+  get recycleElement() {
+    return this[_recycleElement];
   }
-  set recycleChild(fn) {
-    this[_recycleChild] = fn;
+  set recycleElement(fn) {
+    this[_recycleElement] = fn;
     this[_render]();
   }
 
-  get childKey() {
-    return this[_childKey];
+  get elementKey() {
+    return this[_elementKey];
   }
-  set childKey(fn) {
-    this[_childKey] = fn;
+  set elementKey(fn) {
+    this[_elementKey] = fn;
     this[_render]();
   }
 
@@ -116,7 +116,7 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   [_render]() {
-    if (!this.newChild) {
+    if (!this.createElement) {
       return;
     }
     // Delay init to first connected as scroller needs to measure
@@ -139,10 +139,21 @@ export class VirtualScrollerElement extends HTMLElement {
         scroller.layout :
         new Layout({direction});
 
-    const {newChild, updateChild, recycleChild, childKey, totalItems} = this;
-    Object.assign(
-        scroller,
-        {layout, newChild, updateChild, recycleChild, childKey, totalItems});
+    const {
+      createElement,
+      updateElement,
+      recycleElement,
+      elementKey,
+      totalItems
+    } = this;
+    Object.assign(scroller, {
+      layout,
+      createElement,
+      updateElement,
+      recycleElement,
+      elementKey,
+      totalItems
+    });
   }
 }
 customElements.define('virtual-scroller', VirtualScrollerElement);

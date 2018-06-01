@@ -20,7 +20,7 @@ The (tentative) API design choices made here, as well as the element's capabilit
   const myItems = new Array(200).fill('item');
 
   // Setting this is required; without it the scroller does not function.
-  scroller.newChild = (index) => {
+  scroller.createElement = (index) => {
     const child = document.createElement('section');
     child.textContent = index + ' - ' + myItems[index];
     child.onclick = () => console.log(`clicked item #${index}`);
@@ -37,7 +37,7 @@ Checkout more examples in [demo/index.html](./demo/index.html).
 
 ## API
 
-### `newChild` property
+### `createElement` property
 
 Type: `function(itemIndex: number) => Element`
 
@@ -45,7 +45,7 @@ Set this property to configure the virtual scroller with a factory that creates 
 
 This property is required. Without it set, nothing will render.
 
-### `updateChild` property
+### `updateElement` property
 
 Type: `function(child: Element, itemIndex: number)`
 
@@ -53,35 +53,35 @@ Set this property to configure the virtual scroller with a function that will up
 
 If set, this property is invoked in two scenarios:
 
-* The user scrolls the scroller, changing which items' elements are visible. In this case, `updateChild` is called for all of the newly-visible elements.
+* The user scrolls the scroller, changing which items' elements are visible. In this case, `updateElement` is called for all of the newly-visible elements.
 * The developer changes the `totalItems` property.
-* The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
+* The developer calls `requestReset()`, which will call `updateElement` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
 
-For more on the interplay between `newChild` and `updateChild`, and when each is appropriate, see [the example below](#using-newchild-and-updatechild)
+For more on the interplay between `createElement` and `updateElement`, and when each is appropriate, see [the example below](#using-createElement-and-updateElement)
 
-### `recycleChild` property
+### `recycleElement` property
 
 Type: `function(child: Element, itemIndex: number)`
 
 Set this property to replace the default behavior of removing an item's element from the DOM when it is no longer visible.
 
-This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling-using-recyclechild).
+This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling-using-recycleElement).
 
 _We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-scroller/issues/25)._
 
-### `childKey` property
+### `elementKey` property
 
 Type: `function(itemIndex: number) => any`
 
 Set this property to provide a custom identifier for the element corresponding to a given data index.
 
-This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-childkey).
+This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-elementKey).
 
 ### `totalItems` property
 
 Type: `number`
 
-Set this property to control how many items the scroller will display. The items are mapped to elements via the `newChild` property, so this controls the total number of times `newChild` could be called, as the user scrolls to reveal all the times.
+Set this property to control how many items the scroller will display. The items are mapped to elements via the `createElement` property, so this controls the total number of times `createElement` could be called, as the user scrolls to reveal all the times.
 
 Can also be set as an attribute (all lower-case) on the element, e.g. `<virtual-scroller totalitems="10"></virtual-scroller>`
 
@@ -100,7 +100,7 @@ Can also be set as an attribute on the element, e.g. `<virtual-scroller layout="
 
 ### `requestReset()` method
 
-This re-renders all of the currently-displayed elements, updating them from their source data using `updateChild`.
+This re-renders all of the currently-displayed elements, updating them from their source data using `updateElement`.
 
 This can be useful when you mutate data without changing the `totalItems`. Also see [the example below](#data-manipulation-using-requestreset).
 
@@ -119,25 +119,25 @@ Also see [the example below](#performing-actions-as-the-scroller-scrolls-using-t
 
 ## More examples
 
-### Using `newChild` and `updateChild`
+### Using `createElement` and `updateElement`
 
 The rule of thumb for these two options is:
 
-* You always have to set `newChild`. It is responsible for actually creating the DOM elements corresponding to each item.
-* You should set `updateChild` if you ever plan on updating the data items.
+* You always have to set `createElement`. It is responsible for actually creating the DOM elements corresponding to each item.
+* You should set `updateElement` if you ever plan on updating the data items.
 
-Thus, for completely static lists, you only need to set `newChild`:
+Thus, for completely static lists, you only need to set `createElement`:
 
 ```js
 let myItems = ['a', 'b', 'c', 'd'];
 
-scroller.newChild = index => {
+scroller.createElement = index => {
   const child = document.createElement('div');
   child.textContent = myItems[index];
   return child;
 };
 
-// Calls newChild four times (assuming the screen is big enough)
+// Calls createElement four times (assuming the screen is big enough)
 scroller.totalItems = myItems.length;
 ```
 
@@ -155,46 +155,46 @@ requestAnimationFrame(() => {
 
 _Note: we include `requestAnimationFrame` here to wait for `<virtual-scroller>` rendering._
 
-If you plan to update your items, you're likely better off using `newChild` to set up the "template" for each item, and using `updateChild` to fill in the data. Like so:
+If you plan to update your items, you're likely better off using `createElement` to set up the "template" for each item, and using `updateElement` to fill in the data. Like so:
 
 ```js
-scroller.newChild = () => {
+scroller.createElement = () => {
   return document.createElement('div');
 };
 
-scroller.updateChild = (child, index) => {
+scroller.updateElement = (child, index) => {
   child.textContent = myItems[index];
 };
 
 let myItems = ['a', 'b', 'c', 'd'];
-// Calls newChild + updateChild four times
+// Calls createElement + updateElement four times
 scroller.totalItems = myItems.length;
 
-// This now works: it calls updateChild four times
+// This now works: it calls updateElement four times
 requestAnimationFrame(() => {
   myItems = ['A', 'B', 'C', 'D'];
   scroller.requestReset();
 });
 ```
 
-### DOM recycling using `recycleChild`
+### DOM recycling using `recycleElement`
 
-You can recycle DOM by using the `recycleChild` function to collect DOM, and reuse it in `newChild`.
+You can recycle DOM by using the `recycleElement` function to collect DOM, and reuse it in `createElement`.
 
-When doing this, be sure to perform DOM updates in `updateChild`, as recycled children will otherwise have the data from the previous item.
+When doing this, be sure to perform DOM updates in `updateElement`, as recycled children will otherwise have the data from the previous item.
 
 ```js
 const myItems = ['a', 'b', 'c', 'd'];
 const nodePool = [];
 
 Object.assign(scroller, {
-  newChild() {
+  createElement() {
     return nodePool.pop() || document.createElement('div');
   },
-  updateChild(child, index) {
+  updateElement(child, index) {
     child.textContent = myItems[index];
   },
-  recycleChild(child) {
+  recycleElement(child) {
     nodePool.push(child);
   }
 };
@@ -209,10 +209,10 @@ myItems.push('new item');
 scroller.totalItems++;
 ```
 
-If you want to keep the same number of items or change an item's properties, you can use `requestReset()` to notify the scroller about changes, and cause a rerender of currently-displayed items. If you do this, you'll also need to set `updateChild`, since the elements will already be created. For example:
+If you want to keep the same number of items or change an item's properties, you can use `requestReset()` to notify the scroller about changes, and cause a rerender of currently-displayed items. If you do this, you'll also need to set `updateElement`, since the elements will already be created. For example:
 
 ```js
-scroller.updateChild = (child, index) => {
+scroller.updateElement = (child, index) => {
   child.textContent = index + ' - ' + myItems[index];
 };
 
@@ -221,20 +221,20 @@ myItems[0] = 'item 0 changed!';
 scroller.requestReset();
 ```
 
-In this case, `newChild` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items indexes.
+In this case, `createElement` will be called for the newly-added item once it becomes visible, whereas `updateElement` will every item, including the ones that already had corresponding elements in the old items indexes.
 
-### Efficient re-ordering using `childKey`
+### Efficient re-ordering using `elementKey`
 
 `<virtual-scroller>` keeps track of the generated DOM via an internal key/Element map to limit the number of created nodes.
 
-The default key is the array index, but can be customized through the `childKey` property.
+The default key is the array index, but can be customized through the `elementKey` property.
 
 Imagine we have a list of 3 contacts:
 ```js
 const myContacts = ['A', 'B', 'C'];
 virtualScroller.totalItems = myContacts.length;
-virtualScroller.newChild = () => document.createElement('div');
-virtualScroller.updateChild = (div, index) => div.textContent = myContacts[index];
+virtualScroller.createElement = () => document.createElement('div');
+virtualScroller.updateElement = (div, index) => div.textContent = myContacts[index];
 ```
 This renders 3 contacts, and the `<virtual-scroller>` key/Element map is:
 ```
@@ -251,7 +251,7 @@ function moveFirstContactToEnd() {
   virtualScroller.requestReset(); // notify virtual-scroller
 }
 ```
-With the default `childKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
+With the default `elementKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
 ```
 0: <div>B</div> (was <div>A</div>)
 1: <div>C</div> (was <div>B</div>)
@@ -259,9 +259,9 @@ With the default `childKey`, we would relayout and repaint all the contacts when
 ```
 This is suboptimal, as we just needed to move the first DOM node to the end.
 
-We can customize the key/Element mapping via `childKey`:
+We can customize the key/Element mapping via `elementKey`:
 ```js
-virtualScroller.childKey = (index) => myContacts[index];
+virtualScroller.elementKey = (index) => myContacts[index];
 ```
 
 This updates the `<virtual-scroller>` key/Element map to:

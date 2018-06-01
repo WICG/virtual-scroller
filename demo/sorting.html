@@ -28,9 +28,9 @@
 <body>
 
   <label>
-    <input type="checkbox" onchange="toggleChildKey(this.checked)"> Use
+    <input type="checkbox" onchange="toggleelementKey(this.checked)"> Use
     <code>contact.guid</code> as
-    <code>childKey</code>
+    <code>elementKey</code>
   </label>
   <virtual-scroller></virtual-scroller>
 
@@ -40,14 +40,14 @@
 
     const virtualScroller = document.querySelector('virtual-scroller');
 
-    virtualScroller.newChild = () => {
+    virtualScroller.createElement = () => {
       const element = document.createElement('contact-element');
       element.setAttribute('sortable', '');
       element.addEventListener('moveup', (event) => moveContact(event.target.contact, -1));
       element.addEventListener('movedown', (event) => moveContact(event.target.contact, 1));
       return element;
     };
-    virtualScroller.updateChild = (element, index) => element.contact = myContacts[index];
+    virtualScroller.updateElement = (element, index) => element.contact = myContacts[index];
 
     let myContacts = null;
     fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {
@@ -63,8 +63,8 @@
       virtualScroller.requestReset(); // notify virtual-scroller
     }
 
-    window.toggleChildKey = function toggleChildKey(useGuid) {
-      virtualScroller.childKey = useGuid ? (index) => myContacts[index].guid : null;
+    window.toggleelementKey = function toggleelementKey(useGuid) {
+      virtualScroller.elementKey = useGuid ? (index) => myContacts[index].guid : null;
     };
   </script>
 </body>
