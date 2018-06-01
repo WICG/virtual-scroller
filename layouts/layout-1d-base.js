@@ -13,8 +13,6 @@ export default class Layout extends EventTarget {
     this._itemSize = {width: 100, height: 100};
     this._spacing = 0;
 
-    this._virtualScroll = false;
-
     this._sizeDim = 'height';
     this._secondarySizeDim = 'width';
     this._positionDim = 'top';
@@ -36,57 +34,20 @@ export default class Layout extends EventTarget {
 
   // public properties
 
-  set virtualScroll(bool) {
-    this._virtualScroll = bool;
+  get totalItems() {
+    return this._totalItems;
   }
-
-  get virtualScroll() {
-    return this._virtualScroll;
-  }
-
-  set spacing(px) {
-    if (px !== this._spacing) {
-      this._spacing = px;
+  set totalItems(num) {
+    if (num !== this._totalItems) {
+      this._totalItems = num;
+      this._maxIdx = num - 1;
       this._scheduleReflow();
     }
   }
 
-  get spacing() {
-    return this._spacing;
+  get direction() {
+    return this._direction;
   }
-
-  set itemSize(dims) {
-    const {_itemDim1, _itemDim2} = this;
-    Object.assign(this._itemSize, dims);
-    if (_itemDim1 !== this._itemDim1 || _itemDim2 !== this._itemDim2) {
-      if (_itemDim2 !== this._itemDim2) {
-        this._itemDim2Changed();
-      } else {
-        this._scheduleReflow();
-      }
-    }
-  }
-
-  _itemDim2Changed() {
-    // Override
-  }
-
-  get _delta() {
-    return this._itemDim1 + this._spacing;
-  }
-
-  get _itemDim1() {
-    return this._itemSize[this._sizeDim];
-  }
-
-  get _itemDim2() {
-    return this._itemSize[this._secondarySizeDim];
-  }
-
-  get itemSize() {
-    return this._itemSize;
-  }
-
   set direction(dir) {
     // Force it to be either horizontal or vertical.
     dir = (dir === 'horizontal') ? dir : 'vertical';
@@ -100,24 +61,68 @@ export default class Layout extends EventTarget {
     }
   }
 
-  get direction() {
-    return this._direction;
+  get itemSize() {
+    return this._itemSize;
   }
-
-  set viewportSize(dims) {
-    const {_viewDim1, _viewDim2} = this;
-    Object.assign(this._viewportSize, dims);
-    if (_viewDim1 !== this._viewDim1 || _viewDim2 !== this._viewDim2) {
-      if (_viewDim2 !== this._viewDim2) {
-        this._viewDim2Changed();
+  set itemSize(dims) {
+    const {_itemDim1, _itemDim2} = this;
+    Object.assign(this._itemSize, dims);
+    if (_itemDim1 !== this._itemDim1 || _itemDim2 !== this._itemDim2) {
+      if (_itemDim2 !== this._itemDim2) {
+        this._itemDim2Changed();
       } else {
-        this._checkThresholds();
+        this._scheduleReflow();
       }
     }
   }
 
-  _viewDim2Changed() {
-    // Override
+  get spacing() {
+    return this._spacing;
+  }
+  set spacing(px) {
+    if (px !== this._spacing) {
+      this._spacing = px;
+      this._scheduleReflow();
+    }
+  }
+
+  get viewportSize() {
+    return this._viewportSize;
+  }
+  set viewportSize(dims) {
+    const {_viewDim1, _viewDim2} = this;
+    Object.assign(this._viewportSize, dims);
+    if (_viewDim2 !== this._viewDim2) {
+      this._viewDim2Changed();
+    } else if (_viewDim1 !== this._viewDim1) {
+      this._checkThresholds();
+    }
+  }
+
+  get viewportScroll() {
+    return this._latestCoords;
+  }
+  set viewportScroll(coords) {
+    Object.assign(this._latestCoords, coords);
+    if (this._scrollPosition !== this._latestCoords[this._positionDim]) {
+      this._scrollPosition = this._latestCoords[this._positionDim];
+      this._scrollPositionChanged();
+    }
+    this._checkThresholds();
+  }
+
+  // private properties
+
+  get _delta() {
+    return this._itemDim1 + this._spacing;
+  }
+
+  get _itemDim1() {
+    return this._itemSize[this._sizeDim];
+  }
+
+  get _itemDim2() {
+    return this._itemSize[this._secondarySizeDim];
   }
 
   get _viewDim1() {
@@ -127,33 +132,6 @@ export default class Layout extends EventTarget {
   get _viewDim2() {
     return this._viewportSize[this._secondarySizeDim];
   }
-
-  get viewportSize() {
-    return this._viewportSize;
-  }
-
-  set totalItems(num) {
-    if (num !== this._totalItems) {
-      this._totalItems = num;
-      this._maxIdx = num - 1;
-      this._scheduleReflow();
-    }
-  }
-
-  get totalItems() {
-    return this._totalItems;
-  }
-
-  get viewportScroll() {
-    return this._latestCoords;
-  }
-
-  set viewportScroll(coords) {
-    this._latestCoords = coords;
-    this._scroll();
-  }
-
-  // private properties
 
   get _num() {
     if (this._first === -1 || this._last === -1) {
@@ -171,15 +149,7 @@ export default class Layout extends EventTarget {
     }
   }
 
-  _scroll() {
-    this._scrollPosition = this._latestCoords[this._positionDim];
-
-    this._checkThresholds();
-  }
-
-  _getActiveItems() {
-    // Override
-  }
+  ///
 
   _scheduleReflow() {
     this._pendingReflow = true;
@@ -225,8 +195,6 @@ export default class Layout extends EventTarget {
     }
   }
 
-  ///
-
   _emitRange(inProps) {
     const detail = Object.assign(
         {
@@ -263,6 +231,22 @@ export default class Layout extends EventTarget {
       detail[idx] = this._getItemPosition(idx);
     }
     this.dispatchEvent(new CustomEvent('itempositionchange', {detail}));
+  }
+
+  _itemDim2Changed() {
+    // Override
+  }
+
+  _viewDim2Changed() {
+    // Override
+  }
+
+  _scrollPositionChanged() {
+    // Override
+  }
+
+  _getActiveItems() {
+    // Override
   }
 
   _getItemPosition(idx) {

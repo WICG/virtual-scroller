@@ -22,7 +22,7 @@ export default class Layout extends Layout1dBase {
 
     this._itemAnchor = 0;
     this._viewportAnchor = 0;
-    this._anchorInfo = null;
+    this._scrollAnchor = {index: -1, offset: 0};
   }
 
   get itemAnchor() {
@@ -32,7 +32,7 @@ export default class Layout extends Layout1dBase {
   set itemAnchor(anchor) {
     if (this._itemAnchor !== anchor) {
       this._itemAnchor = anchor;
-      this._anchorInfo = null;
+      this._scrollAnchor.index = -1;
       this._scheduleReflow();
     }
   }
@@ -44,20 +44,19 @@ export default class Layout extends Layout1dBase {
   set viewportAnchor(anchor) {
     if (this._viewportAnchor !== anchor) {
       this._viewportAnchor = anchor;
-      this._anchorInfo = null;
+      this._scrollAnchor.index = -1;
       this._scheduleReflow();
     }
   }
 
-  scrollTo(index, offset = 0) {
+  set scrollAnchor({index, offset = 0}) {
     if (!Number.isFinite(index) || !Number.isFinite(offset)) {
       return;
     }
-    if (!this._anchorInfo || this._anchorInfo.index !== index ||
-        this._anchorInfo.offset !== offset) {
-      this._anchorInfo = {index, offset};
+    if (this._scrollAnchor.index !== index ||
+        this._scrollAnchor.offset !== offset) {
+      Object.assign(this._scrollAnchor, {index, offset});
       this._scheduleReflow();
-      this.reflowIfNeeded();
     }
   }
 
@@ -330,10 +329,10 @@ export default class Layout extends Layout1dBase {
     this._getActiveItems();
     // Restore the anchor item in case its position
     // was modified by size changes.
-    if (!this._anchorInfo) {
+    const {index, offset} = this._scrollAnchor;
+    if (index === -1) {
       this._getAnchorInfo();
     } else {
-      const {index, offset} = this._anchorInfo;
       // if (index < this._first || index > this._last) {
       //   console.log(
       //       `anchor ${index} out of bounds ${this._first} - ${this._last}`);
@@ -402,12 +401,8 @@ export default class Layout extends Layout1dBase {
     super._emitRange({remeasure, stable});
   }
 
-  _scroll() {
-    const prevPos = this._scrollPosition;
-    super._scroll();
-    if (prevPos !== this._scrollPosition) {
-      this._anchorInfo = null;
-    }
+  _scrollPositionChanged() {
+    this._scrollAnchor.index = -1;
   }
 
   _getAnchorInfo() {
@@ -424,7 +419,7 @@ export default class Layout extends Layout1dBase {
     }
     if (item && item.pos + item.size > scrollPos) {
       const offset = scrollPos - item.pos - item.size * this.itemAnchor;
-      this._anchorInfo = {index, offset};
+      Object.assign(this._scrollAnchor, {index, offset});
     }
   }
 }
