@@ -8,6 +8,7 @@ const _createElement = Symbol();
 const _updateElement = Symbol();
 const _recycleElement = Symbol();
 const _elementKey = Symbol();
+const _destroyDefaultFactory = Symbol();
 /** Functions */
 const _render = Symbol();
 
@@ -16,9 +17,31 @@ export class VirtualScrollerElement extends HTMLElement {
   constructor() {
     super();
     this[_scroller] = null;
-    this[_createElement] = null;
-    this[_updateElement] = null;
-    this[_recycleElement] = null;
+    // Default create/update/recycleElement.
+    const nodePool = [];
+    let childTemplate = null;
+    const createElement = () => {
+      if (!childTemplate) {
+        const template = this.querySelector('template');
+        childTemplate = template && template.content.firstElementChild ?
+            template.content.firstElementChild :
+            document.createElement('div');
+      }
+      return nodePool.pop() || childTemplate.cloneNode(true);
+    };
+    const recycleElement = (element) => nodePool.push(element);
+    this[_destroyDefaultFactory] = () => {
+      nodePool.length = 0;
+      if (this[_createElement] === createElement) {
+        this[_createElement] = null;
+      }
+      if (this[_recycleElement] === recycleElement) {
+        this[_recycleElement] = null;
+      }
+    };
+    this[_createElement] = createElement;
+    this[_updateElement] = (element, index) => element.textContent = index;
+    this[_recycleElement] = recycleElement;
     this[_elementKey] = null;
   }
 
@@ -81,6 +104,10 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_createElement];
   }
   set createElement(fn) {
+    if (this[_destroyDefaultFactory]) {
+      this[_destroyDefaultFactory]();
+      this[_destroyDefaultFactory] = null;
+    }
     this[_createElement] = fn;
     this[_render]();
   }
@@ -97,6 +124,10 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_recycleElement];
   }
   set recycleElement(fn) {
+    if (this[_destroyDefaultFactory]) {
+      this[_destroyDefaultFactory]();
+      this[_destroyDefaultFactory] = null;
+    }
     this[_recycleElement] = fn;
     this[_render]();
   }
