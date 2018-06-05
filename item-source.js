@@ -1,6 +1,6 @@
-export const _getLength = new WeakMap();
-export const _item = new WeakMap();
-export const _key = new WeakMap();
+export const _getLength = Symbol();
+export const _item = Symbol();
+export const _key = Symbol();
 
 export default class ItemSource {
   constructor({ getLength, item, key }) {
@@ -14,9 +14,9 @@ export default class ItemSource {
       throw new TypeError('key option must be a function');
     }
 
-    _getLength.set(this, getLength);
-    _item.set(this, item);
-    _key.set(this, key);
+    this[_getLength] = getLength;
+    this[_item] = item;
+    this[_key] = key;
   }
 
   static fromArray(array, key) {
@@ -35,6 +35,6 @@ export default class ItemSource {
   }
 
   get length() {
-    return _getLength.get(this)();
+    this[_getLength]();
   }
 }
