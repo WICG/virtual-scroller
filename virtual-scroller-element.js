@@ -8,7 +8,7 @@ const _createElement = Symbol();
 const _updateElement = Symbol();
 const _recycleElement = Symbol();
 const _elementKey = Symbol();
-const _destroyDefaultFactory = Symbol();
+const _nodePool = Symbol();
 /** Functions */
 const _render = Symbol();
 
@@ -18,30 +18,22 @@ export class VirtualScrollerElement extends HTMLElement {
     super();
     this[_scroller] = null;
     // Default create/update/recycleElement.
-    const nodePool = [];
+    this[_nodePool] = [];
     let childTemplate = null;
-    const createElement = () => {
+    this[_createElement] = () => {
+      if (this[_nodePool] && this[_nodePool].length) {
+        return this[_nodePool].pop();
+      }
       if (!childTemplate) {
-        const template = this.querySelector('> template');
+        const template = this.querySelector('template');
         childTemplate = template && template.content.firstElementChild ?
             template.content.firstElementChild :
             document.createElement('div');
       }
-      return nodePool.pop() || childTemplate.cloneNode(true);
+      return childTemplate.cloneNode(true);
     };
-    const recycleElement = (element) => nodePool.push(element);
-    this[_destroyDefaultFactory] = () => {
-      nodePool.length = 0;
-      if (this[_createElement] === createElement) {
-        this[_createElement] = null;
-      }
-      if (this[_recycleElement] === recycleElement) {
-        this[_recycleElement] = null;
-      }
-    };
-    this[_createElement] = createElement;
     this[_updateElement] = (element, index) => element.textContent = index;
-    this[_recycleElement] = recycleElement;
+    this[_recycleElement] = (element) => this[_nodePool].push(element);
     this[_elementKey] = null;
   }
 
@@ -104,9 +96,9 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_createElement];
   }
   set createElement(fn) {
-    if (this[_destroyDefaultFactory]) {
-      this[_destroyDefaultFactory]();
-      this[_destroyDefaultFactory] = null;
+    // Resets default recycling.
+    if (this[_nodePool]) {
+      this.recycleElement = null;
     }
     this[_createElement] = fn;
     this[_render]();
@@ -124,10 +116,8 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_recycleElement];
   }
   set recycleElement(fn) {
-    if (this[_destroyDefaultFactory]) {
-      this[_destroyDefaultFactory]();
-      this[_destroyDefaultFactory] = null;
-    }
+    // Marks default recycling changed.
+    this[_nodePool] = null;
     this[_recycleElement] = fn;
     this[_render]();
   }
