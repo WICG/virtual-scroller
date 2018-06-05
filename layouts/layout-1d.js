@@ -400,8 +400,14 @@ export default class Layout extends Layout1dBase {
     super._emitRange({remeasure, stable});
   }
 
-  _scrollPositionChanged() {
-    this._scrollAnchor.index = -1;
+  _scrollPositionChanged(oldPos, newPos) {
+    // When both values are bigger than the max scroll position, keep the
+    // current scroll anchor. Otherwise, invalidate it so it can be recomputed
+    // in the next reflow.
+    const maxPos = this._scrollSize - this._viewDim1;
+    if (oldPos < maxPos || newPos < maxPos) {
+      this._scrollAnchor.index = -1;
+    }
   }
 
   _updateScrollAnchor() {

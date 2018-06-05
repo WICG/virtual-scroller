@@ -104,9 +104,10 @@ export default class Layout extends EventTarget {
   }
   set viewportScroll(coords) {
     Object.assign(this._latestCoords, coords);
-    if (this._scrollPosition !== this._latestCoords[this._positionDim]) {
-      this._scrollPosition = this._latestCoords[this._positionDim];
-      this._scrollPositionChanged();
+    const oldPos = this._scrollPosition;
+    this._scrollPosition = this._latestCoords[this._positionDim];
+    if (oldPos !== this._scrollPosition) {
+      this._scrollPositionChanged(oldPos, this._scrollPosition);
     }
     this._checkThresholds();
   }
