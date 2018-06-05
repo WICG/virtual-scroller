@@ -68,7 +68,7 @@ The default `recycleElement` collects the item's element if it is no longer visi
 
 Set this property to null to remove the item's element from the DOM when it is no longer visible, and to prevent recycling by the default `createElement`.
 
-Usually this property will be customized to introduce custom node recycling logic, as seen in [the example below](#dom-recycling-using-recycleElement).
+Usually this property will be customized to introduce custom node recycling logic, as seen in [the example below](#custom-dom-recycling-using-recycleelement).
 
 ### `elementKey` property
 
