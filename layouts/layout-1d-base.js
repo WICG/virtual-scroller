@@ -242,7 +242,7 @@ export default class Layout extends EventTarget {
     // Override
   }
 
-  _scrollPositionChanged() {
+  _scrollPositionChanged(oldPos, newPos) {
     // Override
   }
 

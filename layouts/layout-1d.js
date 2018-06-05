@@ -326,10 +326,6 @@ export default class Layout extends Layout1dBase {
     if (index === -1) {
       this._updateScrollAnchor();
     } else {
-      // if (index < this._first || index > this._last) {
-      //   console.log(
-      //       `anchor ${index} out of bounds ${this._first} - ${this._last}`);
-      // }
       const item = this._getPhysicalItem(index) ||
           {pos: this._getPosition(index), size: this._itemDim1};
 
@@ -343,10 +339,6 @@ export default class Layout extends Layout1dBase {
       this._scrollError += this._scrollPosition - scrollPosition;
       this._scrollPosition = scrollPosition;
     }
-
-    // if (!Number.isInteger(this._scrollError)) {
-    //   console.log(`_scrollError should be integer ${this._scrollError}`);
-    // }
 
     if (this._scrollSize !== _scrollSize) {
       this._emitScrollSize();
