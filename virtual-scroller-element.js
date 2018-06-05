@@ -22,7 +22,7 @@ export class VirtualScrollerElement extends HTMLElement {
     let childTemplate = null;
     const createElement = () => {
       if (!childTemplate) {
-        const template = this.querySelector('template');
+        const template = this.querySelector('> template');
         childTemplate = template && template.content.firstElementChild ?
             template.content.firstElementChild :
             document.createElement('div');

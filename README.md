@@ -19,12 +19,9 @@ The (tentative) API design choices made here, as well as the element's capabilit
   const scroller = document.querySelector('virtual-scroller');
   const myItems = new Array(200).fill('item');
 
-  // Setting this is required; without it the scroller does not function.
-  scroller.createElement = (index) => {
-    const child = document.createElement('section');
+  scroller.updateElement = (child, index) => {
     child.textContent = index + ' - ' + myItems[index];
     child.onclick = () => console.log(`clicked item #${index}`);
-    return child;
   };
 
   // This will automatically cause a render of the visible children
@@ -33,35 +30,7 @@ The (tentative) API design choices made here, as well as the element's capabilit
 </script>
 ```
 
-### Leverage default recycling
-
-By default `virtual-scroller` creates and recycles `<div>` children, and renders the data index.
-This snippet creates a list of divs displaying indexes from 0 to 99:
-```html
-<virtual-scroller totalitems="100"></virtual-scroller>
-```
-
-You can customize the rendering through `updateElement` property:
-```js
-virtualScroller.updateElement = (divElem, index) => {
-  divElem.textContent = index + ' - ' + myItems[index];
-};
-```
-
-You can customize the child type while still leveraging the recycling by distributing a `<template>` with the custom element into `virtual-scroller`:
-```html
-<virtual-scroller totalitems="100">
-  <template>
-    <contact-element sortable></contact-element>
-  </template>
-</virtual-scroller>
-
-<script type="module">
-  virtualScroller.updateElement = (contactElem, index) => {
-    contactElem.contact = getContactForIndex(index);
-  };
-</script>
-```
+By default, the elements inside the virtual scroller created in this example will be `<div>`s, and will be recycled. See below for more on customizing this behavior through the `createElement` and `recycleElement` APIs.
 
 Checkout more examples in [demo/index.html](./demo/index.html).
 
@@ -73,9 +42,9 @@ Type: `function(itemIndex: number) => Element`
 
 Set this property to configure the virtual scroller with a factory that creates an element the first time a given item at the specified index is ready to be displayed in the DOM.
 
-The default `createElement` searches for a `<template>` child, and if none, it creates a generic `<div>`. It reuses recycled DOM nodes collected by the default `recycleElement`. 
+The default `createElement` will, upon first being invoked, search for the first `<template>` element child that itself has at least one child element in its template contents. If one exists, it will create new elements by cloning that child. Otherwise, it will create `<div>` elements. In either case, it will reuse recycled DOM nodes if `recycleElement` is left as its default value.
 
-Changing this property will automatically set the default `recycleElement` to null.
+Changing this property from its default will automatically reset `recycleElement` to null, if `recycleElement` has been left as its default.
 
 ### `updateElement` property
 
@@ -97,11 +66,11 @@ For more on the interplay between `createElement` and `updateElement`, and when 
 
 Type: `function(child: Element, itemIndex: number)`
 
-The default `recycleElement` collects the item's element no longer visible and keeps it on the DOM in order to be reused by the default `createElement`. 
+The default `recycleElement` collects the item's element if it is no longer visible, and leaves it connected to the DOM in order to be reused by the default `createElement`.
 
-Set this property to null to discart and remove the item's element from the DOM when no longer visible.
+Set this property to null to remove the item's element from the DOM when it is no longer visible, and to prevent recycling by the default `createElement`.
 
-Changing this property will automatically set the default `createElement` to null.
+Changing this property from its default will automatically reset `recycleElement` to null, if `recycleElement` has been left as its default.
 
 This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling-using-recycleElement).
 
@@ -155,14 +124,67 @@ Also see [the example below](#performing-actions-as-the-scroller-scrolls-using-t
 
 ## More examples
 
-### Using `createElement` and `updateElement`
+### Customizing element creation and updating with `<template>`
 
-The rule of thumb for these two options is:
+If the user does nothing special, the default `createElement` callback will create and reuse `<div>` elements. There are several ways of getting more control over this process.
 
-* You always have to set `createElement`. It is responsible for actually creating the DOM elements corresponding to each item.
-* You should set `updateElement` if you ever plan on updating the data items.
+First, you can use a `<template>` child element to declaratively set up your new element. This snippet creates a scrolling view onto `<section>` elements, which (per the default `updateElement` behavior) display indices from 0 to 99:
 
-Thus, for completely static lists, you only need to set `createElement`:
+```html
+<virtual-scroller totalitems="100">
+  <template>
+    <section></section>
+  </template>
+</virtual-scroller>
+```
+
+By setting a custom `updateElement` behavior, you can leverage more interesting templates, for example:
+
+```html
+<virtual-scroller id="scroller">
+  <template>
+    <section>
+      <h1></h1>
+      <img></img>
+      <p></p>
+    </section>
+  </template>
+</virtual-scroller>
+
+<script type="module">
+  scroller.updateElement = (child, index) => {
+    child.querySelector("h1") = contacts[index].name;
+    child.querySelector("img").src = contacts[index].avatarURL;
+    child.querySelector("p").textContent = contacts[index].bio;
+  };
+
+  scroller.totalItems = contacts.length;
+</script>
+```
+
+A useful pattern here is to encapsulate the details of updating your elements inside a custom element, for example:
+
+```html
+<virtual-scroller>
+  <template>
+    <contact-element sortable></contact-element>
+  </template>
+</virtual-scroller>
+
+<script type="module">
+  scroller.updateElement = (child, index) => {
+    child.contact = contacts[index];
+  };
+
+  scroller.totalItems = contacts.length;
+</script>
+```
+
+Note that in all these examples, the elements are recycled.
+
+### Customizing element creation and updating: using `createElement`
+
+If you want complete control over element creation, you can set a custom `createElement`. This could be useful if, for example, you have a completely static list, which you want to fill out ahead of time and never update again:
 
 ```js
 let myItems = ['a', 'b', 'c', 'd'];
@@ -173,13 +195,13 @@ scroller.createElement = index => {
   return child;
 };
 
+scroller.updateElement = null;
+
 // Calls createElement four times (assuming the screen is big enough)
 scroller.totalItems = myItems.length;
 ```
 
-In this example, we are statically displaying a virtual scroller with four items, which we never plan to update. This can be useful for use cases where you would otherwise use static HTML, but want to get the performance benefits of virtualization. (Admittedly, we'd need more than four items to see that happen in reality.)
-
-Note that even if we invoke `requestReset()`, nothing new would render in this case:
+Note that even if we invoke `requestReset()`, nothing new would render in this case, because we have no `updateElement` behavior:
 
 ```js
 // Does nothing
@@ -191,37 +213,13 @@ requestAnimationFrame(() => {
 
 _Note: we include `requestAnimationFrame` here to wait for `<virtual-scroller>` rendering._
 
-If you plan to update your items, you're likely better off using `createElement` to set up the "template" for each item, and using `updateElement` to fill in the data. Like so:
+### Custom DOM recycling using `recycleElement`
 
-```js
-// Leverage the default `createElement` which creates a generic `<div>`.
-
-scroller.updateElement = (child, index) => {
-  child.textContent = myItems[index];
-};
-
-let myItems = ['a', 'b', 'c', 'd'];
-// Calls createElement + updateElement four times
-scroller.totalItems = myItems.length;
-
-// This now works: it calls updateElement four times
-requestAnimationFrame(() => {
-  myItems = ['A', 'B', 'C', 'D'];
-  scroller.requestReset();
-});
-```
-
-### DOM recycling using `recycleElement`
-
-You can recycle DOM by using the `recycleElement` function to collect DOM, and reuse it in `createElement`.
-
-When doing this, be sure to perform DOM updates in `updateElement`, as recycled children will otherwise have the data from the previous item.
+The default `createElement` and `recycleElement` functions will recycle the created DOM elements. You can also control this process on your own by setting a custom `recycleElement`:
 
 ```js
 const myItems = ['a', 'b', 'c', 'd'];
 
-// By default virtual-scroller creates and recycles `<div>` children, 
-// but we want to generate `<section>` children and control the recycling.
 const nodePool = [];
 scroller.createElement = (index) => {
   return nodePool.pop() || document.createElement('section');
@@ -236,6 +234,16 @@ scroller.updateElement = (child, index) => {
 
 scroller.totalItems = myItems.length;
 ```
+
+This example's only customization over the default is using `<section>` instead of `<div>`. So, it is equivalent to only setting `updateElement` and then using
+
+```html
+<virtual-scroller>
+  <template><section></section></template>
+</virtual-scroller>
+```
+
+But at least it illustrates the idea, and gives you a starting point for more advanced customizations.
 
 ### Data manipulation using `requestReset()`
 
