@@ -2,6 +2,8 @@ import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
 import {default as Layout1d} from './layouts/layout-1d.js';
 import {VirtualScroller} from './virtual-scroller.js';
 
+export {ItemSource} from './item-source.js';
+
 /** Properties */
 const _scroller = Symbol();
 const _createElement = Symbol();

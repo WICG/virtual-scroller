@@ -2,7 +2,7 @@ export const _getLength = Symbol();
 export const _item = Symbol();
 export const _key = Symbol();
 
-export default class ItemSource {
+export class ItemSource {
   constructor({ getLength, item, key }) {
     if (typeof getLength !== 'function') {
       throw new TypeError('getLength option must be a function');
