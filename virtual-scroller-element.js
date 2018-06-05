@@ -8,6 +8,7 @@ const _createElement = Symbol();
 const _updateElement = Symbol();
 const _recycleElement = Symbol();
 const _elementKey = Symbol();
+const _nodePool = Symbol();
 /** Functions */
 const _render = Symbol();
 
@@ -16,9 +17,23 @@ export class VirtualScrollerElement extends HTMLElement {
   constructor() {
     super();
     this[_scroller] = null;
-    this[_createElement] = null;
-    this[_updateElement] = null;
-    this[_recycleElement] = null;
+    // Default create/update/recycleElement.
+    this[_nodePool] = [];
+    let childTemplate = null;
+    this[_createElement] = () => {
+      if (this[_nodePool] && this[_nodePool].length) {
+        return this[_nodePool].pop();
+      }
+      if (!childTemplate) {
+        const template = this.querySelector('template');
+        childTemplate = template && template.content.firstElementChild ?
+            template.content.firstElementChild :
+            document.createElement('div');
+      }
+      return childTemplate.cloneNode(true);
+    };
+    this[_updateElement] = (element, index) => element.textContent = index;
+    this[_recycleElement] = (element) => this[_nodePool].push(element);
     this[_elementKey] = null;
   }
 
@@ -81,6 +96,10 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_createElement];
   }
   set createElement(fn) {
+    // Resets default recycling.
+    if (this[_nodePool]) {
+      this.recycleElement = null;
+    }
     this[_createElement] = fn;
     this[_render]();
   }
@@ -97,6 +116,8 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_recycleElement];
   }
   set recycleElement(fn) {
+    // Marks default recycling changed.
+    this[_nodePool] = null;
     this[_recycleElement] = fn;
     this[_render]();
   }
