@@ -29,22 +29,14 @@ export default class Layout extends Layout1dBase {
     return this._itemAnchor;
   }
   set itemAnchor(anchor) {
-    if (this._itemAnchor !== anchor) {
-      this._itemAnchor = anchor;
-      this._scrollAnchor.index = -1;
-      this._scheduleReflow();
-    }
+    this._itemAnchor = anchor;
   }
 
   get viewportAnchor() {
     return this._viewportAnchor;
   }
   set viewportAnchor(anchor) {
-    if (this._viewportAnchor !== anchor) {
-      this._viewportAnchor = anchor;
-      this._scrollAnchor.index = -1;
-      this._scheduleReflow();
-    }
+    this._viewportAnchor = anchor;
   }
 
   get scrollAnchor() {
