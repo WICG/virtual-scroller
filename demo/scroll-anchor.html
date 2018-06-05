@@ -80,6 +80,7 @@
       <input id="index" type="number" placeholder="index" onchange="scrollToIndex(this.valueAsNumber, offset.valueAsNumber)">
       <input id="offset" type="number" placeholder="offset" onchange="scrollToIndex(index.valueAsNumber, this.valueAsNumber)">
     </label>
+    <button onclick="runTest()">run test</button>
   </div>
   <div id="wrapper">
     <virtual-scroller id="scroller"></virtual-scroller>
@@ -111,6 +112,21 @@
         offset = Number.isFinite(offset) ? offset : 0;
         virtualScroller.scrollTo(index, offset);
       }
+    };
+
+    window.runTest = async function runTest() {
+      const raf = () => new Promise(r => requestAnimationFrame(r));
+      const step = 50, max = virtualScroller.offsetWidth, min = 100;
+      for (let i = max - step; i >= min; i -= step) {
+        await raf();
+        virtualScroller.style.width = `${i}px`;
+      }
+      for (let i = min + step; i < max; i += step) {
+        await raf();
+        virtualScroller.style.width = `${i}px`;
+      }
+      await raf();
+      virtualScroller.style.width = null;
     };
   </script>
 </body>
