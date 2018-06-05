@@ -130,9 +130,10 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   scrollTo(index, offset = 0) {
-    if (this[_scroller]) {
-      this[_scroller].layout.scrollAnchor = {index, offset};
-      this[_scroller].layout.reflowIfNeeded();
+    const layout = this[_scroller] ? this[_scroller].layout : null;
+    if (layout) {
+      layout.scrollAnchor = {index, offset};
+      layout.reflowIfNeeded();
     }
   }
 

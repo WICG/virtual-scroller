@@ -405,16 +405,13 @@ export default class Layout extends Layout1dBase {
   _updateScrollAnchor() {
     const scrollPos =
         this._scrollPosition + this._viewDim1 * this.viewportAnchor;
-    let index = this._first;
-    let item;
-    while ((item = this._getPhysicalItem(index))) {
-      if (item.pos + item.size > scrollPos) {
-        break;
-      } else {
-        index++;
-      }
+    // Find the first measured item that is below the scroll position.
+    let index = this._first, item;
+    while ((item = this._getPhysicalItem(index)) &&
+           item.pos + item.size <= scrollPos) {
+      index++;
     }
-    if (item && item.pos + item.size > scrollPos) {
+    if (item) {
       const offset = scrollPos - item.pos - item.size * this.itemAnchor;
       Object.assign(this._scrollAnchor, {index, offset});
     }
