@@ -25,7 +25,7 @@ export class VirtualScrollerElement extends HTMLElement {
         return this[_nodePool].pop();
       }
       if (!childTemplate) {
-        const template = this.querySelector('> template');
+        const template = this.querySelector('template');
         childTemplate = template && template.content.firstElementChild ?
             template.content.firstElementChild :
             document.createElement('div');
