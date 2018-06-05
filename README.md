@@ -58,9 +58,7 @@ This property is invoked in these scenarios:
 * The developer changes the `totalItems` property.
 * The developer calls `requestReset()`, which will call `updateElement` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
 
-The default `updateElement` sets the textContent of the child to be the data index.
-
-For more on the interplay between `createElement` and `updateElement`, and when each is appropriate, see [the example below](#using-createelement-and-updateelement)
+The default `updateElement` sets the textContent of the child to be the data index. Almost all uses of `<virtual-scroller>` will want to change this behavior.
 
 ### `recycleElement` property
 
@@ -70,9 +68,9 @@ The default `recycleElement` collects the item's element if it is no longer visi
 
 Set this property to null to remove the item's element from the DOM when it is no longer visible, and to prevent recycling by the default `createElement`.
 
-Changing this property from its default will automatically reset `recycleElement` to null, if `recycleElement` has been left as its default.
+Changing this property from its default will automatically reset `createElement` to null, if `createElement` has been left as its default.
 
-This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling-using-recycleElement).
+Usually this property will be customized to introduce custom node recycling logic, as seen in [the example below](#dom-recycling-using-recycleElement).
 
 ### `elementKey` property
 
