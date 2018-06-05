@@ -1,3 +1,6 @@
+const emptyImg =
+    'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 class ContactElement extends HTMLElement {
   connectedCallback() {
     if (this.shadowRoot) {
@@ -73,11 +76,9 @@ class ContactElement extends HTMLElement {
     if (!this.shadowRoot)
       return;
     const contact = this.contact || {};
-    if (contact.image) {
-      this._img.src = contact.image;
-    }
+    this._img.src = contact.image || emptyImg;
     this._label.textContent = contact.name;
-    this._label.style.color = contact.color;
+    this._label.style.color = contact.color || null;
     this._counter.textContent = `render count: ${++this._renderCount}`;
   }
 }
