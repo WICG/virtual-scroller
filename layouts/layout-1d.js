@@ -130,16 +130,16 @@ export default class Layout extends Layout1dBase {
             this._maxIdx, Math.floor(((lower + upper) / 2) / this._delta)));
   }
 
-  _setAnchor(lower, upper) {
+  _getAnchor(lower, upper) {
     if (this._physicalItems.size === 0) {
       return this._calculateAnchor(lower, upper);
     }
     if (this._first < 0) {
-      console.error('_setAnchor: negative _first');
+      console.error('_getAnchor: negative _first');
       return this._calculateAnchor(lower, upper);
     }
     if (this._last < 0) {
-      console.error('_setAnchor: negative _last');
+      console.error('_getAnchor: negative _last');
       return this._calculateAnchor(lower, upper);
     }
 
@@ -211,8 +211,12 @@ export default class Layout extends Layout1dBase {
   _getItems(lower, upper) {
     const items = this._newPhysicalItems;
 
+    // The anchorIdx is the anchor around which we reflow.
+    // It is designed to allow jumping to any point of the scroll size.
+    // We choose it once and stick with it until stable. first and last are
+    // deduced around it.
     if (this._anchorIdx === null || this._anchorPos === null) {
-      this._anchorIdx = this._setAnchor(lower, upper);
+      this._anchorIdx = this._getAnchor(lower, upper);
       this._anchorPos = this._getPosition(this._anchorIdx);
     }
 
