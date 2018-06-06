@@ -3,7 +3,7 @@ export const _item = Symbol();
 export const _key = Symbol();
 
 export class ItemSource {
-  constructor({ getLength, item, key }) {
+  constructor({getLength, item, key}) {
     if (typeof getLength !== 'function') {
       throw new TypeError('getLength option must be a function');
     }
@@ -24,17 +24,24 @@ export class ItemSource {
       throw new TypeError('First argument to fromArray() must be an array');
     }
     if (typeof key !== 'function' && key !== undefined) {
-      throw new TypeError('Second argument to fromArray() must be a function or undefined');
+      throw new TypeError(
+          'Second argument to fromArray() must be a function or undefined');
     }
 
     return new this({
-      getLength() { return array.length; },
-      item(index) { return array[index]; },
-      key(index) { return key ? key(array[index]) : array[index]; }
+      getLength() {
+        return array.length;
+      },
+      item(index) {
+        return array[index];
+      },
+      key(index) {
+        return key ? key(array[index]) : array[index];
+      }
     });
   }
 
   get length() {
-    this[_getLength]();
+    return this[_getLength]();
   }
 }
