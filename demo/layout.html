@@ -73,8 +73,16 @@
     </label>
   </nav>
   <main>
-    <virtual-scroller id="scroller"></virtual-scroller>
-    <virtual-scroller id="recycler"></virtual-scroller>
+    <virtual-scroller id="scroller">
+      <template>
+        <section></section>
+      </template>
+    </virtual-scroller>
+    <virtual-scroller id="recycler">
+      <template>
+        <section></section>
+      </template>
+    </virtual-scroller>
   </main>
 
   <script type="module">
@@ -85,20 +93,9 @@
     const recycler = document.querySelector('#recycler');
     let myItems = [];
 
-    scroller.createElement = () =>
-      document.createElement('section');
-    scroller.updateElement = (child, index) =>
-      child.textContent = index + ' - ' + myItems[index];
-
-    const pool = [];
-    Object.assign(recycler, {
-      createElement: () =>
-        pool.pop() || document.createElement('section'),
-      updateElement: (child, index) =>
-        child.textContent = index + ' - ' + myItems[index],
-      recycleElement: (child) =>
-        pool.push(child)
-    });
+    scroller.recycleElement = null;
+    scroller.updateElement = recycler.updateElement = (child, item, index) =>
+      child.textContent = index + ' - ' + item;
 
     updateItems(document.querySelector('#count'));
     updateLayout(document.querySelector('#layout'));
@@ -120,7 +117,7 @@
       for (let i = 0; i < count; i++) {
         myItems[i] = `item${i}`;
       }
-      scroller.totalItems = recycler.totalItems = count;
+      scroller.itemSource = recycler.itemSource = myItems;
     };
 
     function updateLayout(layoutEl) {
