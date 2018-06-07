@@ -1,3 +1,5 @@
+## index.html
+
 <div> x 5, attach? false hidden? false
 
 #1	spec: 1268.50		render: 23.90
@@ -47,3 +49,55 @@ avg	spec: 3232.24	render: 20.70
 #5	spec: 3594.50		render: 22.40
 
 avg	spec: 3307.04	render: 20.78
+
+## innerHTML.html
+
+<template> x 5, attach? false hidden? false
+
+#1	357.30
+#2	469.90
+#3	319.30
+#4	391.50
+#5	312.70
+
+avg	370.14
+
+<template> x 5, attach? true hidden? false
+
+#1	375.20
+#2	321.70
+#3	398.00
+#4	308.80
+#5	376.30
+
+avg	356.00
+
+<div> x 5, attach? false hidden? false
+
+#1	488.20
+#2	467.60
+#3	447.90
+#4	435.00
+#5	447.20
+
+avg	457.18
+
+<div> x 5, attach? true hidden? true
+
+#1	536.70
+#2	534.30
+#3	522.90
+#4	518.90
+#5	524.30
+
+avg	527.42
+
+<div> x 5, attach? true hidden? false
+
+#1	6052.40
+#2	4739.00
+#3	6035.80
+#4	4703.60
+#5	6022.40
+
+avg	5510.64
