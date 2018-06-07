@@ -111,10 +111,6 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_createElement];
   }
   set createElement(fn) {
-    // No change.
-    if (fn === this[_createElement]) {
-      return;
-    }
     // Resets default recycling.
     if (this[_nodePool]) {
       this.recycleElement = null;
@@ -129,10 +125,6 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_updateElement];
   }
   set updateElement(fn) {
-    // No change.
-    if (fn === this[_updateElement]) {
-      return;
-    }
     this[_updateElement] = fn;
     // Invalidate wrapped function.
     this[_elementSource].updateElement = null;
@@ -143,10 +135,6 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_recycleElement];
   }
   set recycleElement(fn) {
-    // No change.
-    if (fn === this[_recycleElement]) {
-      return;
-    }
     // Marks default recycling changed.
     this[_nodePool] = null;
     this[_recycleElement] = fn;
