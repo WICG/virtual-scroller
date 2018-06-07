@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <div id="tokeep">
+    <select id="containerEl">
+      <option value="template">&lt;template&gt;</option>
+      <option value="div">&lt;div&gt;</option>
+    </select>
+    x
+    <input id="countEl" type="number" value="5" min="1" max="50">
+    <label>attach?
+      <input id="attachEl" type="checkbox">
+    </label>
+    <label>hidden?
+      <input id="hiddenEl" type="checkbox">
+    </label>
+    <button onclick="runTest(containerEl.value, countEl.valueAsNumber, attachEl.checked, hiddenEl.checked)">run test</button>
+    <pre id="outEl"></pre>
+    <script type="module">
+      import { HtmlSpec } from '../../node_modules/streaming-spec/HtmlSpec.js';
+      import { iterateStream } from '../../node_modules/streaming-spec/iterateStream.js';
+      const test = async (elem) => {
+        const specStart = performance.now();
+        const spec = new HtmlSpec();
+        const stream = spec.advance();
+        for await (const _ of iterateStream(stream)) { }
+        const items = spec._elements;
+        spec._elements = null;
+        const specTime = performance.now() - specStart;
+        const container = elem.content || elem;
+        const renderStart = performance.now();
+        items.forEach(item => container.appendChild(item));
+        elem.offsetHeight;
+        getComputedStyle(elem).height;
+        const renderTime = performance.now() - renderStart;
+        return { specTime, renderTime };
+      };
+      window.runTest = async (type, count, attach, hidden) => {
+        outEl.textContent += `<${type}> x ${count}, attach? ${attach} hidden? ${hidden}\n\n`;
+        const sums = { specTime: 0, renderTime: 0 };
+        for (let i = 0; i < count; i++) {
+          const el = document.createElement(type);
+          el.style.display = hidden ? 'none' : null;
+          attach && document.body.appendChild(el);
+          await new Promise(r => requestIdleCallback(r));
+          const { specTime, renderTime } = await test(el);
+          sums.specTime += specTime;
+          sums.renderTime += renderTime;
+          outEl.textContent += `#${i + 1}\tspec: ${specTime.toFixed(2)}\t\trender: ${renderTime.toFixed(2)}\n`;
+          await new Promise(r => requestIdleCallback(r));
+          document.querySelectorAll('body > :not(#tokeep)').forEach(child => child.remove());
+        }
+        if (count > 1) {
+          const { specTime, renderTime } = sums;
+          outEl.textContent += `\navg\tspec: ${(specTime / count).toFixed(2)}\trender: ${(renderTime / count).toFixed(2)}\n\n`;
+        }
+      };
+    </script>
+  </div>
+</body>
+
+</html>

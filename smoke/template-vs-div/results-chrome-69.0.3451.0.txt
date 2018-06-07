@@ -1,0 +1,69 @@
+<template> x 5, attach? false hidden? false
+
+#1	spec: 1275.70		render: 54.80
+#2	spec: 1064.90		render: 54.70
+#3	spec: 1239.50		render: 53.60
+#4	spec: 1054.30		render: 52.20
+#5	spec: 1187.50		render: 57.20
+
+avg	spec: 1164.38	render: 54.50
+
+<template> x 5, attach? false hidden? true
+
+#1	spec: 1145.70		render: 54.50
+#2	spec: 1146.10		render: 56.10
+#3	spec: 1185.40		render: 53.80
+#4	spec: 1259.70		render: 54.00
+#5	spec: 1149.80		render: 58.30
+
+avg	spec: 1177.34	render: 55.34
+
+<template> x 5, attach? true hidden? true
+
+#1	spec: 1157.20		render: 54.20
+#2	spec: 1142.30		render: 57.10
+#3	spec: 1156.60		render: 54.10
+#4	spec: 1195.70		render: 55.40
+#5	spec: 1272.60		render: 54.90
+
+avg	spec: 1184.88	render: 55.14
+
+<div> x 5, attach? false hidden? false
+
+#1	spec: 1463.30		render: 25.40
+#2	spec: 1059.70		render: 25.70
+#3	spec: 1161.90		render: 27.10
+#4	spec: 1137.70		render: 25.00
+#5	spec: 1167.50		render: 24.50
+
+avg	spec: 1198.02	render: 25.54
+
+<div> x 5, attach? false hidden? true
+
+#1	spec: 1189.10		render: 25.30
+#2	spec: 997.00		render: 24.70
+#3	spec: 1006.60		render: 26.80
+#4	spec: 1301.20		render: 26.00
+#5	spec: 1182.70		render: 25.90
+
+avg	spec: 1135.32	render: 25.74
+
+<div> x 5, attach? true hidden? true
+
+#1	spec: 1187.80		render: 94.90
+#2	spec: 1252.90		render: 96.50
+#3	spec: 1415.60		render: 95.90
+#4	spec: 1683.00		render: 97.30
+#5	spec: 2149.60		render: 102.20
+
+avg	spec: 1537.78	render: 97.36
+
+<div> x 5, attach? true hidden? false
+
+#1	spec: 2135.90		render: 3849.60
+#2	spec: 2304.00		render: 3827.70
+#3	spec: 1486.20		render: 3936.80
+#4	spec: 2759.10		render: 3828.60
+#5	spec: 1727.60		render: 3861.30
+
+avg	spec: 2082.56	render: 3860.80
