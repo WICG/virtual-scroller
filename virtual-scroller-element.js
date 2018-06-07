@@ -154,7 +154,7 @@ export class VirtualScrollerElement extends HTMLElement {
     }
   }
 
-  scrollTo(index, offset = 0) {
+  scrollToIndex(index, offset = 0) {
     const layout = this[_scroller] ? this[_scroller].layout : null;
     if (layout) {
       layout.scrollAnchor = {index, offset};
