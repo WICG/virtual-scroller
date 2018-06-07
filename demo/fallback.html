@@ -68,8 +68,7 @@
     const dataSource = new ContactDataSource();
     const virtualScroller = document.querySelector('virtual-scroller');
 
-    virtualScroller.updateElement = (element, index) => {
-      const contact = contacts[index];
+    virtualScroller.updateElement = (element, contact) => {
       element.contact = contact;
       element.style.animation = contact.customAnimation || null;
       element.style.height = contact.expanded ? '160px' : null;
@@ -84,7 +83,7 @@
         customAnimation: `inverse-color 1000ms ${i * 50}ms infinite`,
       };
     }
-    virtualScroller.totalItems = fallbacksCount;
+    virtualScroller.itemSource = contacts;
 
     // Keep track of first fallback index to know when we need to load more contacts.
     let firstFallbackIndex = 0;
@@ -99,13 +98,12 @@
         // Insert new contacts, remove fallbacks.
         contacts.splice(firstFallbackIndex, fallbacksCount, ...newContacts);
         firstFallbackIndex = Infinity;
-        virtualScroller.requestReset();
       } else {
         // Insert new contacts while keeping fallbacks at the end of the array.
         contacts.splice(firstFallbackIndex, 0, ...newContacts);
         firstFallbackIndex += newContacts.length;
-        virtualScroller.totalItems += newContacts.length;
       }
+      virtualScroller.itemsChanged();
     });
 
     window.toggleExpanded = (contactElem) => {

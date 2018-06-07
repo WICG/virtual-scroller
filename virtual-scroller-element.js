@@ -1,18 +1,22 @@
+import {_item, _key, ItemSource} from './item-source.js';
 import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
 import {default as Layout1d} from './layouts/layout-1d.js';
 import {VirtualScroller} from './virtual-scroller.js';
+
+export {ItemSource};
 
 /** Properties */
 const _scroller = Symbol();
 const _createElement = Symbol();
 const _updateElement = Symbol();
 const _recycleElement = Symbol();
-const _elementKey = Symbol();
 const _nodePool = Symbol();
+const _rawItemSource = Symbol();
+const _itemSource = Symbol();
+const _elementSource = Symbol();
 const _firstConnected = Symbol();
 /** Functions */
 const _render = Symbol();
-
 
 export class VirtualScrollerElement extends HTMLElement {
   constructor() {
@@ -33,9 +37,13 @@ export class VirtualScrollerElement extends HTMLElement {
       }
       return childTemplate.cloneNode(true);
     };
-    this[_updateElement] = (element, index) => element.textContent = index;
+    this[_updateElement] = (element, item) => element.textContent =
+        item.toString();
     this[_recycleElement] = (element) => this[_nodePool].push(element);
-    this[_elementKey] = null;
+
+    this[_itemSource] = this[_rawItemSource] = null;
+    this[_elementSource] = {};
+
     this[_firstConnected] = false;
   }
 
@@ -75,7 +83,7 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['layout', 'totalitems'];
+    return ['layout'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
@@ -89,11 +97,19 @@ export class VirtualScrollerElement extends HTMLElement {
     this.setAttribute('layout', layout);
   }
 
-  get totalItems() {
-    return +this.getAttribute('totalitems');
+  get itemSource() {
+    return this[_itemSource];
   }
-  set totalItems(v) {
-    this.setAttribute('totalitems', +v);
+  set itemSource(itemSource) {
+    // No Change.
+    if (this[_rawItemSource] === itemSource) {
+      return;
+    }
+    this[_rawItemSource] = itemSource;
+    this[_itemSource] = Array.isArray(itemSource) ?
+        ItemSource.fromArray(itemSource) :
+        itemSource;
+    this[_render]();
   }
 
   get createElement() {
@@ -105,6 +121,8 @@ export class VirtualScrollerElement extends HTMLElement {
       this.recycleElement = null;
     }
     this[_createElement] = fn;
+    // Invalidate wrapped function.
+    this[_elementSource].createElement = null;
     this[_render]();
   }
 
@@ -113,6 +131,8 @@ export class VirtualScrollerElement extends HTMLElement {
   }
   set updateElement(fn) {
     this[_updateElement] = fn;
+    // Invalidate wrapped function.
+    this[_elementSource].updateElement = null;
     this[_render]();
   }
 
@@ -123,18 +143,12 @@ export class VirtualScrollerElement extends HTMLElement {
     // Marks default recycling changed.
     this[_nodePool] = null;
     this[_recycleElement] = fn;
+    // Invalidate wrapped function.
+    this[_elementSource].recycleElement = null;
     this[_render]();
   }
 
-  get elementKey() {
-    return this[_elementKey];
-  }
-  set elementKey(fn) {
-    this[_elementKey] = fn;
-    this[_render]();
-  }
-
-  requestReset() {
+  itemsChanged() {
     if (this[_scroller]) {
       this[_scroller].requestReset();
     }
@@ -169,13 +183,22 @@ export class VirtualScrollerElement extends HTMLElement {
         scroller.layout :
         new Layout({direction});
 
-    const {
-      createElement,
-      updateElement,
-      recycleElement,
-      elementKey,
-      totalItems
-    } = this;
+    let {createElement, updateElement, recycleElement} = this[_elementSource];
+    if (!createElement) {
+      createElement = this[_elementSource].createElement = (index) =>
+          this.createElement(this.itemSource[_item](index), index);
+    }
+    if (this.updateElement && !updateElement) {
+      updateElement = this[_elementSource].updateElement = (element, index) =>
+          this.updateElement(element, this.itemSource[_item](index), index);
+    }
+    if (this.recycleElement && !recycleElement) {
+      recycleElement = this[_elementSource].recycleElement = (element, index) =>
+          this.recycleElement(element, this.itemSource[_item](index), index);
+    }
+
+    const elementKey = this.itemSource ? this.itemSource[_key] : null;
+    const totalItems = this.itemSource ? this.itemSource.length : 0;
     Object.assign(scroller, {
       layout,
       createElement,

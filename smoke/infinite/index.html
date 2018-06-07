@@ -20,14 +20,14 @@
   </style>
   <virtual-scroller id="virtualScroller"></virtual-scroller>
   <script type="module">
-    import '../../virtual-scroller-element.js';
+    import { ItemSource } from '../../virtual-scroller-element.js';
 
-    const nodePool = [];
-    virtualScroller.createElement = () => nodePool.pop() || document.createElement('div');
-    virtualScroller.updateElement = (elem, i) => elem.textContent = i;
-    virtualScroller.recycleElement = (elem) => nodePool.push(elem);
     // Render as many items as possible --> infinite scrolling!
-    virtualScroller.totalItems = Number.MAX_SAFE_INTEGER;
+    virtualScroller.itemSource = new ItemSource({
+      getLength: () => Number.MAX_SAFE_INTEGER,
+      item: (index) => index,
+      key: (index) => index,
+    });
   </script>
 </body>
 
