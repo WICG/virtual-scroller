@@ -26,17 +26,25 @@
     <script type="module">
       import { HtmlSpec } from '../../node_modules/streaming-spec/HtmlSpec.js';
       import { iterateStream } from '../../node_modules/streaming-spec/iterateStream.js';
+      const wait = () => new Promise(r => requestAnimationFrame(() => requestIdleCallback(r)));
       const test = async (elem) => {
+        await wait();
         const specStart = performance.now();
         const spec = new HtmlSpec();
         const stream = spec.advance();
         for await (const _ of iterateStream(stream)) { }
+        const specTime = performance.now() - specStart;
+        // Collect elements, cleanup internal variables and generated iframe
+        // so they can be garbage collected.
         const items = spec._elements;
         spec._elements = null;
-        const specTime = performance.now() - specStart;
+        document.querySelector('iframe').remove();
+        await wait();
+        // Use document fragment if elem is a template.
         const container = elem.content || elem;
         const renderStart = performance.now();
         items.forEach(item => container.appendChild(item));
+        // Force layout and paint.
         elem.offsetHeight;
         getComputedStyle(elem).height;
         const renderTime = performance.now() - renderStart;
@@ -49,12 +57,12 @@
           const el = document.createElement(type);
           el.style.display = hidden ? 'none' : null;
           attach && document.body.appendChild(el);
-          await new Promise(r => requestIdleCallback(r));
           const { specTime, renderTime } = await test(el);
           sums.specTime += specTime;
           sums.renderTime += renderTime;
           outEl.textContent += `#${i + 1}\tspec: ${specTime.toFixed(2)}\t\trender: ${renderTime.toFixed(2)}\n`;
-          await new Promise(r => requestIdleCallback(r));
+          // Wait here since html spec adds some content asynchronously.
+          await wait();
           document.querySelectorAll('body > :not(#tokeep)').forEach(child => child.remove());
         }
         if (count > 1) {
