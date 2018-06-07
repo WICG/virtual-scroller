@@ -59,17 +59,15 @@
 
     const virtualScroller = document.getElementById('scroller');
 
-    virtualScroller.updateElement = (element, index) =>
-      element.textContent = `${index}) ${myContacts[index].longText}`;
+    virtualScroller.updateElement = (element, contact, index) =>
+      element.textContent = `${index}) ${contact.longText}`;
 
-    let myContacts = null;
-    fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {
-      myContacts = contacts;
-      virtualScroller.totalItems = myContacts.length;
-    });
+    fetch('contacts/contacts.json')
+      .then((resp) => resp.json())
+      .then((contacts) => virtualScroller.itemSource = contacts);
 
     window.scrollToIndex = function(index, offset) {
-      if (index >= 0 && index < myContacts.length) {
+      if (index >= 0 && index < virtualScroller.itemSource.length) {
         offset = Number.isFinite(offset) ? offset : 0;
         virtualScroller.scrollToIndex(index, offset);
       }
