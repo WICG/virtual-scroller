@@ -11,7 +11,7 @@
       flex-direction: column;
     }
 
-    label {
+    #controls {
       margin: 10px 0;
     }
 
@@ -32,16 +32,26 @@
       box-sizing: border-box;
       border-bottom: 1px solid #eee;
     }
+
+    [layout="horizontal"]>div {
+      writing-mode: vertical-lr;
+    }
   </style>
 </head>
 
 <body>
 
-  <label>
-    Scroll to:
-    <input id="index" type="number" placeholder="index" onchange="scrollToIndex(this.valueAsNumber, offset.valueAsNumber)">
-    <input id="offset" type="number" placeholder="offset" onchange="scrollToIndex(index.valueAsNumber, this.valueAsNumber)">
-  </label>
+  <div id="controls">
+    <label>
+      Scroll to:
+      <input id="index" type="number" placeholder="index" onchange="scrollToIndex(this.valueAsNumber, offset.valueAsNumber)">
+      <input id="offset" type="number" placeholder="offset" onchange="scrollToIndex(index.valueAsNumber, this.valueAsNumber)">
+    </label>
+    <label>
+      horizontal:
+      <input type="checkbox" onchange="toggleHorizontal(this.checked)">
+    </label>
+  </div>
   <virtual-scroller id="scroller"></virtual-scroller>
 
   <script type="module">
@@ -58,11 +68,15 @@
       virtualScroller.totalItems = myContacts.length;
     });
 
-    window.scrollToIndex = function scrollToIndex(index, offset) {
+    window.scrollToIndex = function(index, offset) {
       if (index >= 0 && index < myContacts.length) {
         offset = Number.isFinite(offset) ? offset : 0;
         virtualScroller.scrollTo(index, offset);
       }
+    };
+
+    window.toggleHorizontal = function(horizontal) {
+      virtualScroller.layout = horizontal ? 'horizontal' : 'vertical';
     };
   </script>
 </body>
