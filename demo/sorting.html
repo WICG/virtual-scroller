@@ -39,23 +39,23 @@
   </virtual-scroller>
 
   <script type="module">
-    import '../virtual-scroller-element.js';
+    import { ItemSource } from '../virtual-scroller-element.js';
     import './contacts/contact-element.js';
 
     const virtualScroller = document.querySelector('virtual-scroller');
 
     const onMoveup = (event) => moveContact(event.target.contact, -1);
     const onMovedown = (event) => moveContact(event.target.contact, 1);
-    virtualScroller.updateElement = (element, index) => {
+    virtualScroller.updateElement = (element, contact) => {
       element.addEventListener('moveup', onMoveup);
       element.addEventListener('movedown', onMovedown);
-      element.contact = myContacts[index];
+      element.contact = contact;
     };
 
     let myContacts = null;
     fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {
       myContacts = contacts;
-      virtualScroller.totalItems = myContacts.length;
+      toggleElementKey();
     });
 
     function moveContact(contact, offset) {
@@ -63,11 +63,12 @@
       const newI = Math.max(0, Math.min(myContacts.length, i + offset));
       myContacts.splice(i, 1); // remove it
       myContacts.splice(newI, 0, contact); // add it to new position
-      virtualScroller.requestReset(); // notify virtual-scroller
+      virtualScroller.itemsChanged(); // notify virtual-scroller
     }
 
     window.toggleElementKey = function toggleElementKey(useGuid) {
-      virtualScroller.elementKey = useGuid ? (index) => myContacts[index].guid : null;
+      const key = useGuid ? (contact) => contact.guid : (_, index) => index;
+      virtualScroller.itemSource = ItemSource.fromArray(myContacts, key);
     };
   </script>
 </body>
