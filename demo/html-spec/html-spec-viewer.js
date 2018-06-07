@@ -9,7 +9,8 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       const style = document.createElement('style');
       style.textContent = `
   :host {
-    position: fixed;
+    /* Bug with position: fixed https://crbug.com/846322 */
+    position: absolute;
     top: 0px;
     left: 0px;
     right: 0px;
