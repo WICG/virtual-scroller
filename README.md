@@ -99,22 +99,6 @@ One of:
 
 Can also be set as an attribute on the element, e.g. `<virtual-scroller layout="horizontal-grid"></virtual-scroller>`
 
-### `anchor` property
-
-Type: `string`
-
-Set this property to control which part of the viewport should be used as an anchor during viewport or items size changes.
-
-One of:
-
-* "start" (default): preserve the visible top/left position of the first visible item.
-* "middle": preserve the center position of the item in the center of the viewport.
-* "end": preserve the visible bottom/right position of the last visible item.
-
-Can also be set as an attribute on the element, e.g. `<virtual-scroller anchor="middle"></virtual-scroller>`.
-
-See [demo/scroll-anchor.html](demo/scroll-anchor.html) as an example implementation.
-
 ### `requestReset()` method
 
 This re-renders all of the currently-displayed elements, updating them from their source data using `updateElement`.

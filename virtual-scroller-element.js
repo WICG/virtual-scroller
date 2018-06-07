@@ -68,9 +68,6 @@ export class VirtualScrollerElement extends HTMLElement {
       if (!this.layout) {
         this.layout = 'vertical';
       }
-      if (!this.anchor) {
-        this.anchor = 'start';
-      }
       // Enables rendering.
       this[_firstConnected] = true;
     }
@@ -78,18 +75,11 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['anchor', 'layout', 'totalitems'];
+    return ['layout', 'totalitems'];
   }
 
   attributeChangedCallback(name, oldVal, newVal) {
     this[_render]();
-  }
-
-  get anchor() {
-    return this.getAttribute('anchor');
-  }
-  set anchor(anchor) {
-    this.setAttribute('anchor', anchor);
   }
 
   get layout() {
@@ -178,9 +168,6 @@ export class VirtualScrollerElement extends HTMLElement {
             scroller.layout.direction === direction ?
         scroller.layout :
         new Layout({direction});
-    const anchorAttr = this.anchor;
-    const anchor = anchorAttr === 'end' ? 1 : anchorAttr === 'middle' ? 0.5 : 0;
-    layout.itemAnchor = layout.viewportAnchor = anchor;
 
     const {
       createElement,

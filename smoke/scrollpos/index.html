@@ -1,0 +1,88 @@
+<html>
+
+<head>
+  <title>Scroll anchor</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      position: relative;
+      margin: 0;
+    }
+
+    #controls {
+      position: fixed;
+      z-index: 1;
+      width: 100%;
+      padding: 10px 0;
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    label {
+      margin-right: 5px;
+    }
+
+    input {
+      width: 120px;
+    }
+
+    .anchor {
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      width: 100%;
+      background-color: rgba(255, 225, 0, 0.4);
+      height: 0px;
+      outline: 2px dashed red;
+      top: var(--viewport-anchor, 0);
+    }
+
+    .item {
+      padding: 10px;
+      box-sizing: border-box;
+      border-bottom: 1px solid #eee;
+    }
+
+    .item>.anchor {
+      position: absolute;
+      outline-color: green;
+      top: var(--item-anchor, 0);
+    }
+
+    .item>.anchor::after {
+      content: attr(index);
+      display: block;
+      position: absolute;
+      background: white;
+      padding: 0 5px;
+      height: 40px;
+      line-height: 30px;
+      box-sizing: border-box;
+      top: -18px;
+      right: 0;
+      border: 4px dashed green;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="controls">
+    <label>
+      Anchor to:
+      <input id="itemAnchor" type="number" placeholder="item anchor" step="0.1" min="-2" max="2" onchange="updateItemAnchor(this.valueAsNumber)">
+      <input id="viewportAnchor" type="number" placeholder="viewport anchor" step="0.1" min="-2" max="2" onchange="updateViewportAnchor(this.valueAsNumber)">
+    </label>
+    <label>
+      Scroll to:
+      <input id="index" type="number" placeholder="index" onchange="scrollToIndex(this.valueAsNumber, offset.valueAsNumber)">
+      <input id="offset" type="number" placeholder="offset" onchange="scrollToIndex(index.valueAsNumber, this.valueAsNumber)">
+    </label>
+    <button onclick="runTest()">run test</button>
+  </div>
+  <div class="anchor"></div>
+
+  <script type="module" src="script.js"></script>
+</body>
+
+</html>
