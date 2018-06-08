@@ -72,7 +72,7 @@ Usually this property will be customized to introduce custom node recycling logi
 
 ### `itemSource` property
 
-Type: `Array` or [`ItemSource`](#itemsource-api)
+Type: `Array` or [`ItemSource`](#the-itemsource-class)
 
 Set this property to control how the scroller will map the visible indices into their corresponding items. The items are then provided to the various rendering customization functions: `createElement`, `updateElement`, `recycleElement`.
 

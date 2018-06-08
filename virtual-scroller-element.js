@@ -150,6 +150,9 @@ export class VirtualScrollerElement extends HTMLElement {
 
   itemsChanged() {
     if (this[_scroller]) {
+      // Render because length might have changed.
+      this[_render]();
+      // Request reset because items might have changed.
       this[_scroller].requestReset();
     }
   }

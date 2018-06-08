@@ -93,6 +93,7 @@ export default class Layout extends Layout1dBase {
   }
 
   _updateItemSize() {
+    // Keep integer values.
     this._itemSize[this._sizeDim] =
         Math.round(this._tMeasured / this._nMeasured);
   }
@@ -314,8 +315,10 @@ export default class Layout extends Layout1dBase {
   }
 
   _updateScrollSize() {
-    this._scrollSize =
-        Math.max(this._physicalMax, this._totalItems * this._delta);
+    // Reuse previously calculated physical max, as it might be
+    // higher than the estimated size.
+    super._updateScrollSize();
+    this._scrollSize = Math.max(this._physicalMax, this._scrollSize);
   }
 
   // TODO: Can this be made to inherit from base, with proper hooks?
