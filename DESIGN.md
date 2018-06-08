@@ -186,13 +186,49 @@ layout.updateItemSizes({
 });
 ```
 
-Set `layout.viewportScroll` to move the range across the container size.
+### Move range
+
+Use `viewportScroll (type: {top: number, left: number})` to move the range to a specific point.
 ```js
 const el = document.scrollingElement;
 el.addEventListener('scroll', () => {
   layout.viewportScroll = {top: el.scrollTop};
   layout.reflowIfNeeded();
 });
+```
+
+Use `scrollAnchor (type: {index: number, offset: number})` to move the range to a specific index.
+```js
+// Scroll to the 11th item, 20px past it.
+layout.scrollAnchor = {index: 10, offset: 20};
+layout.reflowIfNeeded();
+
+// Scroll to the 3rd item, 50px above it.
+layout.scrollAnchor = {index: 2, offset: -50};
+layout.reflowIfNeeded();
+```
+
+### Control anchor during size changes
+
+`Layout` keeps the first visible item position constant when items' or viewport size changes.
+
+This can be customized through the properties `viewportAnchor` and `itemAnchor`.
+
+`viewportAnchor (type: number, default: 0)` controls which position of the viewport is used as anchor, e.g. 0 for the top (vertical mode) or left (horizontal mode), 1 for the bottom or right.
+
+`itemAnchor (type: number, default: 0)` controls which position of the item position is used as anchor. Combined with `viewportAnchor`, it allows to keep constant the distance between the viewport and the item. e.g.
+```js
+// Keep constant the end point of the first visible item.
+layout.viewportAnchor = 0;
+layout.itemAnchor = 1;
+
+// Keep constant the middle point of the last visible item.
+layout.viewportAnchor = 1;
+layout.itemAnchor = 0.5;
+
+// Keep constant the start point of the center item.
+layout.viewportAnchor = 0.5;
+layout.itemAnchor = 0;
 ```
 
 ## VirtualScroller (RepeatsAndScrolls mixin)

@@ -19,6 +19,38 @@ export default class Layout extends Layout1dBase {
     this._tMeasured = 0;
 
     this._estimate = true;
+
+    this._itemAnchor = 0;
+    this._viewportAnchor = 0;
+    this._scrollAnchor = {index: -1, offset: 0};
+  }
+
+  get itemAnchor() {
+    return this._itemAnchor;
+  }
+  set itemAnchor(anchor) {
+    this._itemAnchor = anchor;
+  }
+
+  get viewportAnchor() {
+    return this._viewportAnchor;
+  }
+  set viewportAnchor(anchor) {
+    this._viewportAnchor = anchor;
+  }
+
+  get scrollAnchor() {
+    return this._scrollAnchor;
+  }
+  set scrollAnchor({index, offset = 0}) {
+    if (!Number.isFinite(index) || !Number.isFinite(offset)) {
+      return;
+    }
+    if (this._scrollAnchor.index !== index ||
+        this._scrollAnchor.offset !== offset) {
+      Object.assign(this._scrollAnchor, {index, offset});
+      this._scheduleReflow();
+    }
   }
 
   updateItemSizes(sizes) {
@@ -295,6 +327,25 @@ export default class Layout extends Layout1dBase {
 
     this._updateScrollSize();
     this._getActiveItems();
+    // Restore the anchor item in case its position
+    // was modified by size changes.
+    const {index, offset} = this._scrollAnchor;
+    if (index === -1) {
+      this._updateScrollAnchor();
+    } else {
+      const item = this._getPhysicalItem(index) ||
+          {pos: this._getPosition(index), size: this._itemDim1};
+
+      const curAnchorPos =
+          this._scrollPosition + this._viewDim1 * this.viewportAnchor;
+      const newAnchorPos = offset + item.pos + item.size * this.itemAnchor;
+      // Ensure scroll position is an integer within scroll bounds.
+      const scrollPosition = Math.floor(Math.min(
+          this._scrollSize - this._viewDim1,
+          Math.max(0, this._scrollPosition - curAnchorPos + newAnchorPos)));
+      this._scrollError += this._scrollPosition - scrollPosition;
+      this._scrollPosition = scrollPosition;
+    }
 
     if (this._scrollSize !== _scrollSize) {
       this._emitScrollSize();
@@ -338,5 +389,30 @@ export default class Layout extends Layout1dBase {
     const stable = this._stable;
     this._needsRemeasure = false;
     super._emitRange({remeasure, stable});
+  }
+
+  _scrollPositionChanged(oldPos, newPos) {
+    // When both values are bigger than the max scroll position, keep the
+    // current scroll anchor. Otherwise, invalidate it so it can be recomputed
+    // in the next reflow.
+    const maxPos = this._scrollSize - this._viewDim1;
+    if (oldPos < maxPos || newPos < maxPos) {
+      this._scrollAnchor.index = -1;
+    }
+  }
+
+  _updateScrollAnchor() {
+    const scrollPos =
+        this._scrollPosition + this._viewDim1 * this.viewportAnchor;
+    // Find the first measured item that is below the scroll position.
+    let index = this._first, item;
+    while ((item = this._getPhysicalItem(index)) &&
+           item.pos + item.size <= scrollPos) {
+      index++;
+    }
+    if (item) {
+      const offset = scrollPos - item.pos - item.size * this.itemAnchor;
+      Object.assign(this._scrollAnchor, {index, offset});
+    }
   }
 }
