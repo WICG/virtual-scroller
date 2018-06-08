@@ -1,0 +1,119 @@
+-- parse with streams --
+
+parse spec x 5
+
+#1	15059.40
+#2	12568.40
+#3	13778.10
+#4	12093.30
+#5	13419.10
+
+avg	13383.66
+
+
+
+-- render time --
+
+<template> x 5, attach? false hidden? false
+
+#1	238.30
+#2	119.20
+#3	129.50
+#4	109.50
+#5	113.70
+
+avg	142.04
+
+<template> x 5, attach? true hidden? false
+
+#1	131.60
+#2	130.90
+#3	135.30
+#4	110.80
+#5	114.30
+
+avg	124.58
+
+<div> x 5, attach? false hidden? false
+
+#1	321.10
+#2	221.00
+#3	139.10
+#4	135.50
+#5	134.40
+
+avg	190.22
+
+<div> x 5, attach? true hidden? true
+
+#1	588.40
+#2	649.10
+#3	591.20
+#4	613.70
+#5	677.90
+
+avg	624.06
+
+<div> x 5, attach? true hidden? false
+
+#1	30684.80
+#2	28968.20
+#3	27953.40
+#4	28080.70
+#5	27888.90
+
+avg	28715.20
+
+
+
+-- innerHTML time --
+
+<template> x 5, attach? false hidden? false
+
+#1	3202.00
+#2	3402.00
+#3	3654.60
+#4	3219.50
+#5	3390.70
+
+avg	3373.76
+
+<template> x 5, attach? true hidden? false
+
+#1	3226.10
+#2	3177.70
+#3	3184.80
+#4	3395.20
+#5	3588.60
+
+avg	3314.48
+
+<div> x 5, attach? false hidden? false
+
+#1	3600.60
+#2	3634.80
+#3	4251.50
+#4	3786.50
+#5	3680.50
+
+avg	3790.78
+
+<div> x 5, attach? true hidden? true
+
+#1	4833.50
+#2	4283.10
+#3	4359.30
+#4	4287.30
+#5	4352.70
+
+avg	4423.18
+
+<div> x 5, attach? true hidden? false
+
+#1	36817.50
+#2	36329.60
+#3	35168.50
+#4	35967.80
+#5	35101.60
+
+avg	35877.00
