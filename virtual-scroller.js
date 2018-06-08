@@ -270,9 +270,15 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    */
   _createContainerSizer() {
     const sizer = document.createElement('div');
-    sizer.style.width = '1px';
-    sizer.style.height = '1px';
-    sizer.style.position = 'absolute';
+    Object.assign(sizer.style, {
+      position: 'absolute',
+      width: '1px',
+      height: '1px',
+      margin: 0,
+      padding: 0,
+      visibility: 'hidden',
+      fontSize: '1px',
+    });
     // When the scrollHeight is large, the height
     // of this element might be ignored. Setting
     // content ensures the element has a size.
@@ -400,8 +406,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    */
   _correctScrollError(err) {
     if (this._scrollTarget) {
-      this._scrollTarget.scrollTop += err.top;
-      this._scrollTarget.scrollLeft += err.left;
+      this._scrollTarget.scrollTop -= err.top;
+      this._scrollTarget.scrollLeft -= err.left;
     } else {
       window.scroll(window.scrollX - err.left, window.scrollY - err.top);
     }
