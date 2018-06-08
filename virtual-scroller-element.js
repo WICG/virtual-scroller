@@ -14,6 +14,7 @@ const _nodePool = Symbol();
 const _rawItemSource = Symbol();
 const _itemSource = Symbol();
 const _elementSource = Symbol();
+const _firstConnected = Symbol();
 /** Functions */
 const _render = Symbol();
 
@@ -42,10 +43,12 @@ export class VirtualScrollerElement extends HTMLElement {
 
     this[_itemSource] = this[_rawItemSource] = null;
     this[_elementSource] = {};
+
+    this[_firstConnected] = false;
   }
 
   connectedCallback() {
-    if (!this.shadowRoot) {
+    if (!this[_firstConnected]) {
       this.attachShadow({mode: 'open'}).innerHTML = `
 <style>
   :host {
@@ -69,10 +72,12 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 </style>
 <slot></slot>`;
-      // Default layout.
+      // Set default values.
       if (!this.layout) {
         this.layout = 'vertical';
       }
+      // Enables rendering.
+      this[_firstConnected] = true;
     }
     this[_render]();
   }
@@ -153,24 +158,21 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   [_render]() {
-    if (!this.createElement) {
-      return;
-    }
-    // Delay init to first connected as scroller needs to measure
+    // Wait first connected as scroller needs to measure
     // sizes of container and children.
-    if (!this[_scroller] && !this.isConnected) {
+    if (!this[_firstConnected] || !this.createElement) {
       return;
     }
-
     if (!this[_scroller]) {
       this[_scroller] =
           new VirtualScroller({container: this, scrollTarget: this});
     }
     const scroller = this[_scroller];
 
-    const Layout = this.layout.endsWith('-grid') ? Layout1dGrid : Layout1d;
+    const layoutAttr = this.layout;
+    const Layout = layoutAttr.endsWith('-grid') ? Layout1dGrid : Layout1d;
     const direction =
-        this.layout.startsWith('horizontal') ? 'horizontal' : 'vertical';
+        layoutAttr.startsWith('horizontal') ? 'horizontal' : 'vertical';
     const layout = scroller.layout instanceof Layout &&
             scroller.layout.direction === direction ?
         scroller.layout :
