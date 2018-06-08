@@ -154,14 +154,6 @@ export class VirtualScrollerElement extends HTMLElement {
     }
   }
 
-  scrollToIndex(index, offset = 0) {
-    const layout = this[_scroller] ? this[_scroller].layout : null;
-    if (layout) {
-      layout.scrollAnchor = {index, offset};
-      layout.reflowIfNeeded();
-    }
-  }
-
   [_render]() {
     // Wait first connected as scroller needs to measure
     // sizes of container and children.

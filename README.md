@@ -97,12 +97,6 @@ This re-renders all of the currently-displayed elements, updating them from thei
 
 This generally needs to be called any time the data to be displayed changes. This includes additions, removals, and modifications to the data. See our [examples below](#data-manipulation-using-itemschanged) for more information.
 
-### `scrollToIndex(index: number, offset: number = 0)` method
-
-Scrolls to a specified index, optionally with an offset (pixels).
-
-See [demo/scroll-anchor.html](demo/scroll-anchor.html) as an example implementation.
-
 ### "`rangechange`" event
 
 Bubbles: false / Cancelable: false / Composed: false
