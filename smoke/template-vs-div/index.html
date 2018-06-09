@@ -21,33 +21,33 @@
       await runTest(streamsTime, runs);
 
       outEl.textContent += `\n\n-- render time --\n\n`;
-      await runTest(renderTime, runs, { elementType: 'template' });
-      await runTest(renderTime, runs, { elementType: 'template', attach: true });
-      await runTest(renderTime, runs, { elementType: 'div' });
-      await runTest(renderTime, runs, { elementType: 'div', attach: true, hidden: true });
-      await runTest(renderTime, runs, { elementType: 'div', attach: true });
+      await runTest(renderTime, runs, { tagName: 'template' });
+      await runTest(renderTime, runs, { tagName: 'template', attach: true });
+      await runTest(renderTime, runs, { tagName: 'div' });
+      await runTest(renderTime, runs, { tagName: 'div', attach: true, hidden: true });
+      await runTest(renderTime, runs, { tagName: 'div', attach: true });
 
       outEl.textContent += `\n\n-- innerHTML time --\n\n`;
-      await runTest(innerHTMLTime, runs, { elementType: 'template' });
-      await runTest(innerHTMLTime, runs, { elementType: 'template', attach: true });
-      await runTest(innerHTMLTime, runs, { elementType: 'div' });
-      await runTest(innerHTMLTime, runs, { elementType: 'div', attach: true, hidden: true });
-      await runTest(innerHTMLTime, runs, { elementType: 'div', attach: true });
+      await runTest(innerHTMLTime, runs, { tagName: 'template' });
+      await runTest(innerHTMLTime, runs, { tagName: 'template', attach: true });
+      await runTest(innerHTMLTime, runs, { tagName: 'div' });
+      await runTest(innerHTMLTime, runs, { tagName: 'div', attach: true, hidden: true });
+      await runTest(innerHTMLTime, runs, { tagName: 'div', attach: true });
 
       alert('done!');
     }
 
-    async function runTest(test, runs, { elementType, attach = false, hidden = false } = {}) {
+    async function runTest(test, runs, { tagName, attach = false, hidden = false } = {}) {
       if (window.stopTests) return;
 
-      outEl.textContent += elementType ?
-        `<${elementType}> x ${runs}, attach? ${attach} hidden? ${hidden}\n\n` :
+      outEl.textContent += tagName ?
+        `<${tagName}> x ${runs}, attach? ${attach} hidden? ${hidden}\n\n` :
         `${runs} runs\n\n`;
       let sum = 0;
       for (let i = 0; i < runs; i++) {
         if (window.stopTests) break;
 
-        const elem = elementType ? document.createElement(elementType) : null;
+        const elem = tagName ? document.createElement(tagName) : null;
         if (elem) {
           elem.style.display = hidden ? 'none' : null;
           attach && document.body.appendChild(elem);
