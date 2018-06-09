@@ -3,7 +3,7 @@ import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js'
 import {ItemSource, VirtualScrollerElement} from '../../virtual-scroller-element.js';
 
 class HTMLSpecSource extends ItemSource {
-  constructor(items) {
+  static fromArray(items) {
     const placeholders = [];
     for (let i = 0; i < 4; i++) {
       const el = document.createElement('div');
@@ -13,7 +13,8 @@ class HTMLSpecSource extends ItemSource {
     const indexToElement = (idx) => idx >= items.length ?
         placeholders[idx % placeholders.length] :
         items[idx];
-    super({
+
+    return new this({
       // The number of nodes that we'll load dynamically
       // as the user scrolls.
       getLength: () => Math.max(items.length, 9312),
@@ -22,6 +23,7 @@ class HTMLSpecSource extends ItemSource {
     });
   }
 }
+
 class HTMLSpecViewer extends VirtualScrollerElement {
   constructor() {
     super();
@@ -29,7 +31,7 @@ class HTMLSpecViewer extends VirtualScrollerElement {
   }
   connectedCallback() {
     super.connectedCallback();
-    if (!this.htmlSpec) {
+    if (!this._htmlSpec) {
       const style = document.createElement('style');
       style.textContent = `
   :host {
@@ -47,11 +49,12 @@ class HTMLSpecViewer extends VirtualScrollerElement {
         document.rootScroller = this;
       }
 
-      this.htmlSpec = new HtmlSpec();
-      this.htmlSpec.head.style.display = 'none';
-      this.appendChild(this.htmlSpec.head);
+      this._htmlSpec = new HtmlSpec();
+      this._htmlSpec.head.style.display = 'none';
+      this.appendChild(this._htmlSpec.head);
+
       this.items = [];
-      this.itemSource = new HTMLSpecSource(this.items);
+      this.itemSource = HTMLSpecSource.fromArray(this.items);
       this.createElement = (item) => item;
       this.updateElement = (item, _, idx) => {
         if (idx >= this.items.length) {
@@ -72,10 +75,10 @@ class HTMLSpecViewer extends VirtualScrollerElement {
 
     await new Promise(resolve => requestIdleCallback(resolve));
 
-    const stream = this.htmlSpec.advance(this.items[this.items.length - 1]);
+    const stream = this._htmlSpec.advance(this.items[this.items.length - 1]);
     for await (const el of iterateStream(stream)) {
       if (/^(style|link|script)$/.test(el.localName)) {
-        this.htmlSpec.head.appendChild(el);
+        this._htmlSpec.head.appendChild(el);
       } else {
         this.items.push(el);
         this.itemsChanged();
