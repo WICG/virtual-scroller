@@ -34,7 +34,7 @@ export const PreactMixin = Superclass => class extends Superclass {
     const component = config.component;
     const pool = [];
     Object.assign(config, {
-      newChild: () => {
+      createElement: () => {
         let child = pool.pop();
         if (!child) {
           child = {vNode: h(component, {ref: n => child.instance = n})};
@@ -42,11 +42,11 @@ export const PreactMixin = Superclass => class extends Superclass {
         }
         return child;
       },
-      updateChild: (child, idx) => {
+      updateElement: (child, idx) => {
         child.vNode.attributes = {idx};
         render(child.vNode, this.container, child.instance.base);
       },
-      recycleChild: (child) => pool.push(child),
+      recycleElement: (child) => pool.push(child),
     });
     super(config);
   }

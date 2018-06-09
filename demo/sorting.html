@@ -28,31 +28,34 @@
 <body>
 
   <label>
-    <input type="checkbox" onchange="toggleChildKey(this.checked)"> Use
+    <input type="checkbox" onchange="toggleElementKey(this.checked)"> Use
     <code>contact.guid</code> as
-    <code>childKey</code>
+    <code>elementKey</code>
   </label>
-  <virtual-scroller></virtual-scroller>
+  <virtual-scroller>
+    <template>
+      <contact-element sortable></contact-element>
+    </template>
+  </virtual-scroller>
 
   <script type="module">
-    import '../virtual-scroller-element.js';
+    import { ItemSource } from '../virtual-scroller-element.js';
     import './contacts/contact-element.js';
 
     const virtualScroller = document.querySelector('virtual-scroller');
 
-    virtualScroller.newChild = () => {
-      const element = document.createElement('contact-element');
-      element.setAttribute('sortable', '');
-      element.addEventListener('moveup', (event) => moveContact(event.target.contact, -1));
-      element.addEventListener('movedown', (event) => moveContact(event.target.contact, 1));
-      return element;
+    const onMoveup = (event) => moveContact(event.target.contact, -1);
+    const onMovedown = (event) => moveContact(event.target.contact, 1);
+    virtualScroller.updateElement = (element, contact) => {
+      element.addEventListener('moveup', onMoveup);
+      element.addEventListener('movedown', onMovedown);
+      element.contact = contact;
     };
-    virtualScroller.updateChild = (element, index) => element.contact = myContacts[index];
 
     let myContacts = null;
     fetch('contacts/contacts.json').then((resp) => resp.json()).then((contacts) => {
       myContacts = contacts;
-      virtualScroller.totalItems = myContacts.length;
+      toggleElementKey();
     });
 
     function moveContact(contact, offset) {
@@ -60,11 +63,12 @@
       const newI = Math.max(0, Math.min(myContacts.length, i + offset));
       myContacts.splice(i, 1); // remove it
       myContacts.splice(newI, 0, contact); // add it to new position
-      virtualScroller.requestReset(); // notify virtual-scroller
+      virtualScroller.itemsChanged(); // notify virtual-scroller
     }
 
-    window.toggleChildKey = function toggleChildKey(useGuid) {
-      virtualScroller.childKey = useGuid ? (index) => myContacts[index].guid : null;
+    window.toggleElementKey = function toggleElementKey(useGuid) {
+      const key = useGuid ? (contact) => contact.guid : (_, index) => index;
+      virtualScroller.itemSource = ItemSource.fromArray(myContacts, key);
     };
   </script>
 </body>

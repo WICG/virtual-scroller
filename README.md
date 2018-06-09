@@ -19,71 +19,64 @@ The (tentative) API design choices made here, as well as the element's capabilit
   const scroller = document.querySelector('virtual-scroller');
   const myItems = new Array(200).fill('item');
 
-  // Setting this is required; without it the scroller does not function.
-  scroller.newChild = (index) => {
-    const child = document.createElement('section');
-    child.textContent = index + ' - ' + myItems[index];
+  scroller.updateElement = (child, item, index) => {
+    child.textContent = index + ' - ' + item;
     child.onclick = () => console.log(`clicked item #${index}`);
-    return child;
   };
 
   // This will automatically cause a render of the visible children
   // (i.e., those that fit on the screen).
-  scroller.totalItems = myItems.length;
+  scroller.itemSource = myItems;
 </script>
 ```
+
+By default, the elements inside the virtual scroller created in this example will be `<div>`s, and will be recycled. See below for more on customizing this behavior through the `createElement` and `recycleElement` APIs.
 
 Checkout more examples in [demo/index.html](./demo/index.html).
 
 ## API
 
-### `newChild` property
+### `createElement` property
 
-Type: `function(itemIndex: number) => Element`
+Type: `function(item: any, itemIndex: number) => Element`
 
 Set this property to configure the virtual scroller with a factory that creates an element the first time a given item at the specified index is ready to be displayed in the DOM.
 
-This property is required. Without it set, nothing will render.
+The default `createElement` will, upon first being invoked, search for the first `<template>` element child that itself has at least one child element in its template contents. If one exists, it will create new elements by cloning that child. Otherwise, it will create `<div>` elements. In either case, it will reuse recycled DOM nodes if `recycleElement` is left as its default value.
 
-### `updateChild` property
+Changing this property from its default will automatically reset `recycleElement` to null, if `recycleElement` has been left as its default.
 
-Type: `function(child: Element, itemIndex: number)`
+### `updateElement` property
 
-Set this property to configure the virtual scroller with a function that will update the element with data at a given index.
+Type: `function(child: Element, item: any, itemIndex: number)`
 
-If set, this property is invoked in two scenarios:
+Set this property to configure the virtual scroller with a function that will update the element with data from a given item at the specified index.
 
-* The user scrolls the scroller, changing which items' elements are visible. In this case, `updateChild` is called for all of the newly-visible elements.
-* The developer changes the `totalItems` property.
-* The developer calls `requestReset()`, which will call `updateChild` for all currently-visible elements. See [below](#data-manipulation-using-requestreset) for why this can be useful.
+This property is invoked in these scenarios:
 
-For more on the interplay between `newChild` and `updateChild`, and when each is appropriate, see [the example below](#using-newchild-and-updatechild)
+* The user scrolls the scroller, changing which items' elements are visible. In this case, `updateElement` is called for all of the newly-visible elements.
+* The developer changes the `itemSource` property.
+* The developer calls `itemsChanged()`, which will call `updateElement` for all currently-visible elements. See [below](#data-manipulation-using-itemschanged) for more on this.
 
-### `recycleChild` property
+The default `updateElement` sets the `textContent` of the child to be the given item, stringified. Almost all uses of `<virtual-scroller>` will want to change this behavior.
 
-Type: `function(child: Element, itemIndex: number)`
+### `recycleElement` property
 
-Set this property to replace the default behavior of removing an item's element from the DOM when it is no longer visible.
+Type: `function(child: Element, item: any, itemIndex: number)`
 
-This is often used for node-recycling scenarios, as seen in [the example below](#dom-recycling-using-recyclechild).
+The default `recycleElement` collects the item's element if it is no longer visible, and leaves it connected to the DOM in order to be reused by the default `createElement`.
 
-_We are discussing the naming and API for this functionality in [#25](https://github.com/valdrinkoshi/virtual-scroller/issues/25)._
+Set this property to null to remove the item's element from the DOM when it is no longer visible, and to prevent recycling by the default `createElement`.
 
-### `childKey` property
+Usually this property will be customized to introduce custom node recycling logic, as seen in [the example below](#custom-dom-recycling-using-recycleelement).
 
-Type: `function(itemIndex: number) => any`
+### `itemSource` property
 
-Set this property to provide a custom identifier for the element corresponding to a given data index.
+Type: `Array` or [`ItemSource`](#the-itemsource-class)
 
-This is often used for more efficient re-ordering, as seen in [the example below](#efficient-re-ordering-using-childkey).
+Set this property to control how the scroller will map the visible indices into their corresponding items. The items are then provided to the various rendering customization functions: `createElement`, `updateElement`, `recycleElement`.
 
-### `totalItems` property
-
-Type: `number`
-
-Set this property to control how many items the scroller will display. The items are mapped to elements via the `newChild` property, so this controls the total number of times `newChild` could be called, as the user scrolls to reveal all the times.
-
-Can also be set as an attribute (all lower-case) on the element, e.g. `<virtual-scroller totalitems="10"></virtual-scroller>`
+If an array is provided, it will be converted to an `ItemSource` instance that returns the elements from the array, as if by using `ItemSource.fromArray(array)` (with no `key` argument).
 
 ### `layout` property
 
@@ -98,13 +91,11 @@ One of:
 
 Can also be set as an attribute on the element, e.g. `<virtual-scroller layout="horizontal-grid"></virtual-scroller>`
 
-### `requestReset()` method
+### `itemsChanged()` method
 
-This re-renders all of the currently-displayed elements, updating them from their source data using `updateChild`.
+This re-renders all of the currently-displayed elements, updating them from their source items using `updateElement` (which in turn consults the `itemSource`).
 
-This can be useful when you mutate data without changing the `totalItems`. Also see [the example below](#data-manipulation-using-requestreset).
-
-_We are discussing the naming of this API, as well as whether it should exist at all, in [#26](https://github.com/valdrinkoshi/virtual-scroller/issues/26). The aforementioned [#29](https://github.com/valdrinkoshi/virtual-scroller/issues/29) is also relevant._
+This generally needs to be called any time the data to be displayed changes. This includes additions, removals, and modifications to the data. See our [examples below](#data-manipulation-using-itemschanged) for more information.
 
 ### "`rangechange`" event
 
@@ -117,160 +108,248 @@ Fired when the scroller has finished rendering a new range of items, e.g. becaus
 
 Also see [the example below](#performing-actions-as-the-scroller-scrolls-using-the-rangechange-event).
 
+### The `ItemSource` class
+
+The `ItemSource` class represents a way of translating indices into JavaScript values. You can create them like so:
+
+```js
+const source = new ItemSource({
+  item(index) { ... },
+  getLength() { ... },
+  key(index) { ... }
+});
+```
+
+For example, to create an `ItemSource` that gets its items from a `contacts` array, and uses `contact.id` as the key, you could do
+
+```js
+const contactsSource = new ItemSource({
+  item(index) { return contacts[index]; },
+  getLength() { return contacts.length; },
+  key(index) { return contacts[index].id; }
+});
+```
+
+There is also a factory method, `ItemSource.fromArray(array[, key])`, that makes this easier:
+
+```js
+const contactsSource = ItemSource.fromArray(contacts, c => c.id);
+```
+
+The `key` argument to `fromArray()` is called with an item, and should return a unique key for the object. If no `key` argument is given, then the item itself is used as the key.
+
+The main use of the `ItemSource` class is to be assigned to the `itemSource` property of a `<virtual-scroller>` element; as such, for now its only public API is a `length` property.
+
 ## More examples
 
-### Using `newChild` and `updateChild`
+### Customizing element creation and updating with `<template>`
 
-The rule of thumb for these two options is:
+If the user does nothing special, the default `createElement` callback will create and reuse `<div>` elements. There are several ways of getting more control over this process.
 
-* You always have to set `newChild`. It is responsible for actually creating the DOM elements corresponding to each item.
-* You should set `updateChild` if you ever plan on updating the data items.
+First, you can use a `<template>` child element to declaratively set up your new element. This snippet creates a scrolling view onto `<section>` elements, which (per the default `updateElement` behavior) displays any items given to it, stringified:
 
-Thus, for completely static lists, you only need to set `newChild`:
+```html
+<virtual-scroller>
+  <template>
+    <section></section>
+  </template>
+</virtual-scroller>
+```
+
+By setting a custom `updateElement` behavior, you can leverage more interesting templates, for example:
+
+```html
+<virtual-scroller id="scroller">
+  <template>
+    <section>
+      <h1></h1>
+      <img></img>
+      <p></p>
+    </section>
+  </template>
+</virtual-scroller>
+
+<script type="module">
+  scroller.updateElement = (child, contact) => {
+    child.querySelector("h1") = contact.name;
+    child.querySelector("img").src = contact.avatarURL;
+    child.querySelector("p").textContent = contact.bio;
+  };
+
+  scroller.itemSource = contacts;
+</script>
+```
+
+A useful pattern here is to encapsulate the details of updating your elements inside a custom element, for example:
+
+```html
+<virtual-scroller>
+  <template>
+    <contact-element sortable></contact-element>
+  </template>
+</virtual-scroller>
+
+<script type="module">
+  scroller.updateElement = (child, contact) => {
+    child.contact = contact;
+  };
+
+  scroller.itemSource = contacts;
+</script>
+```
+
+Note that in all these examples, the elements are recycled.
+
+### Customizing element creation and updating: using `createElement`
+
+If you want complete control over element creation, you can set a custom `createElement`. This could be useful if, for example, you have a completely static list, which you want to fill out ahead of time and never update again:
 
 ```js
 let myItems = ['a', 'b', 'c', 'd'];
 
-scroller.newChild = index => {
+scroller.createElement = item => {
   const child = document.createElement('div');
-  child.textContent = myItems[index];
+  child.textContent = item;
   return child;
 };
 
-// Calls newChild four times (assuming the screen is big enough)
-scroller.totalItems = myItems.length;
+scroller.updateElement = null;
+
+// Calls createElement four times (assuming the screen is big enough)
+scroller.itemSource = myItems;
 ```
 
-In this example, we are statically displaying a virtual scroller with four items, which we never plan to update. This can be useful for use cases where you would otherwise use static HTML, but want to get the performance benefits of virtualization. (Admittedly, we'd need more than four items to see that happen in reality.)
-
-Note that even if we invoke `requestReset()`, nothing new would render in this case:
+Note that even if we invoke `itemsChanged()`, or change `itemSource`, nothing new would render in this case, because we have no `updateElement` behavior:
 
 ```js
 // Does nothing
 requestAnimationFrame(() => {
-  myItems = ['A', 'B', 'C', 'D'];
-  scroller.requestReset();
+  myItems.length = 0;
+  myItems.push('A', 'B', 'C', 'D');
+  scroller.itemsChanged();
+});
+
+// Does nothing
+requestAnimationFrame(() => {
+  scroller.itemSource = ['X', 'Y', 'Z', 'W'];
 });
 ```
 
 _Note: we include `requestAnimationFrame` here to wait for `<virtual-scroller>` rendering._
 
-If you plan to update your items, you're likely better off using `newChild` to set up the "template" for each item, and using `updateChild` to fill in the data. Like so:
+### Custom DOM recycling using `recycleElement`
+
+The default `createElement` and `recycleElement` functions will recycle the created DOM elements. You can also control this process on your own by setting a custom `recycleElement`:
 
 ```js
-scroller.newChild = () => {
-  return document.createElement('div');
+const nodePool = [];
+scroller.createElement = () => {
+  return nodePool.pop() || document.createElement('section');
 };
-
-scroller.updateChild = (child, index) => {
-  child.textContent = myItems[index];
+scroller.recycleElement = (child) => {
+  nodePool.push(child);
 };
+```
 
-let myItems = ['a', 'b', 'c', 'd'];
-// Calls newChild + updateChild four times
-scroller.totalItems = myItems.length;
+This example's only customization over the default is using `<section>` instead of `<div>`. So, it is equivalent to using
 
-// This now works: it calls updateChild four times
-requestAnimationFrame(() => {
-  myItems = ['A', 'B', 'C', 'D'];
-  scroller.requestReset();
+```html
+<virtual-scroller>
+  <template><section></section></template>
+</virtual-scroller>
+```
+
+But at least it illustrates the idea, and gives you a starting point for more advanced customizations.
+
+### Data manipulation using `itemsChanged()`
+
+The `<virtual-scroller>` element will automatically rerender the displayed items when `itemSource` changes. For example, to switch to a completely new set of items, you could do:
+
+```js
+scroller.itemSource = newArray;
+```
+
+If you want to continue using the same items and item source, but have updated any of them, you need to use `itemsChanged()` to notify the scroller about changes, and cause a rerender of currently-displayed items. For example:
+
+```js
+const myItems = ['a', 'b', 'c'];
+scroller.itemSource = myItems;
+
+myItems[0] = 'item 0 changed!';
+scroller.itemsChanged();
+
+myItems.push('d');
+scroller.itemsChanged();
+```
+
+### Efficient re-ordering using a custom item key
+
+`<virtual-scroller>` keeps track of the generated DOM via an internal key/element map to limit the number of created nodes.
+
+Most of our examples so far have directly assigned an array to the `itemSource` property. For these cases, the default key is the item itself. But you can set a custom key either by using the second argument to `fromArray`:
+
+```js
+scroller.itemSource = ItemSource.fromArray(items, item => ...);
+```
+
+or by creating a custom `ItemSource` and providing the `key` method:
+
+```js
+scroller.itemSource = new ItemSource({
+  key(index) { ... },
+  ...
 });
 ```
 
-### DOM recycling using `recycleChild`
-
-You can recycle DOM by using the `recycleChild` function to collect DOM, and reuse it in `newChild`.
-
-When doing this, be sure to perform DOM updates in `updateChild`, as recycled children will otherwise have the data from the previous item.
+To see how this helps, consider the following example. Imagine we have a list of 3 contacts:
 
 ```js
-const myItems = ['a', 'b', 'c', 'd'];
-const nodePool = [];
-
-Object.assign(scroller, {
-  newChild() {
-    return nodePool.pop() || document.createElement('div');
-  },
-  updateChild(child, index) {
-    child.textContent = myItems[index];
-  },
-  recycleChild(child) {
-    nodePool.push(child);
-  }
-};
+const myContacts = [{name: 'A'}, {name: 'B'}, {name:'C'}];
+scroller.updateElement = (child, item) => child.textContent = item.name;
+scroller.itemSource = myContacts;
 ```
 
-### Data manipulation using `requestReset()`
+This renders 3 contacts, and the `<virtual-scroller>` key/element map is:
 
-The `<virtual-scroller>` element will automatically rerender the displayed items when `totalItems` changes. For example, to add a new item to the end, you could do:
+```
+myContacts[0] → <div>A</div>
+myContacts[1] → <div>B</div>
+myContacts[2] → <div>C</div>
+```
+
+Let's say we receive new data from the server, which has rearranged the contacts in a different order:
 
 ```js
-myItems.push('new item');
-scroller.totalItems++;
+// Pretend this came from the server:
+const newContacts = [{name: 'B'}, {name:'C'}, {name: 'A'}];
+scroller.itemSource = newContacts;
 ```
 
-If you want to keep the same number of items or change an item's properties, you can use `requestReset()` to notify the scroller about changes, and cause a rerender of currently-displayed items. If you do this, you'll also need to set `updateChild`, since the elements will already be created. For example:
+With the default key function, we would re-update, relayout, and repaint all the contacts. Since none of the new contact objects are in the key/element map, we would need to call `createElement` again, once for each new contact.
 
-```js
-scroller.updateChild = (child, index) => {
-  child.textContent = index + ' - ' + myItems[index];
-};
-
-myItems[0] = 'item 0 changed!';
-
-scroller.requestReset();
-```
-
-In this case, `newChild` will be called for the newly-added item once it becomes visible, whereas `updateChild` will every item, including the ones that already had corresponding elements in the old items indexes.
-
-### Efficient re-ordering using `childKey`
-
-`<virtual-scroller>` keeps track of the generated DOM via an internal key/Element map to limit the number of created nodes.
-
-The default key is the array index, but can be customized through the `childKey` property.
-
-Imagine we have a list of 3 contacts:
-```js
-const myContacts = ['A', 'B', 'C'];
-virtualScroller.totalItems = myContacts.length;
-virtualScroller.newChild = () => document.createElement('div');
-virtualScroller.updateChild = (div, index) => div.textContent = myContacts[index];
-```
-This renders 3 contacts, and the `<virtual-scroller>` key/Element map is:
-```
-0: <div>A</div>
-1: <div>B</div>
-2: <div>C</div>
-```
-We want to move the first contact to the end:
-```js
-function moveFirstContactToEnd() {
-  const contact = myContacts[0];
-  myContacts.splice(0, 1); // remove it
-  myContacts.push(contact); // add it to the end
-  virtualScroller.requestReset(); // notify virtual-scroller
-}
-```
-With the default `childKey`, we would relayout and repaint all the contacts when invoking `moveFirstContactToEnd()`:
-```
-0: <div>B</div> (was <div>A</div>)
-1: <div>C</div> (was <div>B</div>)
-2: <div>A</div> (was <div>C</div>)
-```
 This is suboptimal, as we just needed to move the first DOM node to the end.
 
-We can customize the key/Element mapping via `childKey`:
+If instead we set the key computation appropriately when first setting `myContacts`, e.g. by doing
+
 ```js
-virtualScroller.childKey = (index) => myContacts[index];
+scroller.itemSource = ItemSource.fromArray(myContacts, c => c.name);
 ```
 
-This updates the `<virtual-scroller>` key/Element map to:
+then the key/element map would be
+
 ```
-A: <div>A</div>
-B: <div>B</div>
-C: <div>C</div>
+A → <div>A</div>
+B → <div>B</div>
+C → <div>C</div>
 ```
-Now, invoking `moveFirstContactToEnd()` will only move the first contact DOM node to the end.
+
+Now if we update the `itemSource`, with
+
+```js
+scroller.itemSource = ItemSource.fromArray(newContacts, c => c.name);
+```
+
+the `<virtual-scroller>` will notice that none of its keys changed, and so it can just reuse the same elements from the key/element map, while rearranging them appropriately. Thus we have avoided the expense of creating new ones.
 
 See [demo/sorting.html](demo/sorting.html) as an example implementation.
 
@@ -283,7 +362,7 @@ scroller.addEventListener('rangechange', (event) => {
   if (event.first === 0) {
     console.log('rendered first item.');
   }
-  if (event.last === scroller.totalItems - 1) {
+  if (event.last === scroller.itemSource.length - 1) {
     console.log('rendered last item.');
     // Perhaps you would want to load more data for display!
   }

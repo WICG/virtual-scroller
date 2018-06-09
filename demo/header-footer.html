@@ -34,7 +34,6 @@
     import './contacts/contact-element.js';
 
     const virtualScroller = document.querySelector('virtual-scroller');
-    let contacts = [];
 
     /**
      * The items array come in 2 shapes: 
@@ -45,9 +44,8 @@
      * dedicated node pools for recycling among them.
      */
     const nodePool = { group: [], contact: [] };
-    virtualScroller.newChild = (index) => {
+    virtualScroller.createElement = (item) => {
       let element;
-      const item = contacts[index];
       if (item.group) {
         element = nodePool.group.pop() || document.createElement('header');
       } else {
@@ -55,16 +53,14 @@
       }
       return element;
     };
-    virtualScroller.updateChild = (element, index) => {
-      const item = contacts[index];
+    virtualScroller.updateElement = (element, item) => {
       if (item.group) {
         element.textContent = `${item.title} (${item.count})`;
       } else {
         element.contact = item;
       }
     };
-    virtualScroller.recycleChild = (element, index) => {
-      const item = contacts[index];
+    virtualScroller.recycleElement = (element, item) => {
       if (item.group) {
         nodePool.group.push(element);
       } else {
@@ -79,7 +75,7 @@
       // Keeps track of the last group created.
       let group = null;
       // We sort the contacts by name and insert group objects within.
-      contacts = (await response.json())
+      virtualScroller.itemSource = (await response.json())
         .sort((a, b) => a.name.localeCompare(b.name))
         .reduce((contacts, contact) => {
           const title = contact.name[0];
@@ -96,7 +92,6 @@
           contacts.push(contact);
           return contacts;
         }, []);
-      virtualScroller.totalItems = contacts.length;
     })();
   </script>
 </body>

@@ -24,7 +24,7 @@ function scrollerForContainer(container, items) {
     totalItems: items.length,
     layout: new Layout({itemSize: {width: innerWidth, height: innerHeight}}),
     container,
-    newChild: (idx) => {
+    createElement: (idx) => {
       let child = pool.pop();
       if (!child) {
         child = document.createElement('div');
@@ -44,7 +44,7 @@ function scrollerForContainer(container, items) {
       }
       return child;
     },
-    updateChild: (child, idx) => {
+    updateElement: (child, idx) => {
       // child.id = `section_${idx}`;
       // child._container.id = `innerContainer_${idx}`;
 
@@ -53,7 +53,7 @@ function scrollerForContainer(container, items) {
         child._container._scroller.totalItems = item.items.length;
       }
     },
-    recycleChild: (child) => {
+    recycleElement: (child) => {
       pool.push(child);
     }
   });

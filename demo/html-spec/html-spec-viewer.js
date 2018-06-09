@@ -1,7 +1,27 @@
 import {HtmlSpec} from '../../node_modules/streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js';
-import {VirtualScrollerElement} from '../../virtual-scroller-element.js';
+import {ItemSource, VirtualScrollerElement} from '../../virtual-scroller-element.js';
 
+class HTMLSpecSource extends ItemSource {
+  constructor(items) {
+    const placeholders = [];
+    for (let i = 0; i < 4; i++) {
+      const el = document.createElement('div');
+      el.style.lineHeight = '100vh';
+      placeholders.push(el);
+    }
+    const indexToElement = (idx) => idx >= items.length ?
+        placeholders[idx % placeholders.length] :
+        items[idx];
+    super({
+      // The number of nodes that we'll load dynamically
+      // as the user scrolls.
+      getLength: () => Math.max(items.length, 9312),
+      item: indexToElement,
+      key: indexToElement,
+    });
+  }
+}
 class HTMLSpecViewer extends VirtualScrollerElement {
   constructor() {
     super();
@@ -13,7 +33,8 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       const style = document.createElement('style');
       style.textContent = `
   :host {
-    position: fixed;
+    /* Bug with position: fixed https://crbug.com/846322 */
+    position: absolute;
     top: 0px;
     left: 0px;
     right: 0px;
@@ -29,33 +50,16 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       this.htmlSpec = new HtmlSpec();
       this.htmlSpec.head.style.display = 'none';
       this.appendChild(this.htmlSpec.head);
-
-      // The number of nodes that we'll load dynamically
-      // as the user scrolls.
-      this.totalItems = 9312;
       this.items = [];
-      this.placeholders = [];
-      for (let i = 0; i < 2; i++) {
-        const el = document.createElement('div');
-        el.style.lineHeight = '100vh';
-        this.placeholders.push(el);
-      }
-      this.newChild = (idx) => {
-        return idx >= this.items.length ?
-            this.placeholders[idx % this.placeholders.length] :
-            this.items[idx];
-      };
-      this.updateChild = (child, idx) => {
+      this.itemSource = new HTMLSpecSource(this.items);
+      this.createElement = (item) => item;
+      this.updateElement = (item, _, idx) => {
         if (idx >= this.items.length) {
-          child.textContent = `Loading (index ${idx}, loaded ${
-              this.items.length} / ${this.totalItems})`;
+          item.textContent = `Loading (index ${idx}, loaded ${
+              this.items.length} / ${this.itemSource.length})`;
         }
       };
-      this.childKey = (idx) => {
-        return idx >= this.items.length ?
-            `placeholder-${idx % this.placeholders.length}` :
-            idx;
-      };
+      this.addNextChunk();
       this.addEventListener('rangechange', this.onRangechange);
     }
   }
@@ -74,6 +78,7 @@ class HTMLSpecViewer extends VirtualScrollerElement {
         this.htmlSpec.head.appendChild(el);
       } else {
         this.items.push(el);
+        this.itemsChanged();
         chunk--;
       }
       if (chunk === 0) {
@@ -83,13 +88,9 @@ class HTMLSpecViewer extends VirtualScrollerElement {
     this._adding = false;
     if (chunk > 0) {
       // YOU REACHED THE END OF THE SPEC \o/
-      this.totalItems = this.items.length;
-      this.newChild = (idx) => this.items[idx];
-      this.updateChild = this.recycleChild = this.childKey = null;
+      this.updateElement = null;
       this.placeholders = null;
       this.removeEventListener('rangechange', this.onRangechange);
-    } else {
-      this.requestReset();
     }
   }
 

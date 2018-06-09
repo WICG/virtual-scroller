@@ -21,23 +21,23 @@ const config = {
   totalItems: items.length,
   container,
   layout,
-  newChild: (idx) => {
+  createElement: (idx) => {
     let section = pool.pop();
     if (!section) {
       section = document.createElement('section');
       section.innerHTML = `<div class="title"></div>`;
       section._title = section.querySelector('.title');
       // Update it immediately.
-      config.updateChild(section, idx);
+      config.updateElement(section, idx);
     }
     return section;
   },
-  updateChild: (section, idx) => {
+  updateElement: (section, idx) => {
     const item = items[idx];
     section.id = `section_${idx}`;
     section._title.textContent = `${idx} - ${item.name}`;
   },
-  recycleChild: (section) => {
+  recycleElement: (section) => {
     pool.push(section);
   }
 };
