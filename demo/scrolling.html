@@ -71,13 +71,13 @@
       .then((resp) => resp.json())
       .then((contacts) => virtualScroller.itemSource = contacts);
 
-    window.scrollToIndex = function(index, position) {
+    window.scrollToIndex = (index, position) => {
       if (index >= 0 && index < virtualScroller.itemSource.length) {
         virtualScroller.scrollToIndex(index, position);
       }
     };
 
-    window.toggleHorizontal = function(horizontal) {
+    window.toggleHorizontal = (horizontal) => {
       virtualScroller.layout = horizontal ? 'horizontal' : 'vertical';
     };
   </script>
