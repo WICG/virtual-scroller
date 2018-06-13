@@ -23,9 +23,7 @@ class VelocityTracker {
     const deltaX = e.clientX - oldestTouchMove.clientX;
     const deltaT = e.timeStamp - oldestTouchMove.timeStamp;
 
-    return {
-      velocityX: (deltaT > 0) ? deltaX / deltaT : 0
-    };
+    return {velocityX: (deltaT > 0) ? deltaX / deltaT : 0};
   }
 }
 
@@ -50,7 +48,7 @@ class DismissableItem extends HTMLElement {
       return;
     }
 
-    switch(event.type) {
+    switch (event.type) {
       case 'pointerdown':
         this.setPointerCapture(event.pointerId);
         this._onPointerDown(event, event);
@@ -87,12 +85,9 @@ class DismissableItem extends HTMLElement {
   _dismiss() {
     this.style.opacity = 0;
 
-    const collapseAnim = this.animate({
-      height: [ getComputedStyle(this).height, '0px']
-    }, {
-      duration: 100,
-      iterations: 1
-    });
+    const collapseAnim = this.animate(
+        {height: [getComputedStyle(this).height, '0px']},
+        {duration: 100, iterations: 1});
 
     collapseAnim.onfinish = this._fireRemove.bind(this);
   }
@@ -100,10 +95,8 @@ class DismissableItem extends HTMLElement {
   _fireRemove() {
     this.setPosition(0);
 
-    const event = new CustomEvent('remove', {
-      detail: { itemIndex: this.itemIndex },
-      bubbles: true
-    });
+    const event = new CustomEvent(
+        'remove', {detail: {itemIndex: this.itemIndex}, bubbles: true});
     this.dispatchEvent(event);
   }
 
@@ -116,19 +109,22 @@ class DismissableItem extends HTMLElement {
     const currentY = this.style.transform.split(',')[1];
     const isDismiss = targetPosition !== 0;
 
-    const animation = this.animate({
-      transform: [
-        `translate(${this.position}px,${currentY}`,
-        `translate(${targetPosition}px,${currentY}`
-      ],
-      opacity: [ this.style.opacity, isDismiss ? 0 : 1 ]
-    }, {
-      duration: Math.abs(targetPosition - this.position) * 0.5,
-      iterations: 1
-    });
+    const animation = this.animate(
+        {
+          transform: [
+            `translate(${this.position}px,${currentY}`,
+            `translate(${targetPosition}px,${currentY}`
+          ],
+          opacity: [this.style.opacity, isDismiss ? 0 : 1]
+        },
+        {
+          duration: Math.abs(targetPosition - this.position) * 0.5,
+          iterations: 1
+        });
 
     this.position = targetPosition;
-    animation.onfinish = () => isDismiss ? this._dismiss() : this.setPosition(0);
+    animation.onfinish = () =>
+        isDismiss ? this._dismiss() : this.setPosition(0);
   }
 
   fling(velocityX) {
@@ -137,16 +133,19 @@ class DismissableItem extends HTMLElement {
 
     const currentY = this.style.transform.split(',')[1];
 
-    const animation = this.animate({
-      transform: [
-        `translate(${this.position}px,${currentY}`,
-        `translate(${targetPosition}px,${currentY}`
-      ],
-      opacity: [ this.style.opacity, 0 ]
-    }, {
-      duration: Math.abs(targetPosition - this.position) / Math.abs(velocityX),
-      iterations: 1
-    });
+    const animation = this.animate(
+        {
+          transform: [
+            `translate(${this.position}px,${currentY}`,
+            `translate(${targetPosition}px,${currentY}`
+          ],
+          opacity: [this.style.opacity, 0]
+        },
+        {
+          duration:
+              Math.abs(targetPosition - this.position) / Math.abs(velocityX),
+          iterations: 1
+        });
 
     animation.onfinish = this._dismiss.bind(this);
   }
