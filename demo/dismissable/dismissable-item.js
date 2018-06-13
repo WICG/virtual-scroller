@@ -23,9 +23,7 @@ class VelocityTracker {
     const deltaX = e.clientX - oldestTouchMove.clientX;
     const deltaT = e.timeStamp - oldestTouchMove.timeStamp;
 
-    return {
-      velocityX: (deltaT > 0) ? deltaX / deltaT : 0
-    };
+    return {velocityX: (deltaT > 0) ? deltaX / deltaT : 0};
   }
 }
 
@@ -50,28 +48,28 @@ class DismissableItem extends HTMLElement {
       return;
     }
 
-    switch(event.type) {
+    switch (event.type) {
       case 'pointerdown':
         this.setPointerCapture(event.pointerId);
-        this._onPointerDown(event, event);
+        this._onPointerDown(event);
         break;
       case 'pointermove':
         if (event.pressure) {
-          this._onPointerPan(event, event);
+          this._onPointerPan(event);
         }
         break;
       case 'pointerup':
         this.releasePointerCapture(event.pointerId);
-        this._onPointerUp(event, event);
+        this._onPointerUp(event);
         break;
       case 'touchstart':
-        this._onPointerDown(event, event.changedTouches[0]);
+        this._onPointerDown(event.changedTouches[0]);
         break;
       case 'touchmove':
-        this._onPointerPan(event, event.changedTouches[0]);
+        this._onPointerPan(event.changedTouches[0]);
         break;
       case 'touchend':
-        this._onPointerUp(event, event.changedTouches[0]);
+        this._onPointerUp(event.changedTouches[0]);
         break;
     }
   }
@@ -87,12 +85,9 @@ class DismissableItem extends HTMLElement {
   _dismiss() {
     this.style.opacity = 0;
 
-    const collapseAnim = this.animate({
-      height: [ getComputedStyle(this).height, '0px']
-    }, {
-      duration: 100,
-      iterations: 1
-    });
+    const collapseAnim = this.animate(
+        {height: [getComputedStyle(this).height, '0px']},
+        {duration: 100, iterations: 1});
 
     collapseAnim.onfinish = this._fireRemove.bind(this);
   }
@@ -100,10 +95,8 @@ class DismissableItem extends HTMLElement {
   _fireRemove() {
     this.setPosition(0);
 
-    const event = new CustomEvent('remove', {
-      detail: { itemIndex: this.itemIndex },
-      bubbles: true
-    });
+    const event = new CustomEvent(
+        'remove', {detail: {itemIndex: this.itemIndex}, bubbles: true});
     this.dispatchEvent(event);
   }
 
@@ -116,19 +109,22 @@ class DismissableItem extends HTMLElement {
     const currentY = this.style.transform.split(',')[1];
     const isDismiss = targetPosition !== 0;
 
-    const animation = this.animate({
-      transform: [
-        `translate(${this.position}px,${currentY}`,
-        `translate(${targetPosition}px,${currentY}`
-      ],
-      opacity: [ this.style.opacity, isDismiss ? 0 : 1 ]
-    }, {
-      duration: Math.abs(targetPosition - this.position) * 0.5,
-      iterations: 1
-    });
+    const animation = this.animate(
+        {
+          transform: [
+            `translate(${this.position}px,${currentY}`,
+            `translate(${targetPosition}px,${currentY}`
+          ],
+          opacity: [this.style.opacity, isDismiss ? 0 : 1]
+        },
+        {
+          duration: Math.abs(targetPosition - this.position) * 0.5,
+          iterations: 1
+        });
 
     this.position = targetPosition;
-    animation.onfinish = () => isDismiss ? this._dismiss() : this.setPosition(0);
+    animation.onfinish = () =>
+        isDismiss ? this._dismiss() : this.setPosition(0);
   }
 
   fling(velocityX) {
@@ -137,16 +133,19 @@ class DismissableItem extends HTMLElement {
 
     const currentY = this.style.transform.split(',')[1];
 
-    const animation = this.animate({
-      transform: [
-        `translate(${this.position}px,${currentY}`,
-        `translate(${targetPosition}px,${currentY}`
-      ],
-      opacity: [ this.style.opacity, 0 ]
-    }, {
-      duration: Math.abs(targetPosition - this.position) / Math.abs(velocityX),
-      iterations: 1
-    });
+    const animation = this.animate(
+        {
+          transform: [
+            `translate(${this.position}px,${currentY}`,
+            `translate(${targetPosition}px,${currentY}`
+          ],
+          opacity: [this.style.opacity, 0]
+        },
+        {
+          duration:
+              Math.abs(targetPosition - this.position) / Math.abs(velocityX),
+          iterations: 1
+        });
 
     animation.onfinish = this._dismiss.bind(this);
   }
@@ -162,14 +161,14 @@ class DismissableItem extends HTMLElement {
     }
   }
 
-  _onPointerDown(e, change) {
+  _onPointerDown(change) {
     this.state = 'initial';
     this.startX = change.clientX;
     this.startY = change.clientY;
     this.startPosition = 0;
   }
 
-  _onPointerPan(e, change) {
+  _onPointerPan(change) {
     if (this.state == 'initial') {
       const deltaX = change.clientX - this.startX;
       const deltaY = change.clientY - this.startY;
@@ -177,13 +176,12 @@ class DismissableItem extends HTMLElement {
       // Shaky or sloppy fingers are common using scroll, so
       // we ignore mini pans of 5 dips like Android.
       if (deltaX ** 2 + deltaY ** 2 < kTouchSlopValue ** 2) {
-        this.state = 'cancel';
         return;
       }
 
+      // If scrolled vertically, ignore following events.
       if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        this._settleToClosestPosition();
-        this.state = 'cancel';
+        this.state = 'ignoring';
         return;
       }
 
@@ -192,34 +190,23 @@ class DismissableItem extends HTMLElement {
 
     if (this.state == 'dragging') {
       this._tracker = this._tracker || new VelocityTracker();
-      this._tracker.update(e);
-
-      // Dragging the item outside the viewport enables horizontal
-      // scrolling, allowing the user to drag the whole virtual scroller
-      // to the opposite side when dragging back.
-
-      // This can be prevented by a e.preventDefault() here or the following
-      // CSS: virtual-scroller { overflow-x: hidden }, but preventDefault()
-      // furthermore ensure that no vertical scrolling can happen while
-      // dragging.
-      e.preventDefault();
+      this._tracker.update(change);
 
       const deltaX = change.clientX - this.startX;
       this.setPosition(this.startPosition + deltaX);
     }
   }
 
-  _onPointerUp(e, change) {
+  _onPointerUp(change) {
     if (this.state == 'dragging') {
       const velocity = this._tracker.update(change).velocityX;
+      this._tracker = null;
       if (Math.abs(velocity) > kMinFlingVelocityValue) {
         this.fling(velocity);
-        return;
+      } else {
+        this._settleToClosestPosition();
       }
-      this._settleToClosestPosition();
-      this.state = 'cancel';
     }
-    this._tracker = null;
   }
 }
 
