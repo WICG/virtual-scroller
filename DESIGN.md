@@ -209,7 +209,7 @@ layout.scrollToIndex(9, 'center');
 layout.scrollToIndex(19, 'end');
 
 // Scroll to the 100th item, position it at the end of the viewport 
-// if we are scrolled above it already, otherwisef position it to the start.
+// if we are scrolled above it already, otherwise position it to the start.
 layout.scrollToIndex(99, 'nearest');
 
 ```
