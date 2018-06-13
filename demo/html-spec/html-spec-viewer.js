@@ -53,6 +53,7 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       this._htmlSpec.head.style.display = 'none';
       this.appendChild(this._htmlSpec.head);
 
+      this._stream = this._htmlSpec.advance();
       this.items = [];
       this.itemSource = HTMLSpecSource.fromArray(this.items);
       this.createElement = (item) => item;
@@ -75,8 +76,7 @@ class HTMLSpecViewer extends VirtualScrollerElement {
 
     await new Promise(resolve => requestIdleCallback(resolve));
 
-    const stream = this._htmlSpec.advance(this.items[this.items.length - 1]);
-    for await (const el of iterateStream(stream)) {
+    for await (const el of iterateStream(this._stream)) {
       if (/^(style|link|script)$/.test(el.localName)) {
         this._htmlSpec.head.appendChild(el);
       } else {
@@ -93,6 +93,7 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       // YOU REACHED THE END OF THE SPEC \o/
       this.itemSource = this.items;
       this.updateElement = null;
+      this._stream = null;
       this.removeEventListener('rangechange', this.onRangechange);
     }
   }
