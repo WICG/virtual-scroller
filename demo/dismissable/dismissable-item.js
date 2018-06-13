@@ -181,16 +181,15 @@ class DismissableItem extends HTMLElement {
   }
 
   _onTouchEnd(e) {
-    const velocity = this._tracker.update(e).velocityX;
-    this._tracker = null;
-
     if (this.state == 'dragging') {
+      const velocity = this._tracker.update(e).velocityX;
       if (Math.abs(velocity) > kMinFlingVelocityValue) {
         this.fling(velocity);
         return;
       }
       this._settleToClosestPosition();
     }
+    this._tracker = null;
   }
 }
 
