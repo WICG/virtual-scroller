@@ -270,18 +270,17 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    */
   _createContainerSizer() {
     const sizer = document.createElement('div');
+    // When the scrollHeight is large, the height
+    // of this element might be ignored.
+    // Setting content and font-size ensures the element
+    // has a size.
     Object.assign(sizer.style, {
       position: 'absolute',
-      width: '1px',
-      height: '1px',
-      margin: 0,
+      margin: '-2px 0 0 0',
       padding: 0,
       visibility: 'hidden',
-      fontSize: '1px',
+      fontSize: '2px',
     });
-    // When the scrollHeight is large, the height
-    // of this element might be ignored. Setting
-    // content ensures the element has a size.
     sizer.innerHTML = '&nbsp;';
     return sizer;
   }
