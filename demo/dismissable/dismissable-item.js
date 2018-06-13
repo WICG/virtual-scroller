@@ -51,25 +51,25 @@ class DismissableItem extends HTMLElement {
     switch (event.type) {
       case 'pointerdown':
         this.setPointerCapture(event.pointerId);
-        this._onPointerDown(event, event);
+        this._onPointerDown(event);
         break;
       case 'pointermove':
         if (event.pressure) {
-          this._onPointerPan(event, event);
+          this._onPointerPan(event);
         }
         break;
       case 'pointerup':
         this.releasePointerCapture(event.pointerId);
-        this._onPointerUp(event, event);
+        this._onPointerUp(event);
         break;
       case 'touchstart':
-        this._onPointerDown(event, event.changedTouches[0]);
+        this._onPointerDown(event.changedTouches[0]);
         break;
       case 'touchmove':
-        this._onPointerPan(event, event.changedTouches[0]);
+        this._onPointerPan(event.changedTouches[0]);
         break;
       case 'touchend':
-        this._onPointerUp(event, event.changedTouches[0]);
+        this._onPointerUp(event.changedTouches[0]);
         break;
     }
   }
@@ -161,14 +161,14 @@ class DismissableItem extends HTMLElement {
     }
   }
 
-  _onPointerDown(e, change) {
+  _onPointerDown(change) {
     this.state = 'initial';
     this.startX = change.clientX;
     this.startY = change.clientY;
     this.startPosition = 0;
   }
 
-  _onPointerPan(e, change) {
+  _onPointerPan(change) {
     if (this.state == 'initial') {
       const deltaX = change.clientX - this.startX;
       const deltaY = change.clientY - this.startY;
@@ -176,13 +176,12 @@ class DismissableItem extends HTMLElement {
       // Shaky or sloppy fingers are common using scroll, so
       // we ignore mini pans of 5 dips like Android.
       if (deltaX ** 2 + deltaY ** 2 < kTouchSlopValue ** 2) {
-        this.state = 'cancel';
         return;
       }
 
+      // If scrolled vertically, ignore following events.
       if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        this._settleToClosestPosition();
-        this.state = 'cancel';
+        this.state = 'ignoring';
         return;
       }
 
@@ -191,34 +190,23 @@ class DismissableItem extends HTMLElement {
 
     if (this.state == 'dragging') {
       this._tracker = this._tracker || new VelocityTracker();
-      this._tracker.update(e);
-
-      // Dragging the item outside the viewport enables horizontal
-      // scrolling, allowing the user to drag the whole virtual scroller
-      // to the opposite side when dragging back.
-
-      // This can be prevented by a e.preventDefault() here or the following
-      // CSS: virtual-scroller { overflow-x: hidden }, but preventDefault()
-      // furthermore ensure that no vertical scrolling can happen while
-      // dragging.
-      e.preventDefault();
+      this._tracker.update(change);
 
       const deltaX = change.clientX - this.startX;
       this.setPosition(this.startPosition + deltaX);
     }
   }
 
-  _onPointerUp(e, change) {
+  _onPointerUp(change) {
     if (this.state == 'dragging') {
       const velocity = this._tracker.update(change).velocityX;
+      this._tracker = null;
       if (Math.abs(velocity) > kMinFlingVelocityValue) {
         this.fling(velocity);
-        return;
+      } else {
+        this._settleToClosestPosition();
       }
-      this._settleToClosestPosition();
-      this.state = 'cancel';
     }
-    this._tracker = null;
   }
 }
 
