@@ -97,16 +97,20 @@ This re-renders all of the currently-displayed elements, updating them from thei
 
 This generally needs to be called any time the data to be displayed changes. This includes additions, removals, and modifications to the data. See our [examples below](#data-manipulation-using-itemschanged) for more information.
 
-### `scrollToIndex(index: number, position: string = "start")` method
+### `scrollToIndex(index: number, { position: string = "start" } = {})` method
 
 Scrolls to a specified index, optionally with a position, one of:
 
-* "start" (default)
-* "center"
-* "end"
-* "nearest"
+* `"start"`: aligns the start of the item with the start of the visible portion of the scroller
+* `"center"`: aligns the center of the item with the center of the visible portion of the scroller
+* `"end"`: aligns the end of the item with the end of the visible portion of the scroller
+* `"nearest"`: if the item is before the center of the visible portion of the scroller, behaves like `"start"`; if it is after the center of the visible portion of the scroller, behaves like `"end"`
 
-See [demo/scrolling.html](demo/scrolling.html) as an example implementation.
+Note that what is considered the "start" and "end" of the scroller is dependent on the layout; for vertical layouts, start/end means top/bottom, while for horizontal layouts, they mean left/right.
+
+See [demo/scrolling.html](demo/scrolling.html) to see these behaviors in action.
+
+_Note: the options object design is inspired by [the options for `element.scrollIntoView()`](https://drafts.csswg.org/cssom-view/#dictdef-scrollintoviewoptions). We may in the future add a `behavior` option for smooth scrolling; see [#99](https://github.com/valdrinkoshi/virtual-scroller/issues/99)._
 
 ### "`rangechange`" event
 

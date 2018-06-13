@@ -157,7 +157,7 @@ export class VirtualScrollerElement extends HTMLElement {
     }
   }
 
-  scrollToIndex(index, position = 'start') {
+  scrollToIndex(index, { position = 'start' } = {}) {
     if (this[_scroller]) {
       this[_scroller].layout.scrollToIndex(index, position);
     }
