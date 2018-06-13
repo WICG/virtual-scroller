@@ -1,8 +1,34 @@
 import {HtmlSpec} from '../../node_modules/streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js';
-import {VirtualScrollerElement} from '../../virtual-scroller-element.js';
+import {ItemSource, VirtualScrollerElement} from '../../virtual-scroller-element.js';
+
+class HTMLSpecSource extends ItemSource {
+  static fromArray(items) {
+    const placeholders = [];
+    for (let i = 0; i < 4; i++) {
+      const el = document.createElement('div');
+      el.style.lineHeight = '100vh';
+      placeholders.push(el);
+    }
+    const indexToElement = (idx) => idx >= items.length ?
+        placeholders[idx % placeholders.length] :
+        items[idx];
+
+    return new this({
+      // The number of nodes that we'll load dynamically
+      // as the user scrolls.
+      getLength: () => Math.max(items.length, 9312),
+      item: indexToElement,
+      key: indexToElement,
+    });
+  }
+}
 
 class HTMLSpecViewer extends VirtualScrollerElement {
+  constructor() {
+    super();
+    this.onRangechange = this.onRangechange.bind(this);
+  }
   connectedCallback() {
     super.connectedCallback();
     if (!this._htmlSpec) {
@@ -27,12 +53,18 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       this._htmlSpec.head.style.display = 'none';
       this.appendChild(this._htmlSpec.head);
 
-      this.itemSource = this.items = [];
+      this._stream = this._htmlSpec.advance();
+      this.items = [];
+      this.itemSource = HTMLSpecSource.fromArray(this.items);
       this.createElement = (item) => item;
-      this.updateElement = null;
+      this.updateElement = (item, _, idx) => {
+        if (idx >= this.items.length) {
+          item.textContent = `Loading (index ${idx}, loaded ${
+              this.items.length} / ${this.itemSource.length})`;
+        }
+      };
       this.addNextChunk();
-      this.addEventListener(
-          'rangechange', (event) => this.onRangechange(event));
+      this.addEventListener('rangechange', this.onRangechange);
     }
   }
 
@@ -41,8 +73,10 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       return;
     }
     this._adding = true;
-    const stream = this._htmlSpec.advance(this.items[this.items.length - 1]);
-    for await (const el of iterateStream(stream)) {
+
+    await new Promise(resolve => requestIdleCallback(resolve));
+
+    for await (const el of iterateStream(this._stream)) {
       if (/^(style|link|script)$/.test(el.localName)) {
         this._htmlSpec.head.appendChild(el);
       } else {
@@ -55,10 +89,17 @@ class HTMLSpecViewer extends VirtualScrollerElement {
       }
     }
     this._adding = false;
+    if (chunk > 0) {
+      // YOU REACHED THE END OF THE SPEC \o/
+      this.itemSource = this.items;
+      this.updateElement = null;
+      this._stream = null;
+      this.removeEventListener('rangechange', this.onRangechange);
+    }
   }
 
   onRangechange(range) {
-    if (range.last >= this.items.length - 4) {
+    if (range.last >= this.items.length) {
       this.addNextChunk();
     }
   }
