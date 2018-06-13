@@ -91,6 +91,7 @@ class HTMLSpecViewer extends VirtualScrollerElement {
     this._adding = false;
     if (chunk > 0) {
       // YOU REACHED THE END OF THE SPEC \o/
+      this.itemSource = this.items;
       this.updateElement = null;
       this.removeEventListener('rangechange', this.onRangechange);
     }
