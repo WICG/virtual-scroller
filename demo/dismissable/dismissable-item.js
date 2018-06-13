@@ -177,7 +177,6 @@ class DismissableItem extends HTMLElement {
       // Shaky or sloppy fingers are common using scroll, so
       // we ignore mini pans of 5 dips like Android.
       if (deltaX ** 2 + deltaY ** 2 < kTouchSlopValue ** 2) {
-        e.preventDefault();
         return;
       }
 
@@ -187,14 +186,18 @@ class DismissableItem extends HTMLElement {
       }
 
       this.state = 'dragging';
-      this.width = this.offsetWidth;
     }
 
     if (this.state == 'dragging') {
       this._tracker = this._tracker || new VelocityTracker();
       this._tracker.update(e);
 
-      e.preventDefault();
+      // Dragging the item outside the viewport enables horizontal
+      // scrolling, allowing the user to drag the whole virtual scroller
+      // to the opposite side when dragging back.
+      // This can be prevented by a e.preventDefault() here or the following
+      // CSS: virtual-scroller { overflow-x: hidden }
+
       const deltaX = change.clientX - this.startX;
       this.setPosition(this.startPosition + deltaX);
     }
