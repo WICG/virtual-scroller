@@ -32,10 +32,6 @@ class VelocityTracker {
 class DismissableItem extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
-    this.shadowRoot.innerHTML = `
-      <slot></slot>
-    `;
 
     this.position = 0;
     this.itemIndex = 0;
@@ -81,6 +77,7 @@ class DismissableItem extends HTMLElement {
   }
 
   setPosition(position) {
+    this.position = position;
     this.width = this.offsetWidth;
     this.style.opacity = (this.width - Math.abs(position)) / this.width;
     const currentY = this.style.transform.split(',')[1];
@@ -177,6 +174,8 @@ class DismissableItem extends HTMLElement {
       const deltaX = change.clientX - this.startX;
       const deltaY = change.clientY - this.startY;
 
+      // Shaky or sloppy fingers are common using scroll, so
+      // we ignore mini pans of 5 dips like Android.
       if (deltaX ** 2 + deltaY ** 2 < kTouchSlopValue ** 2) {
         e.preventDefault();
         return;
@@ -197,8 +196,7 @@ class DismissableItem extends HTMLElement {
 
       e.preventDefault();
       const deltaX = change.clientX - this.startX;
-      this.position = this.startPosition + deltaX;
-      this.setPosition(this.position);
+      this.setPosition(this.startPosition + deltaX);
     }
   }
 
