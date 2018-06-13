@@ -45,16 +45,11 @@
 
     const virtualScroller = document.querySelector('virtual-scroller');
 
-    const createElementFn = virtualScroller.createElement.bind(virtualScroller);
-    virtualScroller.createElement = (item, itemIndex) => {
-      const element = createElementFn(item, itemIndex); 
-      element.itemIndex = itemIndex;
-      element.addEventListener('remove', (e) => {
-        myContacts.splice(e.target.itemIndex, 1);
-        virtualScroller.itemsChanged();
-      });
-      return element;
-    }
+    // `remove` event bubbles
+    virtualScroller.addEventListener('remove', (event) => {
+      myContacts.splice(event.detail.itemIndex, 1);
+      virtualScroller.itemsChanged();
+    });
 
     virtualScroller.updateElement = (element, contact, index) => {
       element.children[0].contact = contact;
