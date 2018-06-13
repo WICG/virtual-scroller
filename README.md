@@ -163,7 +163,7 @@ By setting a custom `updateElement` behavior, you can leverage more interesting 
   <template>
     <section>
       <h1></h1>
-      <img></img>
+      <img>
       <p></p>
     </section>
   </template>
@@ -171,7 +171,7 @@ By setting a custom `updateElement` behavior, you can leverage more interesting 
 
 <script type="module">
   scroller.updateElement = (child, contact) => {
-    child.querySelector("h1") = contact.name;
+    child.querySelector("h1").textContent = contact.name;
     child.querySelector("img").src = contact.avatarURL;
     child.querySelector("p").textContent = contact.bio;
   };
@@ -198,7 +198,35 @@ A useful pattern here is to encapsulate the details of updating your elements in
 </script>
 ```
 
+_We could add a feature to make this even simpler, for custom-element cases like this. See [#101](https://github.com/valdrinkoshi/virtual-scroller/issues/101)._
+
 Note that in all these examples, the elements are recycled.
+
+#### Relation to template instantiation proposal
+
+The [template instantiation](https://github.com/w3c/webcomponents/blob/gh-pages/proposals/Template-Instantiation.md) proposal is a still-evolving idea for how to provide native updating of `<template>` elements to the web platform. This seems like exactly the kind of thing we'd want to use with `<virtual-scroller>`, once it becomes ready. For example, one could replace the above example with
+
+```html
+<virtual-scroller id="scroller">
+  <template>
+    <section>
+      <h1>{{name}}</h1>
+      <img src="{{avatarURL}}">
+      <p>{{bio}}</p>
+    </section>
+  </template>
+</virtual-scroller>
+
+<script type="module">
+  scroller.itemSource = contacts;
+</script>
+```
+
+Since the template instantiation proposal is still in flux, and in particular the idea of a default processor which interprets `{{double-curly}}` syntax is controversial, we don't have any immediate plans for integrating the two proposals. But, we think it's important to preserve forward-compatibility, so if this capability eventually manifests in the web platform, the virtual-scroller spec can be upgraded to use it.
+
+We see no serious obstacles to such a future upgrade. The only potential forward-compatibility issue to worry about is web pages that use `<template>`-based item creation, use the above double-curly syntax, and do not set a custom `updateElement`. Such pages would be changed from having their child element's `textContent` set into having the template stamped.
+
+Such cases _should_ be exceedingly rare; since any text is overwritten by the default `updateElement`, writing double-curly text inside the `<template>` is rather nonsensical. If we're still concerned when that future day comes, we could require some explicit opt-in to the template-stamping, such as `<virtual-scroller autotemplate>` or similar.
 
 ### Customizing element creation and updating: using `createElement`
 
