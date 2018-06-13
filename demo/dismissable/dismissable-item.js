@@ -20,7 +20,7 @@ class VelocityTracker {
 
     const oldestTouchMove = this._recentTouchMoves[0];
 
-    const deltaX = e.changedTouches[0].clientX - oldestTouchMove.changedTouches[0].clientX;
+    const deltaX = e.clientX - oldestTouchMove.clientX;
     const deltaT = e.timeStamp - oldestTouchMove.timeStamp;
 
     return {
@@ -33,27 +33,37 @@ class DismissableItem extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.innerHTML = '<slot></slot>';
+    this.shadowRoot.innerHTML = `
+      <style>
+      :host {
+        touch-action: none;
+      }
+      </style>
+      <slot></slot>
+    `;
 
     this.position = 0;
     this.itemIndex = 0;
     this.width = 0;
     this.state = 'initial';
-    this.addEventListener('touchstart', this);
-    this.addEventListener('touchmove', this);
-    this.addEventListener('touchend', this);
+    this.addEventListener('pointerdown', this);
+    this.addEventListener('pointermove', this);
+    this.addEventListener('pointerup', this);
   }
 
   handleEvent(event) {
     switch(event.type) {
-      case 'touchstart':
-        this._onTouchStart(event);
+      case 'pointerdown':
+        this._onPointerDown(event);
         break;
-      case 'touchmove':
-        this._onTouchMove(event);
+      case 'pointermove':
+        if (!event.pressure) {
+          break;
+        }
+        this._onPointerPan(event);
         break;
-      case 'touchend':
-        this._onTouchEnd(event);
+      case 'pointerup':
+        this._onPointerUp(event);
         break;
     }
   }
@@ -143,17 +153,18 @@ class DismissableItem extends HTMLElement {
     }
   }
 
-  _onTouchStart(e) {
+  _onPointerDown(e) {
     this.state = 'initial';
-    this.startX = e.changedTouches[0].clientX;
-    this.startY = e.changedTouches[0].clientY;
+    this.setPointerCapture(e.pointerId);
+    this.startX = e.clientX;
+    this.startY = e.clientY;
     this.startPosition = 0;
   }
 
-  _onTouchMove(e) {
+  _onPointerPan(e) {
     if (this.state == 'initial') {
-      const deltaX = e.changedTouches[0].clientX - this.startX;
-      const deltaY = e.changedTouches[0].clientY - this.startY;
+      const deltaX = e.clientX - this.startX;
+      const deltaY = e.clientY - this.startY;
 
       if (deltaX ** 2 + deltaY ** 2 < kTouchSlopValue ** 2) {
         e.preventDefault();
@@ -174,13 +185,14 @@ class DismissableItem extends HTMLElement {
       this._tracker.update(e);
 
       e.preventDefault();
-      const deltaX = e.changedTouches[0].clientX - this.startX;
+      const deltaX = e.clientX - this.startX;
       this.position = this.startPosition + deltaX;
       this.setPosition(this.position);
     }
   }
 
-  _onTouchEnd(e) {
+  _onPointerUp(e) {
+    this.releasePointerCapture(e.pointerId);
     if (this.state == 'dragging') {
       const velocity = this._tracker.update(e).velocityX;
       if (Math.abs(velocity) > kMinFlingVelocityValue) {
