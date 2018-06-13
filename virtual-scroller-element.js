@@ -157,6 +157,12 @@ export class VirtualScrollerElement extends HTMLElement {
     }
   }
 
+  scrollToIndex(index, { position = 'start' } = {}) {
+    if (this[_scroller]) {
+      this[_scroller].layout.scrollToIndex(index, position);
+    }
+  }
+
   [_render]() {
     // Wait first connected as scroller needs to measure
     // sizes of container and children.

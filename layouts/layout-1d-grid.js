@@ -23,8 +23,6 @@ export default class Layout extends Layout1dBase {
   }
 
   _getActiveItems() {
-    const {_scrollPosition, _scrollSize} = this;
-
     const min = Math.max(0, this._scrollPosition - this._overhang);
     const max = Math.min(
         this._scrollSize,

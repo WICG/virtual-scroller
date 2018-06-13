@@ -1,0 +1,84 @@
+<html>
+
+<head>
+  <title>Scrolling</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #controls {
+      margin: 10px 0;
+    }
+
+    input {
+      width: 50px;
+    }
+
+    virtual-scroller {
+      flex: 1;
+      height: 100%;
+      box-sizing: border-box;
+      border-top: 2px solid #eee;
+      border-bottom: 2px solid #eee;
+    }
+
+    virtual-scroller>div {
+      padding: 10px;
+      box-sizing: border-box;
+      border-bottom: 1px solid #eee;
+    }
+
+    [layout="horizontal"]>div {
+      writing-mode: vertical-lr;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="controls">
+    <label>
+      Scroll to:
+      <input id="index" type="number" placeholder="index" onchange="scrollToIndex(this.valueAsNumber, position.value)">
+      <select id="position" onchange="scrollToIndex(index.valueAsNumber, this.value)">
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+        <option value="nearest">nearest</option>
+      </select>
+    </label>
+    <label>
+      horizontal:
+      <input type="checkbox" onchange="toggleHorizontal(this.checked)">
+    </label>
+  </div>
+  <virtual-scroller id="scroller"></virtual-scroller>
+
+  <script type="module">
+    import '../virtual-scroller-element.js';
+
+    const virtualScroller = document.getElementById('scroller');
+
+    virtualScroller.updateElement = (element, contact, index) =>
+      element.textContent = `${index}) ${contact.longText}`;
+
+    fetch('contacts/contacts.json')
+      .then((resp) => resp.json())
+      .then((contacts) => virtualScroller.itemSource = contacts);
+
+    window.scrollToIndex = (index, position) => {
+      virtualScroller.scrollToIndex(index, { position });
+    };
+
+    window.toggleHorizontal = (horizontal) => {
+      virtualScroller.layout = horizontal ? 'horizontal' : 'vertical';
+    };
+  </script>
+</body>
+
+</html>

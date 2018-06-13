@@ -186,13 +186,32 @@ layout.updateItemSizes({
 });
 ```
 
-Set `layout.viewportScroll` to move the range across the container size.
+### Move range
+
+Use `viewportScroll (type: {top: number, left: number})` to move the range to a specific point.
 ```js
 const el = document.scrollingElement;
 el.addEventListener('scroll', () => {
   layout.viewportScroll = {top: el.scrollTop};
   layout.reflowIfNeeded();
 });
+```
+
+Use `scrollToIndex(index: number, position: string)` to move the range to a specific index.
+```js
+// Scroll to the 3rd item, position it at the start of the viewport.
+layout.scrollToIndex(2);
+
+// Scroll to the 10th item, position it at the center of the viewport.
+layout.scrollToIndex(9, 'center');
+
+// Scroll to the 20th item, position it at the end of the viewport.
+layout.scrollToIndex(19, 'end');
+
+// Scroll to the 100th item, position it at the end of the viewport 
+// if we are scrolled above it already, otherwise position it to the start.
+layout.scrollToIndex(99, 'nearest');
+
 ```
 
 ## VirtualScroller (RepeatsAndScrolls mixin)
