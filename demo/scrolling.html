@@ -72,10 +72,7 @@
       .then((contacts) => virtualScroller.itemSource = contacts);
 
     window.scrollToIndex = (index, position) => {
-      // TODO: virtual-scroller should probably handle this clamping itself?
-      if (index >= 0 && index < virtualScroller.itemSource.length) {
-        virtualScroller.scrollToIndex(index, { position });
-      }
+      virtualScroller.scrollToIndex(index, { position });
     };
 
     window.toggleHorizontal = (horizontal) => {

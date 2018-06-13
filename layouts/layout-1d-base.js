@@ -155,6 +155,9 @@ export default class Layout extends EventTarget {
   }
 
   scrollToIndex(index, position = 'start') {
+    if (!Number.isFinite(index))
+      return;
+    index = Math.min(this.totalItems, Math.max(0, index));
     this._scrollToIndex = index;
     if (position === 'nearest') {
       position = index > this._first + this._num / 2 ? 'end' : 'start';
