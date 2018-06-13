@@ -67,11 +67,10 @@ class DismissableItem extends HTMLElement {
 
   _dismiss() {
     this.style.opacity = 0;
-    const height = getComputedStyle(this).height;
 
-    const collapseAnim = this.animate([
-      { height }, { height: '0px'}
-    ], { 
+    const collapseAnim = this.animate({
+      height: [ getComputedStyle(this).height, '0px']
+    }, {
       duration: 100,
       iterations: 1
     });
@@ -82,7 +81,7 @@ class DismissableItem extends HTMLElement {
   _fireRemove() {
     this.setPosition(0);
 
-    const event = new CustomEvent('remove', { 
+    const event = new CustomEvent('remove', {
       detail: { itemIndex: this.itemIndex },
       bubbles: true
     });
@@ -98,10 +97,13 @@ class DismissableItem extends HTMLElement {
     const currentY = this.style.transform.split(',')[1];
     const isDismiss = targetPosition !== 0;
 
-    const animation = this.animate([
-      { transform: `translate(${this.position}px,${currentY}`, opacity: this.style.opacity },
-      { transform: `translate(${targetPosition}px,${currentY}`, opacity: isDismiss ? 0 : 1}
-    ], { 
+    const animation = this.animate({
+      transform: [
+        `translate(${this.position}px,${currentY}`,
+        `translate(${targetPosition}px,${currentY}`
+      ],
+      opacity: [ this.style.opacity, isDismiss ? 0 : 1 ]
+    }, {
       duration: Math.abs(targetPosition - this.position) * 0.5,
       iterations: 1
     });
@@ -116,10 +118,13 @@ class DismissableItem extends HTMLElement {
 
     const currentY = this.style.transform.split(',')[1];
 
-    const animation = this.animate([
-      { transform: `translate(${this.position}px,${currentY}`, opacity: this.style.opacity },
-      { transform: `translate(${targetPosition}px,${currentY}`, opacity: 0 }
-    ], { 
+    const animation = this.animate({
+      transform: [
+        `translate(${this.position}px,${currentY}`,
+        `translate(${targetPosition}px,${currentY}`
+      ],
+      opacity: [ this.style.opacity, 0 ]
+    }, {
       duration: Math.abs(targetPosition - this.position) / Math.abs(velocityX),
       iterations: 1
     });
@@ -136,16 +141,16 @@ class DismissableItem extends HTMLElement {
     } else {
       this.settle(0);
     }
-  } 
+  }
 
-  _onTouchStart(e) { 
+  _onTouchStart(e) {
     this.state = 'initial';
     this.startX = e.changedTouches[0].clientX;
     this.startY = e.changedTouches[0].clientY;
     this.startPosition = 0;
   }
 
-  _onTouchMove(e) { 
+  _onTouchMove(e) {
     if (this.state == 'initial') {
       const deltaX = e.changedTouches[0].clientX - this.startX;
       const deltaY = e.changedTouches[0].clientY - this.startY;
@@ -175,7 +180,7 @@ class DismissableItem extends HTMLElement {
     }
   }
 
-  _onTouchEnd(e) { 
+  _onTouchEnd(e) {
     const velocity = this._tracker.update(e).velocityX;
     this._tracker = null;
 
