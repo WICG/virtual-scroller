@@ -10,7 +10,6 @@ export default class Layout extends Layout1dBase {
 
     this._anchorIdx = null;
     this._anchorPos = null;
-    this._scrollError = 0;
     this._stable = true;
 
     this._needsRemeasure = false;
@@ -295,6 +294,7 @@ export default class Layout extends Layout1dBase {
 
     this._updateScrollSize();
     this._getActiveItems();
+    this._scrollIfNeeded();
 
     if (this._scrollSize !== _scrollSize) {
       this._emitScrollSize();
@@ -326,6 +326,13 @@ export default class Layout extends Layout1dBase {
       [this._positionDim]: this._getPosition(idx),
           [this._secondaryPositionDim]: 0
     }
+  }
+
+  _getItemSize(idx) {
+    return {
+      [this._sizeDim]: this._getSize(idx) || this._itemDim1,
+      [this._secondarySizeDim]: this._itemDim2,
+    };
   }
 
   _viewDim2Changed() {

@@ -20,6 +20,7 @@ export default class Layout extends EventTarget {
     this._direction = 'vertical';
 
     this._scrollPosition = 0;
+    this._scrollError = 0;
     this._viewportSize = {width: 0, height: 0};
     this._totalItems = 0;
 
@@ -28,6 +29,9 @@ export default class Layout extends EventTarget {
     this._overhang = 150;
 
     this._pendingReflow = false;
+
+    this._scrollToIndex = -1;
+    this._scrollToAnchor = 0;
 
     Object.assign(this, config);
   }
@@ -150,6 +154,29 @@ export default class Layout extends EventTarget {
     }
   }
 
+  scrollToIndex(index, position = 'start') {
+    this._scrollToIndex = index;
+    if (position === 'nearest') {
+      position = index > this._first + this._num / 2 ? 'end' : 'start';
+    }
+    switch (position) {
+      case 'start':
+        this._scrollToAnchor = 0;
+        break;
+      case 'center':
+        this._scrollToAnchor = 0.5;
+        break;
+      case 'end':
+        this._scrollToAnchor = 1;
+        break;
+      default:
+        throw new TypeError(
+            'position must be one of: start, center, end, nearest');
+    }
+    this._scheduleReflow();
+    this.reflowIfNeeded();
+  }
+
   ///
 
   _scheduleReflow() {
@@ -161,6 +188,7 @@ export default class Layout extends EventTarget {
 
     this._updateScrollSize();
     this._getActiveItems();
+    this._scrollIfNeeded();
 
     if (this._scrollSize !== _scrollSize) {
       this._emitScrollSize();
@@ -174,6 +202,7 @@ export default class Layout extends EventTarget {
       this._emitRange();
       this._emitChildPositions();
     }
+    this._emitScrollError();
   }
 
   _updateScrollSize() {
@@ -194,6 +223,25 @@ export default class Layout extends EventTarget {
         this._scheduleReflow();
       }
     }
+  }
+
+  _scrollIfNeeded() {
+    if (this._scrollToIndex === -1) {
+      return;
+    }
+    const index = this._scrollToIndex;
+    const anchor = this._scrollToAnchor;
+    const pos = this._getItemPosition(index)[this._positionDim];
+    const size = this._getItemSize(index)[this._sizeDim];
+
+    const curAnchorPos = this._scrollPosition + this._viewDim1 * anchor;
+    const newAnchorPos = pos + size * anchor;
+    // Ensure scroll position is an integer within scroll bounds.
+    const scrollPosition = Math.floor(Math.min(
+        this._scrollSize - this._viewDim1,
+        Math.max(0, this._scrollPosition - curAnchorPos + newAnchorPos)));
+    this._scrollError += this._scrollPosition - scrollPosition;
+    this._scrollPosition = scrollPosition;
   }
 
   _emitRange(inProps) {
@@ -243,7 +291,13 @@ export default class Layout extends EventTarget {
   }
 
   _scrollPositionChanged(oldPos, newPos) {
-    // Override
+    // When both values are bigger than the max scroll position, keep the
+    // current scroll anchor. Otherwise, invalidate it so it can be recomputed
+    // in the next reflow.
+    const maxPos = this._scrollSize - this._viewDim1;
+    if (oldPos < maxPos || newPos < maxPos) {
+      this._scrollToIndex = -1;
+    }
   }
 
   _getActiveItems() {
@@ -252,5 +306,13 @@ export default class Layout extends EventTarget {
 
   _getItemPosition(idx) {
     // Override.
+  }
+
+  _getItemSize(idx) {
+    // Override.
+    return {
+      [this._sizeDim]: this._itemDim1,
+      [this._secondarySizeDim]: this._itemDim2,
+    };
   }
 }

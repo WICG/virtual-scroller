@@ -97,6 +97,17 @@ This re-renders all of the currently-displayed elements, updating them from thei
 
 This generally needs to be called any time the data to be displayed changes. This includes additions, removals, and modifications to the data. See our [examples below](#data-manipulation-using-itemschanged) for more information.
 
+### `scrollToIndex(index: number, position: string = "start")` method
+
+Scrolls to a specified index, optionally with a position, one of:
+
+* "start" (default)
+* "center"
+* "end"
+* "nearest"
+
+See [demo/scrolling.html](demo/scrolling.html) as an example implementation.
+
 ### "`rangechange`" event
 
 Bubbles: false / Cancelable: false / Composed: false
