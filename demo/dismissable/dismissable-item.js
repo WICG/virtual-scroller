@@ -61,8 +61,8 @@ class DismissableItem extends HTMLElement {
     this.addEventListener('pointerup', this, {passive: true});
   }
 
-  connectedCallback() {
-    this.scroller = this.offsetParent;
+  disconnectedCallback() {
+    this.scroller = null;
   }
 
   handleEvent(event) {
@@ -204,9 +204,11 @@ class DismissableItem extends HTMLElement {
       }
 
       this.state = 'dragging';
-      if (this.scroller) {
-        this.scroller.style.overflow = 'hidden';
+      if (!this.scroller) {
+        this.scroller = this.offsetParent;
+        this._scrollerOverflow = this.scroller.style.overflow;
       }
+      this.scroller.style.overflow = 'hidden';
     }
 
     if (this.state == 'dragging') {
@@ -220,9 +222,7 @@ class DismissableItem extends HTMLElement {
 
   _onPointerUp(change) {
     if (this.state == 'dragging') {
-      if (this.scroller) {
-        this.scroller.style.overflow = '';
-      }
+      this.scroller.style.overflow = this._scrollerOverflow;
       const velocity = this._tracker.update(change).velocityX;
       this._tracker = null;
       if (Math.abs(velocity) > kMinFlingVelocityValue) {
