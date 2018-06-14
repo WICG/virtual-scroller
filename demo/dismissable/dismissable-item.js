@@ -34,12 +34,10 @@ class DismissableItem extends HTMLElement {
     this.attachShadow({mode: 'open'}).innerHTML = `
       <style>
         :host {
-          contain: content;
           overflow: hidden;
         }
         #contentWrapper {
           contain: content;
-          overflow: hidden;
           will-change: transform, opacity;
         }
       </style>
@@ -64,7 +62,7 @@ class DismissableItem extends HTMLElement {
   }
 
   connectedCallback() {
-    this.scroller = this.closest("virtual-scroller");
+    this.scroller = this.offsetParent;
   }
 
   handleEvent(event) {
