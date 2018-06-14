@@ -34,7 +34,13 @@ class DismissableItem extends HTMLElement {
     this.attachShadow({mode: 'open'}).innerHTML = `
       <style>
         :host {
-          overflow-x: hidden;
+          contain: content;
+          overflow: hidden;
+        }
+        #contentWrapper {
+          contain: content;
+          overflow: hidden;
+          will-change: transform, opacity;
         }
       </style>
       <div id="contentWrapper">
@@ -44,16 +50,21 @@ class DismissableItem extends HTMLElement {
 
     this.wrapper = this.shadowRoot.querySelector('#contentWrapper');
 
+    this.scroller = null;
     this.position = 0;
     this.itemIndex = 0;
     this.width = 0;
     this.state = 'initial';
-    this.addEventListener('touchstart', this);
-    this.addEventListener('touchmove', this);
-    this.addEventListener('touchend', this);
-    this.addEventListener('pointerdown', this);
-    this.addEventListener('pointermove', this);
-    this.addEventListener('pointerup', this);
+    this.addEventListener('touchstart', this, {passive: true});
+    this.addEventListener('touchmove', this, {passive: true});
+    this.addEventListener('touchend', this, {passive: true});
+    this.addEventListener('pointerdown', this, {passive: true});
+    this.addEventListener('pointermove', this, {passive: true});
+    this.addEventListener('pointerup', this, {passive: true});
+  }
+
+  connectedCallback() {
+    this.scroller = this.closest("virtual-scroller");
   }
 
   handleEvent(event) {
@@ -195,6 +206,9 @@ class DismissableItem extends HTMLElement {
       }
 
       this.state = 'dragging';
+      if (this.scroller) {
+        this.scroller.style.overflow = 'hidden';
+      }
     }
 
     if (this.state == 'dragging') {
@@ -208,6 +222,9 @@ class DismissableItem extends HTMLElement {
 
   _onPointerUp(change) {
     if (this.state == 'dragging') {
+      if (this.scroller) {
+        this.scroller.style.overflow = '';
+      }
       const velocity = this._tracker.update(change).velocityX;
       this._tracker = null;
       if (Math.abs(velocity) > kMinFlingVelocityValue) {
