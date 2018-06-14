@@ -31,6 +31,19 @@ class DismissableItem extends HTMLElement {
   constructor() {
     super();
 
+    this.attachShadow({mode: 'open'}).innerHTML = `
+      <style>
+        :host {
+          overflow-x: hidden;
+        }
+      </style>
+      <div id="contentWrapper">
+        <slot></slot>
+      </div>
+    `;
+
+    this.wrapper = this.shadowRoot.querySelector('#contentWrapper');
+
     this.position = 0;
     this.itemIndex = 0;
     this.width = 0;
@@ -77,15 +90,14 @@ class DismissableItem extends HTMLElement {
   setPosition(position) {
     this.position = position;
     this.width = this.offsetWidth;
-    this.style.opacity = (this.width - Math.abs(position)) / this.width;
-    const currentY = this.style.transform.split(',')[1];
-    this.style.transform = `translate(${position}px, ${currentY}`;
+    this.wrapper.style.opacity = (this.width - Math.abs(position)) / this.width;
+    this.wrapper.style.transform = `translateX(${position}px)`;
   }
 
   _dismiss() {
-    this.style.opacity = 0;
+    this.wrapper.style.opacity = 0;
 
-    const collapseAnim = this.animate(
+    const collapseAnim = this.wrapper.animate(
         {height: [getComputedStyle(this).height, '0px']},
         {duration: 100, iterations: 1});
 
@@ -106,16 +118,15 @@ class DismissableItem extends HTMLElement {
       return;
     }
 
-    const currentY = this.style.transform.split(',')[1];
     const isDismiss = targetPosition !== 0;
 
-    const animation = this.animate(
+    const animation = this.wrapper.animate(
         {
           transform: [
-            `translate(${this.position}px,${currentY}`,
-            `translate(${targetPosition}px,${currentY}`
+            `translateX(${this.position}px)`,
+            `translateX(${targetPosition}px)`
           ],
-          opacity: [this.style.opacity, isDismiss ? 0 : 1]
+          opacity: [this.wrapper.style.opacity, isDismiss ? 0 : 1]
         },
         {
           duration: Math.abs(targetPosition - this.position) * 0.5,
@@ -131,15 +142,13 @@ class DismissableItem extends HTMLElement {
     this.state = 'initial';
     const targetPosition = velocityX < 0 ? -this.width : this.width;
 
-    const currentY = this.style.transform.split(',')[1];
-
-    const animation = this.animate(
+    const animation = this.wrapper.animate(
         {
           transform: [
-            `translate(${this.position}px,${currentY}`,
-            `translate(${targetPosition}px,${currentY}`
+            `translateX(${this.position}px)`,
+            `translateX(${targetPosition}px)`
           ],
-          opacity: [this.style.opacity, 0]
+          opacity: [this.wrapper.style.opacity, 0]
         },
         {
           duration:
