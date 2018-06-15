@@ -1,0 +1,90 @@
+<html>
+
+<head>
+  <title>Fallback element</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      max-width: 600px;
+      height: 100vh;
+      margin: 0px auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    virtual-scroller {
+      flex: 1;
+      margin: 10px 0;
+      border-top: 2px solid #eee;
+      border-bottom: 2px solid #eee;
+    }
+
+    contact-element,
+    button {
+      height: 80px;
+    }
+  </style>
+</head>
+
+<body>
+  <virtual-scroller></virtual-scroller>
+
+  <script type="module">
+    import '../virtual-scroller-element.js';
+    import './contacts/contact-element.js';
+    import { ContactDataSource } from './contacts/contact-data-source.js';
+
+    const dataSource = new ContactDataSource();
+    const virtualScroller = document.querySelector('virtual-scroller');
+
+    const button = document.createElement('button');
+    const loadMore = async () => {
+      // Make loading go, then trigger itemsChanged so we can update
+      // the button status.
+      const newContactsPromise = dataSource.getContacts(20);
+      virtualScroller.itemsChanged();
+      const newContacts = await newContactsPromise;
+      const last = contacts.pop();
+      contacts.push(...newContacts);
+      if (!dataSource.loadedAll) {
+        contacts.push(last);
+      }
+      virtualScroller.itemsChanged();
+    };
+    button.addEventListener('click', loadMore);
+
+    // Use the actual button as data. We keep it at the end.
+    const contacts = [button];
+    virtualScroller.itemSource = contacts;
+    // We'll have a custom createElement, so we have to recycle ourselves.
+    const nodePool = [];
+
+    virtualScroller.createElement = (contact) => {
+      if (contact !== button) {
+        return nodePool.pop() || document.createElement('contact-element');
+      }
+      return button;
+    };
+    virtualScroller.updateElement = (element, contact) => {
+      if (element !== button) {
+        element.contact = contact;
+      } else {
+        button.disabled = dataSource.loading;
+        button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
+      }
+    };
+    virtualScroller.recycleElement = (element, contact) => {
+      // TODO(valdrin): why we get `contact != button && element == button`
+      // here after the first load?
+      if (element !== button) {
+        nodePool.push(element);
+      }
+    };
+
+    loadMore();
+  </script>
+</body>
+
+</html>
