@@ -47,7 +47,7 @@
       virtualScroller.itemsChanged();
       // ... and wait for the contacts to be loaded.
       const newContacts = await promise;
-      contacts.splice(contacts.length - 2, 0, ...newContacts);
+      contacts.splice(contacts.length - 1, 0, ...newContacts);
       if (dataSource.loadedAll) {
         contacts.pop();
       }
