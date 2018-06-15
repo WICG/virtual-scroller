@@ -86,7 +86,7 @@ export class VirtualScrollerElement extends HTMLElement {
     return ['layout'];
   }
 
-  attributeChangedCallback(name, oldVal, newVal) {
+  attributeChangedCallback() {
     this[_render]();
   }
 
@@ -98,13 +98,9 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   get itemSource() {
-    return this[_itemSource];
+    return this[_rawItemSource];
   }
   set itemSource(itemSource) {
-    // No Change.
-    if (this[_rawItemSource] === itemSource) {
-      return;
-    }
     this[_rawItemSource] = itemSource;
     this[_itemSource] = Array.isArray(itemSource) ?
         ItemSource.fromArray(itemSource) :
@@ -157,7 +153,7 @@ export class VirtualScrollerElement extends HTMLElement {
     }
   }
 
-  scrollToIndex(index, { position = 'start' } = {}) {
+  scrollToIndex(index, {position = 'start'} = {}) {
     if (this[_scroller]) {
       this[_scroller].layout.scrollToIndex(index, position);
     }
