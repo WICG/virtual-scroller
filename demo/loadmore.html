@@ -41,15 +41,15 @@
 
     const button = document.createElement('button');
     const loadMore = async () => {
-      // Make loading go, then trigger itemsChanged so we can update
-      // the button status.
-      const newContactsPromise = dataSource.getContacts(20);
+      // Start loading the contacts...
+      const promise = dataSource.getContacts(20);
+      // ... notify list so the button can be updated...
       virtualScroller.itemsChanged();
-      const newContacts = await newContactsPromise;
-      const last = contacts.pop();
-      contacts.push(...newContacts);
-      if (!dataSource.loadedAll) {
-        contacts.push(last);
+      // ... and wait for the contacts to be loaded.
+      const newContacts = await promise;
+      contacts.splice(contacts.length - 2, 0, ...newContacts);
+      if (dataSource.loadedAll) {
+        contacts.pop();
       }
       virtualScroller.itemsChanged();
     };
@@ -62,10 +62,10 @@
     const nodePool = [];
 
     virtualScroller.createElement = (contact) => {
-      if (contact !== button) {
-        return nodePool.pop() || document.createElement('contact-element');
+      if (contact === button) {
+        return button;
       }
-      return button;
+      return nodePool.pop() || document.createElement('contact-element');
     };
     virtualScroller.updateElement = (element, contact) => {
       if (element !== button) {
@@ -75,9 +75,7 @@
         button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
       }
     };
-    virtualScroller.recycleElement = (element, contact) => {
-      // TODO(valdrin): why we get `contact != button && element == button`
-      // here after the first load?
+    virtualScroller.recycleElement = (element) => {
       if (element !== button) {
         nodePool.push(element);
       }
