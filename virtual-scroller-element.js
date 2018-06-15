@@ -102,7 +102,7 @@ export class VirtualScrollerElement extends HTMLElement {
   }
   set itemSource(itemSource) {
     // No change.
-    if (this[_rawItemSource] !== itemSource) {
+    if (this[_rawItemSource] === itemSource) {
       return;
     }
     this[_rawItemSource] = itemSource;
