@@ -58,9 +58,9 @@
     // Use the actual button as data. We keep it at the end.
     const contacts = [button];
     virtualScroller.itemSource = contacts;
+
     // We'll have a custom createElement, so we have to recycle ourselves.
     const nodePool = [];
-
     virtualScroller.createElement = (contact) => {
       if (contact === button) {
         return button;
@@ -68,11 +68,11 @@
       return nodePool.pop() || document.createElement('contact-element');
     };
     virtualScroller.updateElement = (element, contact) => {
-      if (element !== button) {
-        element.contact = contact;
-      } else {
+      if (element === button) {
         button.disabled = dataSource.loading;
         button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
+      } else {
+        element.contact = contact;
       }
     };
     virtualScroller.recycleElement = (element) => {
