@@ -1,0 +1,88 @@
+<html>
+
+<head>
+  <title>Load more</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      max-width: 600px;
+      height: 100vh;
+      margin: 0px auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    virtual-scroller {
+      flex: 1;
+      margin: 10px 0;
+      border-top: 2px solid #eee;
+      border-bottom: 2px solid #eee;
+    }
+
+    contact-element,
+    button {
+      height: 80px;
+    }
+  </style>
+</head>
+
+<body>
+  <virtual-scroller></virtual-scroller>
+
+  <script type="module">
+    import '../virtual-scroller-element.js';
+    import './contacts/contact-element.js';
+    import { ContactDataSource } from './contacts/contact-data-source.js';
+
+    const dataSource = new ContactDataSource();
+    const virtualScroller = document.querySelector('virtual-scroller');
+
+    const button = document.createElement('button');
+    const loadMore = async () => {
+      // Start loading the contacts...
+      const promise = dataSource.getContacts(20);
+      // ... notify list so the button can be updated...
+      virtualScroller.itemsChanged();
+      // ... and wait for the contacts to be loaded.
+      const newContacts = await promise;
+      contacts.splice(contacts.length - 1, 0, ...newContacts);
+      if (dataSource.loadedAll) {
+        contacts.pop();
+      }
+      virtualScroller.itemsChanged();
+    };
+    button.addEventListener('click', loadMore);
+
+    // Use the actual button as data. We keep it at the end.
+    const contacts = [button];
+    virtualScroller.itemSource = contacts;
+
+    // We'll have a custom createElement, so we have to recycle ourselves.
+    const nodePool = [];
+    virtualScroller.createElement = (contact) => {
+      if (contact === button) {
+        return button;
+      }
+      return nodePool.pop() || document.createElement('contact-element');
+    };
+    virtualScroller.updateElement = (element, contact) => {
+      if (element === button) {
+        button.disabled = dataSource.loading;
+        button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
+      } else {
+        element.contact = contact;
+      }
+    };
+    virtualScroller.recycleElement = (element) => {
+      if (element !== button) {
+        nodePool.push(element);
+      }
+    };
+
+    loadMore();
+  </script>
+</body>
+
+</html>
