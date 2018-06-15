@@ -101,6 +101,10 @@ export class VirtualScrollerElement extends HTMLElement {
     return this[_rawItemSource];
   }
   set itemSource(itemSource) {
+    // No change.
+    if (this[_rawItemSource] !== itemSource) {
+      return;
+    }
     this[_rawItemSource] = itemSource;
     this[_itemSource] = Array.isArray(itemSource) ?
         ItemSource.fromArray(itemSource) :
