@@ -1,6 +1,6 @@
 import {h, render} from '../../../node_modules/preact/dist/preact.esm.js';
-import {Scroller} from '../../../preact/preact-scroller.js';
-import {getDims, getUrl, Sample as BaseSample} from '../photos.js';
+import {Scroller} from '../../../preact/preact-scroller.mjs';
+import {getDims, getUrl, Sample as BaseSample} from '../photos.mjs';
 
 export class Sample extends BaseSample {
   _setUp() {

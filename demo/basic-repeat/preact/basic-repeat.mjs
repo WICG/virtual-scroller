@@ -1,6 +1,6 @@
 import {Component, h, render} from '../../../node_modules/preact/dist/preact.esm.js';
-import {Repeat} from '../../../preact/preact-repeater.js';
-import {RepeaterControl} from '../basic-repeat.js';
+import {Repeat} from '../../../preact/preact-repeater.mjs';
+import {RepeaterControl} from '../basic-repeat.mjs';
 
 export const Sample = RepeaterControl(class extends Component {
   constructor() {

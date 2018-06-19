@@ -1,7 +1,7 @@
-import {_item, _key, ItemSource} from './item-source.js';
-import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
-import {default as Layout1d} from './layouts/layout-1d.js';
-import {VirtualScroller} from './virtual-scroller.js';
+import {_item, _key, ItemSource} from './item-source.mjs';
+import {default as Layout1dGrid} from './layouts/layout-1d-grid.mjs';
+import {default as Layout1d} from './layouts/layout-1d.mjs';
+import {VirtualScroller} from './virtual-scroller.mjs';
 
 export {ItemSource};
 

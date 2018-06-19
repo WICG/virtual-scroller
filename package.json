@@ -2,8 +2,8 @@
   "name": "virtual-scroller",
   "version": "0.0.1",
   "description": "A virtual scroller that optimizes the rendering of DOM according to the visible area and available data.",
-  "main": "virtual-scroller.js",
-  "module": "virtual-scroller.js",
+  "main": "virtual-scroller.mjs",
+  "module": "virtual-scroller.mjs",
   "flat": true,
   "directories": {},
   "devDependencies": {
@@ -15,7 +15,7 @@
   "scripts": {
     "gh-pages": "./deploy-to-gh-pages.sh",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "find . -name '*.js' | grep -v node_modules | xargs clang-format --style=file -i"
+    "format": "find . -name '*.mjs' | grep -v node_modules | xargs clang-format --style=file -i"
   },
   "repository": {
     "type": "git",

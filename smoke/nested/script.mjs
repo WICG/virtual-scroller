@@ -1,7 +1,7 @@
-import Layout from '../../layouts/layout-1d.js';
-import {scroller} from '../../lit-html/lit-scroller.js';
+import Layout from '../../layouts/layout-1d.mjs';
+import {scroller} from '../../lit-html/lit-scroller.mjs';
 import {html, render} from '../../node_modules/lit-html/lit-html.js';
-import {VirtualScroller} from '../../virtual-scroller.js';
+import {VirtualScroller} from '../../virtual-scroller.mjs';
 
 const items = new Array(40).fill({
   name: 'item',
