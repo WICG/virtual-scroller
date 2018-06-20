@@ -11,7 +11,6 @@ const _createElement = Symbol();
 const _updateElement = Symbol();
 const _recycleElement = Symbol();
 const _nodePool = Symbol();
-const _rawItemSource = Symbol();
 const _itemSource = Symbol();
 const _elementSource = Symbol();
 const _firstConnected = Symbol();
@@ -41,7 +40,7 @@ export class VirtualScrollerElement extends HTMLElement {
         item.toString();
     this[_recycleElement] = (element) => this[_nodePool].push(element);
 
-    this[_itemSource] = this[_rawItemSource] = null;
+    this[_itemSource] = null;
     this[_elementSource] = {};
 
     this[_firstConnected] = false;
@@ -98,14 +97,9 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   get itemSource() {
-    return this[_rawItemSource];
+    return this[_itemSource];
   }
   set itemSource(itemSource) {
-    // No change.
-    if (this[_rawItemSource] === itemSource) {
-      return;
-    }
-    this[_rawItemSource] = itemSource;
     this[_itemSource] = Array.isArray(itemSource) ?
         ItemSource.fromArray(itemSource) :
         itemSource;
