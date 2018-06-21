@@ -163,6 +163,7 @@ export class VirtualScrollerElement extends HTMLElement {
       this[_scroller].layout.scrollToIndex(index, position);
     }
   }
+
   get[_scrollTarget]() {
     return this;
   }
@@ -174,10 +175,8 @@ export class VirtualScrollerElement extends HTMLElement {
       return;
     }
     if (!this[_scroller]) {
-      this[_scroller] = new VirtualScroller({
-        container: this,
-        scrollTarget: this[_scrollTarget],
-      });
+      this[_scroller] = new VirtualScroller(
+          {container: this, scrollTarget: this[_scrollTarget]});
     }
     const scroller = this[_scroller];
 
