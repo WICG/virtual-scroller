@@ -17,6 +17,7 @@ const _elementSource = Symbol();
 const _firstConnected = Symbol();
 /** Functions */
 const _render = Symbol();
+export const _scrollerConfig = Symbol();
 
 export class VirtualScrollerElement extends HTMLElement {
   constructor() {
@@ -162,6 +163,12 @@ export class VirtualScrollerElement extends HTMLElement {
       this[_scroller].layout.scrollToIndex(index, position);
     }
   }
+  get [_scrollerConfig]() {
+    return {
+      container: this,
+      scrollTarget: this
+    };
+  }
 
   [_render]() {
     // Wait first connected as scroller needs to measure
@@ -171,7 +178,7 @@ export class VirtualScrollerElement extends HTMLElement {
     }
     if (!this[_scroller]) {
       this[_scroller] =
-          new VirtualScroller({container: this, scrollTarget: this});
+          new VirtualScroller(this[_scrollerConfig]);
     }
     const scroller = this[_scroller];
 
