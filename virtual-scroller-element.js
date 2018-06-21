@@ -15,9 +15,9 @@ const _rawItemSource = Symbol();
 const _itemSource = Symbol();
 const _elementSource = Symbol();
 const _firstConnected = Symbol();
+export const _scrollTarget = Symbol();
 /** Functions */
 const _render = Symbol();
-export const _scrollerConfig = Symbol();
 
 export class VirtualScrollerElement extends HTMLElement {
   constructor() {
@@ -158,16 +158,13 @@ export class VirtualScrollerElement extends HTMLElement {
     }
   }
 
-  scrollToIndex(index, { position = 'start' } = {}) {
+  scrollToIndex(index, {position = 'start'} = {}) {
     if (this[_scroller]) {
       this[_scroller].layout.scrollToIndex(index, position);
     }
   }
-  get [_scrollerConfig]() {
-    return {
-      container: this,
-      scrollTarget: this
-    };
+  get[_scrollTarget]() {
+    return this;
   }
 
   [_render]() {
@@ -177,8 +174,10 @@ export class VirtualScrollerElement extends HTMLElement {
       return;
     }
     if (!this[_scroller]) {
-      this[_scroller] =
-          new VirtualScroller(this[_scrollerConfig]);
+      this[_scroller] = new VirtualScroller({
+        container: this,
+        scrollTarget: this[_scrollTarget],
+      });
     }
     const scroller = this[_scroller];
 

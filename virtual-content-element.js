@@ -1,10 +1,10 @@
-import {_scrollerConfig, ItemSource, VirtualScrollerElement} from './virtual-scroller-element.js';
+import {_scrollTarget, ItemSource, VirtualScrollerElement} from './virtual-scroller-element.js';
 
 export {ItemSource};
 
 export class VirtualContentElement extends VirtualScrollerElement {
-  get[_scrollerConfig]() {
-    return {container: this, scrollTarget: findScrollTarget(this.parentNode)};
+  get[_scrollTarget]() {
+    return findScrollTarget(this.parentNode);
   }
 }
 customElements.define('virtual-content', VirtualContentElement);
