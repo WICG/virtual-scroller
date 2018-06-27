@@ -151,7 +151,7 @@ There is also a factory method, `ItemSource.fromArray(array[, key])`, that makes
 const contactsSource = ItemSource.fromArray(contacts, c => c.id);
 ```
 
-The `key` argument to `fromArray()` is called with an item, and should return a unique key for the object. If no `key` argument is given, then the item itself is used as the key.
+The `key` argument to `fromArray()` is called with an item, and should return a unique key for the object. If no `key` argument is given, then the item index is used as the key.
 
 The main use of the `ItemSource` class is to be assigned to the `itemSource` property of a `<virtual-scroller>` element; as such, for now its only public API is a `length` property.
 
@@ -301,7 +301,7 @@ scroller.itemsChanged();
 
 `<virtual-scroller>` keeps track of the generated DOM via an internal key/element map to limit the number of created nodes.
 
-Most of our examples so far have directly assigned an array to the `itemSource` property. For these cases, the default key is the item itself. But you can set a custom key either by using the second argument to `fromArray`:
+Most of our examples so far have directly assigned an array to the `itemSource` property. For these cases, the default key is the item index. But you can set a custom key either by using the second argument to `fromArray`:
 
 ```js
 scroller.itemSource = ItemSource.fromArray(items, item => ...);
@@ -327,9 +327,9 @@ scroller.itemSource = myContacts;
 This renders 3 contacts, and the `<virtual-scroller>` key/element map is:
 
 ```
-myContacts[0] → <div>A</div>
-myContacts[1] → <div>B</div>
-myContacts[2] → <div>C</div>
+0 → <div>A</div>
+1 → <div>B</div>
+2 → <div>C</div>
 ```
 
 Let's say we receive new data from the server, which has rearranged the contacts in a different order:
