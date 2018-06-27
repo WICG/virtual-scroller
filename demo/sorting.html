@@ -67,7 +67,7 @@
     }
 
     window.toggleElementKey = function toggleElementKey(useGuid) {
-      const key = useGuid ? (contact) => contact.guid : (_, index) => index;
+      const key = useGuid ? (contact) => contact.guid : undefined;
       virtualScroller.itemSource = ItemSource.fromArray(myContacts, key);
     };
   </script>

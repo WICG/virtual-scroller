@@ -36,7 +36,7 @@ export class ItemSource {
         return array[index];
       },
       key(index) {
-        return key ? key(array[index], index) : array[index];
+        return key ? key(array[index], index) : index;
       }
     });
   }
