@@ -8,14 +8,16 @@
   "directories": {},
   "devDependencies": {
     "clang-format": "^1.2",
+    "http-server": "^0.11.1",
     "lit-html": "latest",
     "preact": "^8.2.6",
     "streaming-spec": "github:jakearchibald/streaming-html-spec#master"
   },
   "scripts": {
     "gh-pages": "./deploy-to-gh-pages.sh",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "find . -name '*.mjs' | grep -v node_modules | xargs clang-format --style=file -i"
+    "test": "echo 'Error: no test specified' && exit 1",
+    "start": "http-server -p 8081",
+    "format": "echo 'Disabled for now'; exit 1; find . -name '*.mjs' | grep -v node_modules | xargs clang-format --style=file -i"
   },
   "repository": {
     "type": "git",

@@ -426,13 +426,13 @@ Main document scrolling will be achievable through [`document.rootScroller`](htt
 
 ## Development
 
-To work on the proof-of-concept implementation, ensure you have installed the npm dependencies and serve from the project root
+To work on the proof-of-concept implementation, ensure you have installed the npm dependencies and serve from the project root.
 
 ```sh
 $ npm install
-$ python -m SimpleHTTPServer 8081
+$ npm start
 ```
 
-Then, navigate to the url: http://localhost:8081/demo/
+Then, navigate to the URL: <http://localhost:8081/demo/>.
 
 For more documentation on the internal pieces that we use to implement our `<virtual-scroller>` prototype, see [DESIGN.md](./DESIGN.md).
