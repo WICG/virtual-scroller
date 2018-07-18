@@ -1,7 +1,7 @@
-import './lazy-image.mjs';
-import Layout from '../../layouts/layout-1d.mjs';
-import {VirtualScroller} from '../../virtual-scroller.mjs';
-import {getDims, getUrl, searchFlickr} from './flickr.mjs';
+import './lazy-image.js';
+import Layout from '../../layouts/layout-1d.js';
+import {VirtualScroller} from '../../virtual-scroller.js';
+import {getDims, getUrl, searchFlickr} from './flickr.js';
 
 export {getDims, getUrl, searchFlickr};
 

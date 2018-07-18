@@ -1,4 +1,4 @@
-import {Repeats} from './virtual-repeater.mjs';
+import {Repeats} from './virtual-repeater.js';
 
 export class RangeChangeEvent extends Event {
   constructor(type, init) {

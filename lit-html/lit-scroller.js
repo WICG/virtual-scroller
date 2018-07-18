@@ -1,8 +1,8 @@
-import Layout from '../layouts/layout-1d.mjs';
+import Layout from '../layouts/layout-1d.js';
 import {directive} from '../node_modules/lit-html/lit-html.js';
-import {VirtualScroller} from '../virtual-scroller.mjs';
+import {VirtualScroller} from '../virtual-scroller.js';
 
-import {LitMixin} from './lit-repeater.mjs';
+import {LitMixin} from './lit-repeater.js';
 
 export const LitScroller = LitMixin(VirtualScroller);
 

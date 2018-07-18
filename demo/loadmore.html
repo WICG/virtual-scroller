@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 
 <head>
@@ -33,9 +32,9 @@
   <virtual-scroller></virtual-scroller>
 
   <script type="module">
-    import '../virtual-scroller-element.mjs';
-    import './contacts/contact-element.mjs';
-    import { ContactDataSource } from './contacts/contact-data-source.mjs';
+    import '../virtual-scroller-element.js';
+    import './contacts/contact-element.js';
+    import { ContactDataSource } from './contacts/contact-data-source.js';
 
     const dataSource = new ContactDataSource();
     const virtualScroller = document.querySelector('virtual-scroller');
