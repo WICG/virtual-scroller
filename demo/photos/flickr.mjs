@@ -1,4 +1,4 @@
-import {jsonp} from './jsonp-promise.js';
+import {jsonp} from './jsonp-promise.mjs';
 
 const apiKey = '241fe87a3ad5e19014a2ed498f4afcb5';
 

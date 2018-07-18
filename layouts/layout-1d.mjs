@@ -1,4 +1,4 @@
-import Layout1dBase from './layout-1d-base.js';
+import Layout1dBase from './layout-1d-base.mjs';
 
 export default class Layout extends Layout1dBase {
   constructor(config) {

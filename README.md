@@ -10,7 +10,7 @@ The (tentative) API design choices made here, as well as the element's capabilit
 
 ```html
 <script type="module"
-        src="std:virtual-scroller|https://some.cdn.com/virtual-scroller.js">
+        src="std:virtual-scroller|https://some-cdn.example/virtual-scroller.mjs">
 </script>
 
 <virtual-scroller></virtual-scroller>
