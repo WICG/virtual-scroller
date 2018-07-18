@@ -1,5 +1,5 @@
-import Layout from '../../layouts/layout-1d.mjs';
-import {VirtualScroller} from '../../virtual-scroller.mjs';
+import Layout from '../../layouts/layout-1d.js';
+import {VirtualScroller} from '../../virtual-scroller.js';
 
 const scrollMethod = document.createElement('div').scrollIntoViewIfNeeded ?
     'scrollIntoViewIfNeeded' :

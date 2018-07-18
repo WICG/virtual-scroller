@@ -1,5 +1,5 @@
 import {Component, h, render} from '../node_modules/preact/dist/preact.esm.js';
-import {VirtualRepeater} from '../virtual-repeater.mjs';
+import {VirtualRepeater} from '../virtual-repeater.js';
 
 export class Repeat extends Component {
   componentDidMount() {
