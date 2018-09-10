@@ -29,14 +29,14 @@ scroller-io > div {
         <div id="item${i}">
           Item #${i}:
           <hr>
-          This is a sentence. This is a sentence. This is a sentence. This is a
-          sentence. This is a sentence. This is a sentence. This is a sentence. This
-          is a sentence. This is a sentence. This is a sentence.  This is a sentence.
-          This is a sentence. This is a sentence. This is a sentence. This is a
-          sentence. This is a sentence. This is a sentence. This is a sentence. This
-          is a sentence. This is a sentence. This is a sentence. This is a sentence.
-          This is a sentence. This is a sentence. This is a sentence. This is a
-          sentence. This is a sentence.
+          ${(() => {
+            const items = [];
+            const count = 50 + Math.floor(50 * Math.random());
+            for (let i = 0; i < count; i++) {
+              items.push('This is a sentence.');
+            }
+            return items.join(' ');
+          })()}
         </div>
       `;
     }
