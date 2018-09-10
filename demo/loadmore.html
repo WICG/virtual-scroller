@@ -35,6 +35,7 @@
   <script type="module">
     import '../virtual-scroller-element.mjs';
     import './contacts/contact-element.mjs';
+    import { ItemSource } from '../item-source.js';
     import { ContactDataSource } from './contacts/contact-data-source.mjs';
 
     const dataSource = new ContactDataSource();
@@ -58,7 +59,9 @@
 
     // Use the actual button as data. We keep it at the end.
     const contacts = [button];
-    virtualScroller.itemSource = contacts;
+    // Use contacts as item keys, so that when new data is received, the
+    // index previously containing the button will be updated.
+    virtualScroller.itemSource = ItemSource.fromArray(contacts, (c) => c);
 
     // We'll have a custom createElement, so we have to recycle ourselves.
     const nodePool = [];
