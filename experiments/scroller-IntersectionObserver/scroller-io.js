@@ -1,3 +1,11 @@
+const rectsIntersect = (a, b) => {
+  return (
+    !(b.right < a.left || a.right < b.left) &&
+    !(b.bottom < a.top || a.bottom < b.top)
+  );
+};
+
+
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
@@ -30,6 +38,8 @@ const _hideChild = Symbol('ScrollerIO#_hideChild');
 const _observer = Symbol('ScrollerIO#_observer');
 const _observerCallback = Symbol('ScrollerIO#_observerCallback');
 
+const _fillEnd = Symbol('ScrollerIO#_fillEnd');
+
 class ScrollerIO extends HTMLElement {
   constructor() {
     super();
@@ -54,18 +64,7 @@ class ScrollerIO extends HTMLElement {
     this[_observer].observe(this[_spaceAfter]);
 
     window.requestAnimationFrame(() => {
-      for (const child of Array.from(this.children)) {
-        this[_showChild](child);
-
-        if (this[_visibleRangeStart] === undefined) {
-          this[_visibleRangeStart] = child;
-        }
-        this[_visibleRangeEnd] = child;
-
-        if (this.scrollHeight > this.clientHeight) {
-          break;
-        }
-      }
+      this[_fillEnd]();
     });
   }
 
@@ -85,14 +84,36 @@ class ScrollerIO extends HTMLElement {
       console.log(entry);
       if (entry.target === this[_spaceAfter] && entry.intersectionRatio > 0) {
         console.log(entry.target);
-        const next = this[_visibleRangeEnd].nextElementSibling;
-        if (next) {
-          this[_visibleRangeEnd] = next;
-          this[_showChild](next);
-        }
+        this[_fillEnd]();
       }
     }
     console.groupEnd();
+  }
+
+  [_fillEnd]() {
+    const firstElementChild = this.firstElementChild;
+    if (!firstElementChild) return;
+
+    if (this[_visibleRangeStart] === undefined) {
+      this[_visibleRangeStart] = firstElementChild;
+      this[_visibleRangeEnd] = firstElementChild;
+      this[_showChild](this[_visibleRangeStart]);
+    }
+
+    let next = this[_visibleRangeEnd].nextElementSibling;
+    if (next !== null) {
+      console.log('next', next);
+      const thisRect = this.getBoundingClientRect();
+      let afterRect;
+
+      do {
+        this[_visibleRangeEnd] = next;
+        this[_showChild](next);
+        afterRect = this[_spaceAfter].getBoundingClientRect();
+
+        next = next.nextElementSibling;
+      } while (rectsIntersect(thisRect, afterRect));
+    }
   }
 }
 
