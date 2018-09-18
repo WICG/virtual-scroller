@@ -94,23 +94,24 @@ class ScrollerIO extends HTMLElement {
 
   [_observerCallback](entries) {
     for (const entry of entries) {
-      if (entry.target === this[_spaceBefore] && entry.isIntersecting) {
-        this[_fillStart]();
-      }
-      if (entry.target === this[_spaceAfter] && entry.isIntersecting) {
-        this[_fillEnd]();
+      if (!entry.isIntersecting) continue;
+
+      if (entry.target === this[_spaceBefore]) {
+        this[_fillStart](entry);
+      } else if (entry.target === this[_spaceAfter]) {
+        this[_fillEnd](entry);
       }
     }
   }
 
-  [_fillStart]() {
-    const thisRect = this.getBoundingClientRect();
+  [_fillStart](entry) {
+    const thisRect = entry.rootBounds;
 
 
     // Add new elements to the start of the visible range.
     let next = this[_visibleRangeStart].previousElementSibling;
     if (next !== null) {
-      let beforeRect = this[_spaceBefore].getBoundingClientRect();
+      let beforeRect = entry.boundingClientRect;
 
       while (next !== null && rectsIntersect(thisRect, beforeRect)) {
         const scrollTop = this.scrollTop;
@@ -159,14 +160,14 @@ class ScrollerIO extends HTMLElement {
     this[_updateScrollbar]();
   }
 
-  [_fillEnd]() {
-    const thisRect = this.getBoundingClientRect();
+  [_fillEnd](entry) {
+    const thisRect = entry.rootBounds;
 
 
     // Add new elements to the end of the visible range.
     let next = this[_visibleRangeEnd].nextElementSibling;
     if (next !== null) {
-      let afterRect = this[_spaceAfter].getBoundingClientRect();
+      let afterRect = entry.boundingClientRect;
 
       while (next !== null && rectsIntersect(thisRect, afterRect)) {
         const scrollTop = this.scrollTop;
