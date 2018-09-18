@@ -5,6 +5,8 @@ const rectsIntersect = (a, b) => (
   !(b.bottom < a.top || a.bottom < b.top)
 );
 
+const rectIsVisible = r => (r.width !== 0 && r.height !== 0);
+
 
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
@@ -134,7 +136,7 @@ class ScrollerIO extends HTMLElement {
     let end = this[_visibleRangeEnd];
     let endRect = end.getBoundingClientRect();
     this[_heightEstimator].set(end, endRect.height);
-    while ((endRect.width === 0 && endRect.height === 0) || !rectsIntersect(thisRect, endRect)) {
+    while (!rectIsVisible(endRect) || !rectsIntersect(thisRect, endRect)) {
       toHide.add(end);
       if (end.previousElementSibling === null) break;
 
@@ -188,7 +190,7 @@ class ScrollerIO extends HTMLElement {
     let start = this[_visibleRangeStart];
     let startRect = start.getBoundingClientRect();
     this[_heightEstimator].set(start, startRect.height);
-    while ((startRect.width === 0 && startRect.height === 0) || !rectsIntersect(thisRect, startRect)) {
+    while (!rectIsVisible(startRect) || !rectsIntersect(thisRect, startRect)) {
       toHide.add(start);
       if (start.nextElementSibling === null) break;
 
