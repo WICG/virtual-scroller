@@ -22,7 +22,7 @@ TEMPLATE.innerHTML = `
 }
 </style>
 <div id="spaceBefore"></div>
-<slot name="visible"></slot>
+<slot></slot>
 <div id="spaceAfter"></div>
 `;
 
@@ -66,9 +66,12 @@ class ScrollerIO extends HTMLElement {
     this[_heightEstimator] = new HeightEstimator();
 
     window.requestAnimationFrame(() => {
-      const firstElementChild = this.firstElementChild;
-      if (!firstElementChild) return;
+      // TODO: This isn't the right place for this initialization logic.
+      for (let child = this.firstElementChild; child !== null; child = child.nextElementSibling) {
+        this[_hideChild](child);
+      }
 
+      const firstElementChild = this.firstElementChild;
       if (this[_visibleRangeStart] === undefined) {
         this[_visibleRangeStart] = firstElementChild;
         this[_visibleRangeEnd] = firstElementChild;
@@ -80,13 +83,11 @@ class ScrollerIO extends HTMLElement {
   }
 
   [_showChild](child) {
-    child.setAttribute('slot', 'visible');
-    this[_heightEstimator].set(child, child.getBoundingClientRect().height);
+    child.removeAttribute('invisible');
   }
 
   [_hideChild](child) {
-    this[_heightEstimator].set(child, child.getBoundingClientRect().height);
-    child.removeAttribute('slot');
+    child.setAttribute('invisible', '');
   }
 
   [_observerCallback](entries) {
@@ -112,7 +113,10 @@ class ScrollerIO extends HTMLElement {
       while (next !== null && rectsIntersect(thisRect, beforeRect)) {
         const scrollTop = this.scrollTop;
         this[_showChild](next);
-        this.scrollTop = scrollTop + next.getBoundingClientRect().height;
+        const nextRect = next.getBoundingClientRect();
+        this.scrollTop = scrollTop + nextRect.height;
+        this[_heightEstimator].set(next, nextRect.height);
+
         this[_visibleRangeStart] = next;
 
         next = next.previousElementSibling;
@@ -129,12 +133,14 @@ class ScrollerIO extends HTMLElement {
     const toHide = new Set();
     let end = this[_visibleRangeEnd];
     let endRect = end.getBoundingClientRect();
-    while (!rectsIntersect(thisRect, endRect)) {
+    this[_heightEstimator].set(end, endRect.height);
+    while ((endRect.width === 0 && endRect.height === 0) || !rectsIntersect(thisRect, endRect)) {
       toHide.add(end);
       if (end.previousElementSibling === null) break;
 
       end = end.previousElementSibling;
       endRect = end.getBoundingClientRect();
+      this[_heightEstimator].set(end, endRect.height);
     }
     this[_visibleRangeEnd] = end;
 
@@ -163,6 +169,7 @@ class ScrollerIO extends HTMLElement {
       while (next !== null && rectsIntersect(thisRect, afterRect)) {
         const scrollTop = this.scrollTop;
         this[_showChild](next);
+        this[_heightEstimator].set(next, next.getBoundingClientRect().height);
         this.scrollTop = scrollTop;
         this[_visibleRangeEnd] = next;
 
@@ -180,12 +187,14 @@ class ScrollerIO extends HTMLElement {
     const toHide = new Set();
     let start = this[_visibleRangeStart];
     let startRect = start.getBoundingClientRect();
-    while (!rectsIntersect(thisRect, startRect)) {
+    this[_heightEstimator].set(start, startRect.height);
+    while ((startRect.width === 0 && startRect.height === 0) || !rectsIntersect(thisRect, startRect)) {
       toHide.add(start);
       if (start.nextElementSibling === null) break;
 
       start = start.nextElementSibling;
       startRect = start.getBoundingClientRect();
+      this[_heightEstimator].set(start, startRect.height);
     }
     this[_visibleRangeStart] = start;
 
