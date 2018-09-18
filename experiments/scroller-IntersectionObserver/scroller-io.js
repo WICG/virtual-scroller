@@ -36,6 +36,7 @@ const _heightEstimator = Symbol('ScrollerIO#_heightEstimator');
 
 const _showChild = Symbol('ScrollerIO#_showChild');
 const _hideChild = Symbol('ScrollerIO#_hideChild');
+const _fillStart = Symbol('ScrollerIO#_fillStart');
 const _fillEnd = Symbol('ScrollerIO#_fillEnd');
 const _updateScrollbar = Symbol('ScrollerIO#_updateScrollbar');
 
@@ -65,14 +66,21 @@ class ScrollerIO extends HTMLElement {
     this[_heightEstimator] = new HeightEstimator();
 
     window.requestAnimationFrame(() => {
+      const firstElementChild = this.firstElementChild;
+      if (!firstElementChild) return;
+
+      if (this[_visibleRangeStart] === undefined) {
+        this[_visibleRangeStart] = firstElementChild;
+        this[_visibleRangeEnd] = firstElementChild;
+        this[_showChild](firstElementChild);
+      }
+
       this[_fillEnd]();
     });
   }
 
   [_showChild](child) {
-    const scrollTop = this.scrollTop;
     child.setAttribute('slot', 'visible');
-    this.scrollTop = scrollTop;
     this[_heightEstimator].set(child, child.getBoundingClientRect().height);
   }
 
@@ -83,32 +91,82 @@ class ScrollerIO extends HTMLElement {
 
   [_observerCallback](entries) {
     for (const entry of entries) {
-      if (entry.target === this[_spaceAfter] && entry.intersectionRatio > 0) {
+      if (entry.target === this[_spaceBefore] && entry.isIntersecting) {
+        this[_fillStart]();
+      }
+      if (entry.target === this[_spaceAfter] && entry.isIntersecting) {
         this[_fillEnd]();
       }
     }
   }
 
-  [_fillEnd]() {
-    const firstElementChild = this.firstElementChild;
-    if (!firstElementChild) return;
+  [_fillStart]() {
+    const thisRect = this.getBoundingClientRect();
 
-    if (this[_visibleRangeStart] === undefined) {
-      this[_visibleRangeStart] = firstElementChild;
-      this[_visibleRangeEnd] = firstElementChild;
-      this[_showChild](firstElementChild);
+
+    // Add new elements to the start of the visible range.
+    let next = this[_visibleRangeStart].previousElementSibling;
+    if (next !== null) {
+      let beforeRect = this[_spaceBefore].getBoundingClientRect();
+
+      while (next !== null && rectsIntersect(thisRect, beforeRect)) {
+        const scrollTop = this.scrollTop;
+        this[_showChild](next);
+        this.scrollTop = scrollTop + next.getBoundingClientRect().height;
+        this[_visibleRangeStart] = next;
+
+        next = next.previousElementSibling;
+        beforeRect = this[_spaceBefore].getBoundingClientRect();
+      }
+
+      // Trigger the callback.
+      this[_observer].unobserve(this[_spaceBefore]);
+      this[_observer].observe(this[_spaceBefore]);
     }
 
+
+    // Remove elements from the end of the visible range.
+    const toHide = new Set();
+    let end = this[_visibleRangeEnd];
+    let endRect = end.getBoundingClientRect();
+    while (!rectsIntersect(thisRect, endRect)) {
+      toHide.add(end);
+      if (end.previousElementSibling === null) break;
+
+      end = end.previousElementSibling;
+      endRect = end.getBoundingClientRect();
+    }
+    this[_visibleRangeEnd] = end;
+
+    for (const child of toHide) {
+      this[_hideChild](child);
+    }
+    if (toHide.size > 0) {
+      // Trigger the callback.
+      this[_observer].unobserve(this[_spaceAfter]);
+      this[_observer].observe(this[_spaceAfter]);
+    }
+
+
+    this[_updateScrollbar]();
+  }
+
+  [_fillEnd]() {
+    const thisRect = this.getBoundingClientRect();
+
+
+    // Add new elements to the end of the visible range.
     let next = this[_visibleRangeEnd].nextElementSibling;
     if (next !== null) {
-      const thisRect = this.getBoundingClientRect();
       let afterRect = this[_spaceAfter].getBoundingClientRect();
 
       while (next !== null && rectsIntersect(thisRect, afterRect)) {
-        this[_visibleRangeEnd] = next;
+        const scrollTop = this.scrollTop;
         this[_showChild](next);
-        next = next.nextElementSibling;
+        this.scrollTop = scrollTop;
+        this[_visibleRangeEnd] = next;
 
+        next = next.nextElementSibling;
         afterRect = this[_spaceAfter].getBoundingClientRect();
       }
 
@@ -116,6 +174,30 @@ class ScrollerIO extends HTMLElement {
       this[_observer].unobserve(this[_spaceAfter]);
       this[_observer].observe(this[_spaceAfter]);
     }
+
+
+    // Remove elements from the start of the visible range.
+    const toHide = new Set();
+    let start = this[_visibleRangeStart];
+    let startRect = start.getBoundingClientRect();
+    while (!rectsIntersect(thisRect, startRect)) {
+      toHide.add(start);
+      if (start.nextElementSibling === null) break;
+
+      start = start.nextElementSibling;
+      startRect = start.getBoundingClientRect();
+    }
+    this[_visibleRangeStart] = start;
+
+    for (const child of toHide) {
+      this[_hideChild](child);
+    }
+    if (toHide.size > 0) {
+      // Trigger the callback.
+      this[_observer].unobserve(this[_spaceBefore]);
+      this[_observer].observe(this[_spaceBefore]);
+    }
+
 
     this[_updateScrollbar]();
   }
@@ -130,6 +212,9 @@ class ScrollerIO extends HTMLElement {
     let afterHeight = 0;
     for (let child = this.firstElementChild; child !== null; child = child.nextElementSibling) {
       if (child === this[_visibleRangeStart]) {
+        if (state !== beforeState) {
+          throw new Error("Invalid state.");
+        }
         state = visibleState;
       }
 
@@ -140,6 +225,9 @@ class ScrollerIO extends HTMLElement {
       }
 
       if (child === this[_visibleRangeEnd]) {
+        if (state !== visibleState) {
+          throw new Error("Invalid state.");
+        }
         state = afterState;
       }
     }
