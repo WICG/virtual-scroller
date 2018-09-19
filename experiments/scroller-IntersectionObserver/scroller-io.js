@@ -32,8 +32,7 @@ const _spaceBefore = Symbol('ScrollerIO#_spaceBefore');
 const _spaceAfter = Symbol('ScrollerIO#_spaceAfter');
 const _observer = Symbol('ScrollerIO#_observer');
 const _observerCallback = Symbol('ScrollerIO#_observerCallback');
-const _visibleRangeStart = Symbol('ScrollerIO#_visibleRangeStart');
-const _visibleRangeEnd = Symbol('ScrollerIO#_visibleRangeEnd');
+const _visibleRange = Symbol('ScrollerIO#_visibleRange');
 const _heightEstimator = Symbol('ScrollerIO#_heightEstimator');
 
 const _showChild = Symbol('ScrollerIO#_showChild');
@@ -55,8 +54,9 @@ class ScrollerIO extends HTMLElement {
     this[_spaceBefore] = this.shadowRoot.getElementById('spaceBefore');
     this[_spaceAfter] = this.shadowRoot.getElementById('spaceAfter');
 
-    this[_visibleRangeStart] = undefined;
-    this[_visibleRangeEnd] = undefined;
+    this[_visibleRange] = new Range();
+    this[_visibleRange].setStart(this, 0);
+    this[_visibleRange].setEnd(this, 0);
 
     this[_observer] =
         new IntersectionObserver(this[_observerCallback], {
@@ -73,14 +73,11 @@ class ScrollerIO extends HTMLElement {
         this[_hideChild](child);
       }
 
-      const firstElementChild = this.firstElementChild;
-      if (this[_visibleRangeStart] === undefined) {
-        this[_visibleRangeStart] = firstElementChild;
-        this[_visibleRangeEnd] = firstElementChild;
-        this[_showChild](firstElementChild);
-      }
 
-      this[_fillEnd]();
+      this[_fillEnd]({
+        boundingClientRect: this[_spaceAfter].getBoundingClientRect(),
+        rootBounds: this.getBoundingClientRect(),
+      });
     });
   }
 
@@ -109,8 +106,12 @@ class ScrollerIO extends HTMLElement {
 
 
     // Add new elements to the start of the visible range.
-    let next = this[_visibleRangeStart].previousElementSibling;
+    let next = this.childNodes[this[_visibleRange].startOffset].previousElementSibling;
     if (next !== null) {
+      if (next.nodeType !== Node.ELEMENT_NODE) {
+        next = next.nextElementSibling;
+      }
+
       let beforeRect = entry.boundingClientRect;
 
       while (next !== null && rectsIntersect(thisRect, beforeRect)) {
@@ -120,7 +121,7 @@ class ScrollerIO extends HTMLElement {
         this.scrollTop = scrollTop + nextRect.height;
         this[_heightEstimator].set(next, nextRect.height);
 
-        this[_visibleRangeStart] = next;
+        this[_visibleRange].setStartBefore(next);
 
         next = next.previousElementSibling;
         beforeRect = this[_spaceBefore].getBoundingClientRect();
@@ -133,10 +134,15 @@ class ScrollerIO extends HTMLElement {
 
 
     // Remove elements from the end of the visible range.
-    const toHide = new Set();
-    let end = this[_visibleRangeEnd];
+
+    let end = this.childNodes[this[_visibleRange].endOffset];
+    if (end.nodeType !== Node.ELEMENT_NODE) {
+      end = end.previousElementSibling;
+    }
     let endRect = end.getBoundingClientRect();
     this[_heightEstimator].set(end, endRect.height);
+
+    const toHide = new Set();
     while (!rectIsVisible(endRect) || !rectsIntersect(thisRect, endRect)) {
       toHide.add(end);
       if (end.previousElementSibling === null) break;
@@ -145,7 +151,7 @@ class ScrollerIO extends HTMLElement {
       endRect = end.getBoundingClientRect();
       this[_heightEstimator].set(end, endRect.height);
     }
-    this[_visibleRangeEnd] = end;
+    this[_visibleRange].setEndAfter(end);
 
     for (const child of toHide) {
       this[_hideChild](child);
@@ -165,7 +171,7 @@ class ScrollerIO extends HTMLElement {
 
 
     // Add new elements to the end of the visible range.
-    let next = this[_visibleRangeEnd].nextElementSibling;
+    let next = this.childNodes[this[_visibleRange].endOffset].nextElementSibling;
     if (next !== null) {
       let afterRect = entry.boundingClientRect;
 
@@ -174,7 +180,7 @@ class ScrollerIO extends HTMLElement {
         this[_showChild](next);
         this[_heightEstimator].set(next, next.getBoundingClientRect().height);
         this.scrollTop = scrollTop;
-        this[_visibleRangeEnd] = next;
+        this[_visibleRange].setEndAfter(next);
 
         next = next.nextElementSibling;
         afterRect = this[_spaceAfter].getBoundingClientRect();
@@ -188,7 +194,10 @@ class ScrollerIO extends HTMLElement {
 
     // Remove elements from the start of the visible range.
     const toHide = new Set();
-    let start = this[_visibleRangeStart];
+    let start = this.childNodes[this[_visibleRange].startOffset];
+    if (start.nodeType !== Node.ELEMENT_NODE) {
+      start = start.nextElementSibling;
+    }
     let startRect = start.getBoundingClientRect();
     this[_heightEstimator].set(start, startRect.height);
     while (!rectIsVisible(startRect) || !rectsIntersect(thisRect, startRect)) {
@@ -199,7 +208,7 @@ class ScrollerIO extends HTMLElement {
       startRect = start.getBoundingClientRect();
       this[_heightEstimator].set(start, startRect.height);
     }
-    this[_visibleRangeStart] = start;
+    this[_visibleRange].setStartBefore(start);
 
     for (const child of toHide) {
       this[_hideChild](child);
@@ -215,32 +224,15 @@ class ScrollerIO extends HTMLElement {
   }
 
   [_updateScrollbar]() {
-    const beforeState = Symbol('beforeState');
-    const visibleState = Symbol('visibleState');
-    const afterState = Symbol('afterState');
-
-    let state = beforeState;
     let beforeHeight = 0;
     let afterHeight = 0;
     for (let child = this.firstElementChild; child !== null; child = child.nextElementSibling) {
-      if (child === this[_visibleRangeStart]) {
-        if (state !== beforeState) {
-          throw new Error("Invalid state.");
-        }
-        state = visibleState;
-      }
+      const result = this[_visibleRange].comparePoint(child, 0);
 
-      if (state === beforeState) {
+      if (result < 0) {
         beforeHeight += this[_heightEstimator].estimateHeight(child);
-      } else if (state === afterState) {
+      } else if (result > 0) {
         afterHeight += this[_heightEstimator].estimateHeight(child);
-      }
-
-      if (child === this[_visibleRangeEnd]) {
-        if (state !== visibleState) {
-          throw new Error("Invalid state.");
-        }
-        state = afterState;
       }
     }
 
