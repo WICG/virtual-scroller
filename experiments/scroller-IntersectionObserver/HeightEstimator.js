@@ -10,9 +10,15 @@ export class HeightEstimator {
   }
 
   set(item, height) {
-    this[_known].set(item, height);
-    this[_total] += height;
-    this[_count] += 1;
+    if (this[_known].has(item)) {
+      const currentHeight = this[_known].get(item);
+      this[_known].set(item, height);
+      this[_total] += height - currentHeight;
+    } else {
+      this[_known].set(item, height);
+      this[_total] += height;
+      this[_count] += 1;
+    }
   }
 
   delete(item) {
