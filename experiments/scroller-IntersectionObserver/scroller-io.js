@@ -22,6 +22,7 @@ TEMPLATE.innerHTML = `
   width: 100%;
   background-color: #fff8f8;
 }
+
 ::slotted(*) {
   border-width: 1px 0px;
   border-style: dotted;
@@ -114,24 +115,31 @@ class ScrollerIO extends HTMLElement {
   }
 
   [_childObserverCallback](entries) {
+    const lastEntryAlreadyProcessed = new Set();
     let needsScrollbarUpdate = false;
 
-    for (const entry of entries) {
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const entry = entries[i];
+      if (entry.isIntersecting) return;
+
       const child = entry.target;
+      if (lastEntryAlreadyProcessed.has(child)) {
+        continue;
+      }
+      lastEntryAlreadyProcessed.add(child);
+
       this[_heightEstimator].set(child, entry.boundingClientRect.height);
 
-      if (!entry.isIntersecting) {
-        if (this[_visibleRange].intersectsNode(child)) {
-          if (entry.boundingClientRect.bottom < entry.rootBounds.top) {
-            this[_visibleRange].setStartAfter(child);
-          } else if (entry.rootBounds.bottom < entry.boundingClientRect.top) {
-            this[_visibleRange].setEndBefore(child);
-          }
+      if (this[_visibleRange].intersectsNode(child)) {
+        if (entry.boundingClientRect.bottom < entry.rootBounds.top) {
+          this[_visibleRange].setStartAfter(child);
+        } else if (entry.rootBounds.bottom < entry.boundingClientRect.top) {
+          this[_visibleRange].setEndBefore(child);
         }
-        this[_childObserver].unobserve(child);
-        this[_hideChild](child);
-        needsScrollbarUpdate = true;
       }
+      this[_childObserver].unobserve(child);
+      this[_hideChild](child);
+      needsScrollbarUpdate = true;
     }
 
     if (needsScrollbarUpdate) {
