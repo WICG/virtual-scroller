@@ -20,7 +20,12 @@ TEMPLATE.innerHTML = `
 #spaceBefore, #spaceAfter {
   min-height: 1px;
   width: 100%;
-  background-color: red;
+  background-color: #fff8f8;
+}
+::slotted(*) {
+  border-width: 1px 0px;
+  border-style: dotted;
+  border-color: magenta;
 }
 </style>
 <div id="spaceBefore"></div>
@@ -30,8 +35,10 @@ TEMPLATE.innerHTML = `
 
 const _spaceBefore = Symbol('ScrollerIO#_spaceBefore');
 const _spaceAfter = Symbol('ScrollerIO#_spaceAfter');
-const _observer = Symbol('ScrollerIO#_observer');
-const _observerCallback = Symbol('ScrollerIO#_observerCallback');
+const _spaceObserverCallback = Symbol('ScrollerIO#_spaceObserverCallback');
+const _spaceObserver = Symbol('ScrollerIO#_spaceObserver');
+const _childObserverCallback = Symbol('ScrollerIO#_childObserverCallback');
+const _childObserver = Symbol('ScrollerIO#_childObserver');
 const _visibleRange = Symbol('ScrollerIO#_visibleRange');
 const _heightEstimator = Symbol('ScrollerIO#_heightEstimator');
 
@@ -45,9 +52,6 @@ class ScrollerIO extends HTMLElement {
   constructor() {
     super();
 
-    this[_observerCallback] =
-        this[_observerCallback].bind(this);
-
     this.attachShadow({mode: 'open'}).appendChild(
         TEMPLATE.content.cloneNode(true));
 
@@ -58,12 +62,19 @@ class ScrollerIO extends HTMLElement {
     this[_visibleRange].setStart(this, 0);
     this[_visibleRange].setEnd(this, 0);
 
-    this[_observer] =
-        new IntersectionObserver(this[_observerCallback], {
+    this[_spaceObserverCallback] = this[_spaceObserverCallback].bind(this);
+    this[_spaceObserver] =
+        new IntersectionObserver(this[_spaceObserverCallback], {
           root: document.scrollingElement,
         });
-    this[_observer].observe(this[_spaceBefore]);
-    this[_observer].observe(this[_spaceAfter]);
+    this[_spaceObserver].observe(this[_spaceBefore]);
+    this[_spaceObserver].observe(this[_spaceAfter]);
+
+    this[_childObserverCallback] = this[_childObserverCallback].bind(this);
+    this[_childObserver] =
+        new IntersectionObserver(this[_childObserverCallback], {
+          root: document.scrollingElement,
+        });
 
     this[_heightEstimator] = new HeightEstimator();
 
@@ -73,10 +84,11 @@ class ScrollerIO extends HTMLElement {
         this[_hideChild](child);
       }
 
+      this.setAttribute('ready', '');
 
       this[_fillEnd]({
-        boundingClientRect: this[_spaceAfter].getBoundingClientRect(),
         rootBounds: this.getBoundingClientRect(),
+        boundingClientRect: this[_spaceAfter].getBoundingClientRect(),
       });
     });
   }
@@ -89,7 +101,7 @@ class ScrollerIO extends HTMLElement {
     child.setAttribute('invisible', '');
   }
 
-  [_observerCallback](entries) {
+  [_spaceObserverCallback](entries) {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
 
@@ -101,143 +113,78 @@ class ScrollerIO extends HTMLElement {
     }
   }
 
+  [_childObserverCallback](entries) {
+    let needsScrollbarUpdate = false;
+
+    for (const entry of entries) {
+      const child = entry.target;
+      this[_heightEstimator].set(child, entry.boundingClientRect.height);
+
+      if (!entry.isIntersecting) {
+        if (this[_visibleRange].intersectsNode(child)) {
+          if (entry.boundingClientRect.bottom < entry.rootBounds.top) {
+            this[_visibleRange].setStartAfter(child);
+          } else if (entry.rootBounds.bottom < entry.boundingClientRect.top) {
+            this[_visibleRange].setEndBefore(child);
+          }
+        }
+        this[_childObserver].unobserve(child);
+        this[_hideChild](child);
+        needsScrollbarUpdate = true;
+      }
+    }
+
+    if (needsScrollbarUpdate) {
+      this[_updateScrollbar]();
+    }
+  }
+
   [_fillStart](entry) {
-    const thisRect = entry.rootBounds;
-
-
-    // Add new elements to the start of the visible range.
-    let next = this.childNodes[this[_visibleRange].startOffset].previousElementSibling;
-    if (next !== null) {
-      if (next.nodeType !== Node.ELEMENT_NODE) {
-        next = next.nextElementSibling;
-      }
-
-      let beforeRect = entry.boundingClientRect;
-
-      while (next !== null && rectsIntersect(thisRect, beforeRect)) {
-        const scrollTop = this.scrollTop;
-        this[_showChild](next);
-        const nextRect = next.getBoundingClientRect();
-        this.scrollTop = scrollTop + nextRect.height;
-        this[_heightEstimator].set(next, nextRect.height);
-
-        this[_visibleRange].setStartBefore(next);
-
-        next = next.previousElementSibling;
-        beforeRect = this[_spaceBefore].getBoundingClientRect();
-      }
-
-      // Trigger the callback.
-      this[_observer].unobserve(this[_spaceBefore]);
-      this[_observer].observe(this[_spaceBefore]);
-    }
-
-
-    // Remove elements from the end of the visible range.
-
-    let end = this.childNodes[this[_visibleRange].endOffset];
-    if (end.nodeType !== Node.ELEMENT_NODE) {
-      end = end.previousElementSibling;
-    }
-    let endRect = end.getBoundingClientRect();
-    this[_heightEstimator].set(end, endRect.height);
-
-    const toHide = new Set();
-    while (!rectIsVisible(endRect) || !rectsIntersect(thisRect, endRect)) {
-      toHide.add(end);
-      if (end.previousElementSibling === null) break;
-
-      end = end.previousElementSibling;
-      endRect = end.getBoundingClientRect();
-      this[_heightEstimator].set(end, endRect.height);
-    }
-    this[_visibleRange].setEndAfter(end);
-
-    for (const child of toHide) {
-      this[_hideChild](child);
-    }
-    if (toHide.size > 0) {
-      // Trigger the callback.
-      this[_observer].unobserve(this[_spaceAfter]);
-      this[_observer].observe(this[_spaceAfter]);
-    }
-
-
-    this[_updateScrollbar]();
   }
 
   [_fillEnd](entry) {
     const thisRect = entry.rootBounds;
 
-
     // Add new elements to the end of the visible range.
     let next = this.childNodes[this[_visibleRange].endOffset].nextElementSibling;
     if (next !== null) {
-      let afterRect = entry.boundingClientRect;
+      const scrollTop = this.scrollTop;
+      this[_showChild](next);
+      this[_childObserver].observe(next);
+      this.scrollTop = scrollTop;
 
-      while (next !== null && rectsIntersect(thisRect, afterRect)) {
-        const scrollTop = this.scrollTop;
-        this[_showChild](next);
-        this[_heightEstimator].set(next, next.getBoundingClientRect().height);
-        this.scrollTop = scrollTop;
-        this[_visibleRange].setEndAfter(next);
-
-        next = next.nextElementSibling;
-        afterRect = this[_spaceAfter].getBoundingClientRect();
-      }
+      this[_visibleRange].setEndAfter(next);
+      this[_heightEstimator].set(next, next.getBoundingClientRect().height);
 
       // Trigger the callback.
-      this[_observer].unobserve(this[_spaceAfter]);
-      this[_observer].observe(this[_spaceAfter]);
+      this[_spaceObserver].unobserve(this[_spaceAfter]);
+      this[_spaceObserver].observe(this[_spaceAfter]);
     }
-
-
-    // Remove elements from the start of the visible range.
-    const toHide = new Set();
-    let start = this.childNodes[this[_visibleRange].startOffset];
-    if (start.nodeType !== Node.ELEMENT_NODE) {
-      start = start.nextElementSibling;
-    }
-    let startRect = start.getBoundingClientRect();
-    this[_heightEstimator].set(start, startRect.height);
-    while (!rectIsVisible(startRect) || !rectsIntersect(thisRect, startRect)) {
-      toHide.add(start);
-      if (start.nextElementSibling === null) break;
-
-      start = start.nextElementSibling;
-      startRect = start.getBoundingClientRect();
-      this[_heightEstimator].set(start, startRect.height);
-    }
-    this[_visibleRange].setStartBefore(start);
-
-    for (const child of toHide) {
-      this[_hideChild](child);
-    }
-    if (toHide.size > 0) {
-      // Trigger the callback.
-      this[_observer].unobserve(this[_spaceBefore]);
-      this[_observer].observe(this[_spaceBefore]);
-    }
-
 
     this[_updateScrollbar]();
   }
 
   [_updateScrollbar]() {
-    let beforeHeight = 0;
-    let afterHeight = 0;
-    for (let child = this.firstElementChild; child !== null; child = child.nextElementSibling) {
-      const result = this[_visibleRange].comparePoint(child, 0);
+    const childNodes = this.childNodes;
+    const childNodesLength = childNodes.length;
+    const visibleRange = this[_visibleRange];
+    const visibleRangeStartOffset = visibleRange.startOffset;
+    const visibleRangeEndOffset = visibleRange.endOffset;
 
-      if (result < 0) {
-        beforeHeight += this[_heightEstimator].estimateHeight(child);
-      } else if (result > 0) {
-        afterHeight += this[_heightEstimator].estimateHeight(child);
-      }
+    let beforeEstimate = 0;
+    for (let i = 0; i < visibleRangeStartOffset; i++) {
+      const node = childNodes[i];
+      beforeEstimate += this[_heightEstimator].estimateHeight(node);
     }
 
-    this[_spaceBefore].style.height = `${beforeHeight}px`;
-    this[_spaceAfter].style.height = `${afterHeight}px`;
+    let afterEstimate = 0;
+    for (let i = visibleRangeEndOffset; i < childNodesLength; i++) {
+      const node = childNodes[i];
+      afterEstimate += this[_heightEstimator].estimateHeight(node);
+    }
+
+    this[_spaceBefore].style.height = `${beforeEstimate}px`;
+    this[_spaceAfter].style.height = `${afterEstimate}px`;
   }
 }
 
