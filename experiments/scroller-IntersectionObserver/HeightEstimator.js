@@ -1,9 +1,11 @@
+const _initialEstimate = Symbol('HeightEstimator#[_initialEstimate]');
 const _known = Symbol('HeightEstimator#[_known]');
 const _total = Symbol('HeightEstimator#[_total]');
 const _count = Symbol('HeightEstimator#[_count]');
 
 export class HeightEstimator {
-  constructor() {
+  constructor({initialEstimate = 16} = {}) {
+    this[_initialEstimate] = initialEstimate;
     this[_known] = new Map();
     this[_total] = 0;
     this[_count] = 0;
@@ -31,6 +33,10 @@ export class HeightEstimator {
   }
 
   estimateHeight(item) {
+    if (this[_total] === 0) {
+      return this[_initialEstimate];
+    }
+
     if (this[_known].has(item)) {
       return this[_known].get(item);
     }
