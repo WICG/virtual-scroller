@@ -4,7 +4,7 @@ const _total = Symbol('HeightEstimator#[_total]');
 const _count = Symbol('HeightEstimator#[_count]');
 
 export class HeightEstimator {
-  constructor({initialEstimate = 16} = {}) {
+  constructor({initialEstimate = 64} = {}) {
     this[_initialEstimate] = initialEstimate;
     this[_known] = new Map();
     this[_total] = 0;
@@ -32,15 +32,23 @@ export class HeightEstimator {
     }
   }
 
+  // Produces either the last generated or provided estimate or creates and
+  // stores a new estimate and returns that. The generated estimate for a node
+  // should be stored so that it isn't regenerated and potentially changed when
+  // new estimates are inserted.
   estimateHeight(item) {
     if (this[_total] === 0) {
-      return this[_initialEstimate];
+      const estimate = this[_initialEstimate];
+      this[_known].set(item, estimate);
+      return estimate;
     }
 
     if (this[_known].has(item)) {
       return this[_known].get(item);
     }
 
-    return this[_total] / this[_count];
+    const estimate = this[_total] / this[_count];
+    this[_known].set(item, estimate);
+    return estimate;
   }
 };

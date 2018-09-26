@@ -39,8 +39,11 @@ const _heightEstimator = Symbol('VirtualContent#_heightEstimator');
 
 const _showChild = Symbol('VirtualContent#_showChild');
 const _hideChild = Symbol('VirtualContent#_hideChild');
-const _fillStart = Symbol('VirtualContent#_fillStart');
-const _fillEnd = Symbol('VirtualContent#_fillEnd');
+const _childIsVisible = Symbol('VirtualContent#_childIsVisible');
+
+const _expandStart = Symbol('VirtualContent#_expandStart');
+const _expandEnd = Symbol('VirtualContent#_expandEnd');
+const _moveEnd = Symbol('VirtualContent#_moveEnd');
 const _updateScrollbar = Symbol('VirtualContent#_updateScrollbar');
 
 const _flushPending = Symbol('VirtualContent#_flushPending');
@@ -99,8 +102,13 @@ class VirtualContent extends HTMLElement {
 
       this[_updateScrollbar]();
 
-      this[_spaceObserver].observe(this[_spaceBefore]);
-      this[_spaceObserver].observe(this[_spaceAfter]);
+      // Wait for the browser to set the initial scroll position. This might
+      // not be the top because the browser may try to keep the scroll position
+      // consistent between refreshes.
+      window.setTimeout(() => {
+        this[_spaceObserver].observe(this[_spaceBefore]);
+        this[_spaceObserver].observe(this[_spaceAfter]);
+      }, 0);
 
       this.setAttribute('ready', '');
     });
@@ -116,23 +124,38 @@ class VirtualContent extends HTMLElement {
     child.setAttribute('invisible', '');
   }
 
+  [_childIsVisible](child) {
+    return !child.hasAttribute('invisible');
+  }
+
   [_spaceObserverCallback](entries) {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
 
       if (entry.target === this[_spaceBefore]) {
-        this[_fillStart](entry);
+        const fillDifference = entry.boundingClientRect.bottom - entry.rootBounds.bottom;
+        if (fillDifference < 1000) {
+          this[_expandStart](entry);
+        } else {
+          console.warn('NOT IMPLEMENTED: `this[_moveStart](entry, fillDifference);`');
+          this[_expandStart](entry);
+        }
       } else if (entry.target === this[_spaceAfter]) {
-        this[_fillEnd](entry);
+        const fillDifference = entry.rootBounds.top - entry.boundingClientRect.top;
+        if (fillDifference < 1000) {
+          this[_expandEnd](entry);
+        } else {
+          this[_moveEnd](entry, fillDifference);
+        }
       }
     }
   }
 
-  [_fillStart](entry) {
+  [_expandStart](entry) {
     // Add new elements to the start of the visible range.
     let estimatedAddedHeight = 0;
     let next = this.childNodes[this[_hiddenBeforeRange].endOffset] || null;
-    while (next !== null && next.previousSibling !== null && estimatedAddedHeight < (entry.boundingClientRect.bottom - entry.rootBounds.top + 1)) {
+    while (next !== null && next.previousSibling !== null && estimatedAddedHeight < (entry.intersectionRect.height + 1)) {
       const previousSibling = next.previousSibling;
       this[_enqueueShow](previousSibling);
       estimatedAddedHeight += this[_heightEstimator].estimateHeight(previousSibling);
@@ -142,11 +165,46 @@ class VirtualContent extends HTMLElement {
     }
   }
 
-  [_fillEnd](entry) {
+  [_moveEnd](entry, difference) {
+    console.log('_moveEnd', entry, difference);
+
+    const childNodes = this.childNodes;
+    let estimatedAdjustedHeight = 0;
+
+    // Hide all currently visible nodes in the before area.
+    for (let i = this[_hiddenBeforeRange].endOffset; i < this[_hiddenAfterRange].startOffset; i++) {
+      const child = childNodes[i];
+
+      if (this[_childIsVisible](child)) {
+        const height = child.getBoundingClientRect().height;
+        estimatedAdjustedHeight += height;
+        this[_heightEstimator].set(child, height);
+        this[_enqueueHide](child);
+      } else {
+        estimatedAdjustedHeight += this[_heightEstimator].estimateHeight(child);
+      }
+    }
+    this[_hiddenBeforeRange].setEnd(this, this[_hiddenAfterRange].startOffset);
+
+    // Slide the now-mutual hidden area bounds forward until reaching the first
+    // node that should appear within the viewport.
+    let moveIndex = this[_hiddenBeforeRange].endOffset;
+    while (estimatedAdjustedHeight < difference) {
+      const child = childNodes[moveIndex];
+      estimatedAdjustedHeight += this[_heightEstimator].estimateHeight(child);
+      moveIndex++;
+    }
+    this[_hiddenBeforeRange].setEnd(this, moveIndex);
+    this[_hiddenAfterRange].setStart(this, moveIndex);
+
+    this[_expandEnd](entry);
+  }
+
+  [_expandEnd](entry) {
     // Add new elements to the end of the visible range.
     let estimatedAddedHeight = 0;
     let next = this.childNodes[this[_hiddenAfterRange].startOffset] || null;
-    while (next !== null && estimatedAddedHeight < (entry.rootBounds.bottom - entry.boundingClientRect.top + 1)) {
+    while (next !== null && estimatedAddedHeight < (entry.intersectionRect.height + 1)) {
       this[_enqueueShow](next);
       estimatedAddedHeight += this[_heightEstimator].estimateHeight(next);
       this[_hiddenAfterRange].setStartAfter(next);
@@ -183,7 +241,9 @@ class VirtualContent extends HTMLElement {
     if (this[_flushPendingToHide].has(child)) {
       this[_flushPendingToHide].delete(child);
     }
-    this[_flushPendingToShow].add(child);
+    if (!this[_childIsVisible](child)) {
+      this[_flushPendingToShow].add(child);
+    }
     this[_enqueueFlush]();
   }
 
@@ -191,7 +251,9 @@ class VirtualContent extends HTMLElement {
     if (this[_flushPendingToShow].has(child)) {
       this[_flushPendingToShow].delete(child);
     }
-    this[_flushPendingToHide].add(child);
+    if (this[_childIsVisible](child)) {
+      this[_flushPendingToHide].add(child);
+    }
     this[_enqueueFlush]();
   }
 
@@ -208,6 +270,7 @@ class VirtualContent extends HTMLElement {
     // Given that we just forced layout to get the intersection position, go
     // ahead and request the bounds for all the elements that we're about to
     // hide and give them to the height estimator.
+    //
     // NOTE: Do not interleave calls to `getBoundingClientRect` with
     // `#[_hideChild]` - this thrashes layout.
     for (const child of this[_flushPendingToHide]) {
@@ -224,7 +287,7 @@ class VirtualContent extends HTMLElement {
     }
     this[_flushPendingToShow].clear();
 
-    // Update the space before / space after divs.
+    // Update the space before and space after divs.
     this[_updateScrollbar]();
 
     // Force the observer to check the intersections of both spacing elements
