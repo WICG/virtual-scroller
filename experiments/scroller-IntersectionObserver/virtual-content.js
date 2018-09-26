@@ -178,8 +178,8 @@ class VirtualContent extends HTMLElement {
     // Move all newly hidden elements into the after range.
     this[_hiddenAfterRange].setStart(this, this[_hiddenBeforeRange].endOffset);
 
-    // Slide the now-mutual hidden area bounds forward until reaching the first
-    // node that should appear within the viewport.
+    // Slide the now-mutual hidden area bounds backward until reaching the
+    // first node that should appear within the viewport.
     let moveIndex = this[_hiddenAfterRange].startOffset - 1;
     while (moveIndex >= 0 && estimatedAdjustedHeight < difference) {
       const child = childNodes[moveIndex];
