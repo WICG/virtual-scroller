@@ -5,9 +5,11 @@ TEMPLATE.innerHTML = `
 <style>
 :host {
   display: block;
+  will-change: contents;
 }
 
 #spaceBefore, #spaceAfter {
+  will-change: height;
   width: 100%;
   background-color: #fff0f0;
 }
@@ -17,7 +19,6 @@ TEMPLATE.innerHTML = `
   position: relative !important;
   margin: 0px !important;
   contain: content !important;
-  border: 1px dashed magenta !important;
 }
 </style>
 <div id="spaceBefore"></div>
