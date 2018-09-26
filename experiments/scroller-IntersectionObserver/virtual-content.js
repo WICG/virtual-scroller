@@ -1,5 +1,21 @@
 import {HeightEstimator} from './HeightEstimator.js';
 
+// Elements further than this distance outside of viewport bounds will not be
+// rendered. This value is a tradeoff between keeping a sufficient buffer of
+// visible elements (so that scrolling doesn't often result in empty regions
+// becoming visible) and the general cost to show or hide elements in general.
+const ROOT_MARGIN_PX = window.screen.availHeight;
+
+// When scrolling, if the user scrolls to a position that keeps the viewport
+// within this distance of the previous viewport's position and its margin,
+// then currently visible elements will not be hidden before attempting to move
+// to the new position - all elements between the two positions will be
+// rendered. Otherwise, all currently visible elements are hidden and a new
+// position and set of visible elements are determined based on current height
+// estimates. Note: After moving within this distance, elements that have
+// become positioned outside of the viewport and margin will still be hidden.
+const SEQUENTIAL_ACCESS_CUTOFF_PX = window.screen.availHeight;
+
 const TEMPLATE = document.createElement('template');
 TEMPLATE.innerHTML = `
 <style>
@@ -82,10 +98,14 @@ class VirtualContent extends HTMLElement {
     this[_nextHiddenAfterRange] = this[_hiddenAfterRange].cloneRange();
 
     this[_spaceObserverCallback] = this[_spaceObserverCallback].bind(this);
-    this[_spaceObserver] = new IntersectionObserver(this[_spaceObserverCallback]);
+    this[_spaceObserver] = new IntersectionObserver(this[_spaceObserverCallback], {
+      rootMargin: `${ROOT_MARGIN_PX}px`,
+    });
 
     this[_childObserverCallback] = this[_childObserverCallback].bind(this);
-    this[_childObserver] = new IntersectionObserver(this[_childObserverCallback]);
+    this[_childObserver] = new IntersectionObserver(this[_childObserverCallback], {
+      rootMargin: `${ROOT_MARGIN_PX}px`,
+    });
 
     this[_heightEstimator] = new HeightEstimator();
 
@@ -142,14 +162,14 @@ class VirtualContent extends HTMLElement {
 
       if (entry.target === this[_spaceBefore]) {
         const fillDifference = entry.boundingClientRect.bottom - entry.rootBounds.bottom;
-        if (fillDifference < 1000) {
+        if (fillDifference < (ROOT_MARGIN_PX + SEQUENTIAL_ACCESS_CUTOFF_PX)) {
           this[_expandStart](entry);
         } else {
           this[_moveStart](entry, fillDifference);
         }
       } else if (entry.target === this[_spaceAfter]) {
         const fillDifference = entry.rootBounds.top - entry.boundingClientRect.top;
-        if (fillDifference < 1000) {
+        if (fillDifference < (ROOT_MARGIN_PX + SEQUENTIAL_ACCESS_CUTOFF_PX)) {
           this[_expandEnd](entry);
         } else {
           this[_moveEnd](entry, fillDifference);
