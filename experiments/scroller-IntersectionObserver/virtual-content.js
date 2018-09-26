@@ -158,8 +158,6 @@ class VirtualContent extends HTMLElement {
   }
 
   [_moveStart](entry, difference) {
-    console.log('_moveStart', entry, difference);
-
     const childNodes = this.childNodes;
     let estimatedAdjustedHeight = 0;
 
@@ -209,8 +207,6 @@ class VirtualContent extends HTMLElement {
   }
 
   [_moveEnd](entry, difference) {
-    console.log('_moveEnd', entry, difference);
-
     const childNodes = this.childNodes;
     const childNodesLength = childNodes.length;
     let estimatedAdjustedHeight = 0;
