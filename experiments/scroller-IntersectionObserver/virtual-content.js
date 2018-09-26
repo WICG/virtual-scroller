@@ -43,10 +43,10 @@ const _showChild = Symbol('VirtualContent#_showChild');
 const _hideChild = Symbol('VirtualContent#_hideChild');
 const _childIsVisible = Symbol('VirtualContent#_childIsVisible');
 
+const _moveStart = Symbol('VirtualContent#_moveStart');
 const _expandStart = Symbol('VirtualContent#_expandStart');
-const _expandEnd = Symbol('VirtualContent#_expandEnd');
 const _moveEnd = Symbol('VirtualContent#_moveEnd');
-const _updateScrollbar = Symbol('VirtualContent#_updateScrollbar');
+const _expandEnd = Symbol('VirtualContent#_expandEnd');
 
 const _flushPending = Symbol('VirtualContent#_flushPending');
 const _flushPendingToShow = Symbol('VirtualContent#_flushPendingToShow');
@@ -55,6 +55,8 @@ const _enqueueShow = Symbol('VirtualContent#_enqueueShow');
 const _enqueueHide = Symbol('VirtualContent#_enqueueHide');
 const _enqueueFlush = Symbol('VirtualContent#_enqueueFlush');
 const _flush = Symbol('VirtualContent#_flush');
+
+const _updateSpace = Symbol('VirtualContent#_updateSpace');
 
 class VirtualContent extends HTMLElement {
   constructor() {
@@ -105,7 +107,7 @@ class VirtualContent extends HTMLElement {
         this[_hideChild](child);
       }
 
-      this[_updateScrollbar]();
+      this[_updateSpace]();
 
       // Wait for the browser to set the initial scroll position. This might
       // not be the top because the browser may try to keep the scroll position
@@ -142,8 +144,7 @@ class VirtualContent extends HTMLElement {
         if (fillDifference < 1000) {
           this[_expandStart](entry);
         } else {
-          console.warn('NOT IMPLEMENTED: `this[_moveStart](entry, fillDifference);`');
-          this[_expandStart](entry);
+          this[_moveStart](entry, fillDifference);
         }
       } else if (entry.target === this[_spaceAfter]) {
         const fillDifference = entry.rootBounds.top - entry.boundingClientRect.top;
@@ -154,6 +155,43 @@ class VirtualContent extends HTMLElement {
         }
       }
     }
+  }
+
+  [_moveStart](entry, difference) {
+    console.log('_moveStart', entry, difference);
+
+    const childNodes = this.childNodes;
+    let estimatedAdjustedHeight = 0;
+
+    // Hide all currently visible nodes.
+    for (let i = this[_hiddenBeforeRange].endOffset; i < this[_hiddenAfterRange].startOffset; i++) {
+      const child = childNodes[i];
+
+      if (this[_childIsVisible](child)) {
+        const height = child.getBoundingClientRect().height;
+        estimatedAdjustedHeight += height;
+        this[_heightEstimator].set(child, height);
+        this[_enqueueHide](child);
+      } else {
+        estimatedAdjustedHeight += this[_heightEstimator].estimateHeight(child);
+      }
+    }
+
+    // Move all newly hidden elements into the after range.
+    this[_hiddenAfterRange].setStart(this, this[_hiddenBeforeRange].endOffset);
+
+    // Slide the now-mutual hidden area bounds forward until reaching the first
+    // node that should appear within the viewport.
+    let moveIndex = this[_hiddenAfterRange].startOffset - 1;
+    while (moveIndex >= 0 && estimatedAdjustedHeight < difference) {
+      const child = childNodes[moveIndex];
+      estimatedAdjustedHeight += this[_heightEstimator].estimateHeight(child);
+      moveIndex--;
+    }
+    this[_hiddenBeforeRange].setEnd(this, moveIndex);
+    this[_hiddenAfterRange].setStart(this, moveIndex);
+
+    this[_expandStart](entry);
   }
 
   [_expandStart](entry) {
@@ -174,9 +212,10 @@ class VirtualContent extends HTMLElement {
     console.log('_moveEnd', entry, difference);
 
     const childNodes = this.childNodes;
+    const childNodesLength = childNodes.length;
     let estimatedAdjustedHeight = 0;
 
-    // Hide all currently visible nodes in the before area.
+    // Hide all currently visible nodes.
     for (let i = this[_hiddenBeforeRange].endOffset; i < this[_hiddenAfterRange].startOffset; i++) {
       const child = childNodes[i];
 
@@ -189,12 +228,14 @@ class VirtualContent extends HTMLElement {
         estimatedAdjustedHeight += this[_heightEstimator].estimateHeight(child);
       }
     }
+
+    // Move all newly hidden elements into the before range.
     this[_hiddenBeforeRange].setEnd(this, this[_hiddenAfterRange].startOffset);
 
     // Slide the now-mutual hidden area bounds forward until reaching the first
     // node that should appear within the viewport.
     let moveIndex = this[_hiddenBeforeRange].endOffset;
-    while (estimatedAdjustedHeight < difference) {
+    while (moveIndex < childNodesLength && estimatedAdjustedHeight < difference) {
       const child = childNodes[moveIndex];
       estimatedAdjustedHeight += this[_heightEstimator].estimateHeight(child);
       moveIndex++;
@@ -314,7 +355,7 @@ class VirtualContent extends HTMLElement {
     this[_hiddenAfterRange] = this[_nextHiddenAfterRange].cloneRange();
 
     // Update the space before and space after divs.
-    this[_updateScrollbar]();
+    this[_updateSpace]();
 
     // If there was an element in both the old and new visible regions, make
     // sure its in the same viewport-relative position.
@@ -335,7 +376,7 @@ class VirtualContent extends HTMLElement {
     this[_spaceObserver].observe(this[_spaceAfter]);
   }
 
-  [_updateScrollbar]() {
+  [_updateSpace]() {
     const childNodes = Array.from(this.childNodes);
     const childNodesLength = childNodes.length;
 
