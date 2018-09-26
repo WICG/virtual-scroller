@@ -34,6 +34,8 @@ const _childObserver = Symbol('VirtualContent#_childObserver');
 
 const _hiddenBeforeRange = Symbol('VirtualContent#_hiddenBeforeRange');
 const _hiddenAfterRange = Symbol('VirtualContent#_hiddenAfterRange');
+const _nextHiddenBeforeRange = Symbol('VirtualContent#_nextHiddenBeforeRange');
+const _nextHiddenAfterRange = Symbol('VirtualContent#_nextHiddenAfterRange');
 
 const _heightEstimator = Symbol('VirtualContent#_heightEstimator');
 
@@ -72,6 +74,9 @@ class VirtualContent extends HTMLElement {
     this[_hiddenAfterRange].setStart(this, 0);
     // TODO: Reading child nodes in the constructor is technically not allowed...
     this[_hiddenAfterRange].setEnd(this, this.childNodes.length);
+
+    this[_nextHiddenBeforeRange] = this[_hiddenBeforeRange].cloneRange();
+    this[_nextHiddenAfterRange] = this[_hiddenAfterRange].cloneRange();
 
     this[_spaceObserverCallback] = this[_spaceObserverCallback].bind(this);
     this[_spaceObserver] = new IntersectionObserver(this[_spaceObserverCallback]);
@@ -159,7 +164,7 @@ class VirtualContent extends HTMLElement {
       const previousSibling = next.previousSibling;
       this[_enqueueShow](previousSibling);
       estimatedAddedHeight += this[_heightEstimator].estimateHeight(previousSibling);
-      this[_hiddenBeforeRange].setEndBefore(previousSibling);
+      this[_nextHiddenBeforeRange].setEndBefore(previousSibling);
 
       next = previousSibling;
     }
@@ -207,7 +212,7 @@ class VirtualContent extends HTMLElement {
     while (next !== null && estimatedAddedHeight < (entry.intersectionRect.height + 1)) {
       this[_enqueueShow](next);
       estimatedAddedHeight += this[_heightEstimator].estimateHeight(next);
-      this[_hiddenAfterRange].setStartAfter(next);
+      this[_nextHiddenAfterRange].setStartAfter(next);
 
       next = next.nextSibling;
     }
@@ -226,11 +231,11 @@ class VirtualContent extends HTMLElement {
       if (entry.isIntersecting) continue;
 
       if (entry.boundingClientRect.bottom < entry.rootBounds.top &&
-          !this[_hiddenBeforeRange].intersectsNode(child)) {
-        this[_hiddenBeforeRange].setEndAfter(child);
+          !this[_nextHiddenBeforeRange].intersectsNode(child)) {
+        this[_nextHiddenBeforeRange].setEndAfter(child);
       } else if (entry.rootBounds.bottom < entry.boundingClientRect.top &&
-          !this[_hiddenAfterRange].intersectsNode(child)) {
-        this[_hiddenAfterRange].setStartBefore(child);
+          !this[_nextHiddenAfterRange].intersectsNode(child)) {
+        this[_nextHiddenAfterRange].setStartBefore(child);
       }
 
       this[_enqueueHide](child);
@@ -286,6 +291,10 @@ class VirtualContent extends HTMLElement {
       this[_showChild](child);
     }
     this[_flushPendingToShow].clear();
+
+    // Set the current ranges to the updated ranges.
+    this[_hiddenBeforeRange] = this[_nextHiddenBeforeRange].cloneRange();
+    this[_hiddenAfterRange] = this[_nextHiddenAfterRange].cloneRange();
 
     // Update the space before and space after divs.
     this[_updateScrollbar]();
