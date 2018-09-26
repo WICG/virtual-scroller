@@ -272,6 +272,23 @@ class VirtualContent extends HTMLElement {
   [_flush]() {
     this[_flushPending] = false;
 
+    // Save the bounding rect of the first element in the intersection between
+    // the old and new visible ranges, if any.
+    const intersectionStartIndex = Math.max(
+        this[_hiddenBeforeRange].endOffset,
+        this[_nextHiddenBeforeRange].endOffset);
+    const intersectionEndIndex = Math.min(
+        this[_hiddenAfterRange].startOffset,
+        this[_nextHiddenAfterRange].startOffset);
+    const firstIntersectionElement =
+        intersectionStartIndex < intersectionEndIndex ?
+        this.childNodes[intersectionStartIndex] :
+        undefined;
+    const firstIntersectionElementStartRect =
+        firstIntersectionElement !== undefined ?
+        firstIntersectionElement.getBoundingClientRect() :
+        undefined;
+
     // Given that we just forced layout to get the intersection position, go
     // ahead and request the bounds for all the elements that we're about to
     // hide and give them to the height estimator.
@@ -298,6 +315,17 @@ class VirtualContent extends HTMLElement {
 
     // Update the space before and space after divs.
     this[_updateScrollbar]();
+
+    // If there was an element in both the old and new visible regions, make
+    // sure its in the same viewport-relative position.
+    if (firstIntersectionElement !== undefined) {
+      const firstIntersectionElementEndRect =
+          firstIntersectionElement.getBoundingClientRect();
+      // TODO: `document.scrollingElement` here should really be whatever
+      // element happens to be the scroll parent of this element.
+      document.scrollingElement.scrollTop +=
+          firstIntersectionElementEndRect.top - firstIntersectionElementStartRect.top;
+    }
 
     // Force the observer to check the intersections of both spacing elements
     // again on the next frame.
