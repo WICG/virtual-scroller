@@ -42,6 +42,8 @@ TEMPLATE.innerHTML = `
 <div id="spaceAfter"></div>
 `;
 
+const _heightBefore = Symbol('VirtualContent#_heightBefore');
+const _heightAfter = Symbol('VirtualContent#_heightAfter');
 const _spaceBefore = Symbol('VirtualContent#_spaceBefore');
 const _spaceAfter = Symbol('VirtualContent#_spaceAfter');
 const _spaceObserverCallback = Symbol('VirtualContent#_spaceObserverCallback');
@@ -82,6 +84,8 @@ class VirtualContent extends HTMLElement {
     this.attachShadow({mode: 'open'}).appendChild(
         TEMPLATE.content.cloneNode(true));
 
+    this[_heightBefore] = 0;
+    this[_heightAfter] = 0;
     this[_spaceBefore] = this.shadowRoot.getElementById('spaceBefore');
     this[_spaceAfter] = this.shadowRoot.getElementById('spaceAfter');
 
@@ -89,10 +93,11 @@ class VirtualContent extends HTMLElement {
     this[_hiddenBeforeRange].setStart(this, 0);
     this[_hiddenBeforeRange].setEnd(this, 0);
 
-    this[_hiddenAfterRange] = new Range();
-    this[_hiddenAfterRange].setStart(this, 0);
     // TODO: Reading child nodes in the constructor is technically not allowed...
-    this[_hiddenAfterRange].setEnd(this, this.childNodes.length);
+    const childNodesLength = this.childNodes.length;
+    this[_hiddenAfterRange] = new Range();
+    this[_hiddenAfterRange].setStart(this, childNodesLength);
+    this[_hiddenAfterRange].setEnd(this, childNodesLength);
 
     this[_nextHiddenBeforeRange] = this[_hiddenBeforeRange].cloneRange();
     this[_nextHiddenAfterRange] = this[_hiddenAfterRange].cloneRange();
@@ -128,7 +133,12 @@ class VirtualContent extends HTMLElement {
         this[_hideChild](child);
       }
 
+      // Set `_nextHiddenAfterRange` to cover all children so that
+      // `_updateSpace` will include them in the esimate for `_heightBefore`.
+      // TODO: Is it correct to replace this section with a call to `_flush`?
+      this[_nextHiddenAfterRange].setStart(this, 0);
       this[_updateSpace]();
+      this[_hiddenAfterRange] = this[_nextHiddenAfterRange].cloneRange();
 
       // Wait for the browser to set the initial scroll position. This might
       // not be the top because the browser may try to keep the scroll position
@@ -183,7 +193,7 @@ class VirtualContent extends HTMLElement {
     let estimatedAdjustedHeight = 0;
 
     // Hide all currently visible nodes.
-    for (let i = this[_hiddenBeforeRange].endOffset; i < this[_hiddenAfterRange].startOffset; i++) {
+    for (let i = this[_nextHiddenBeforeRange].endOffset; i < this[_nextHiddenAfterRange].startOffset; i++) {
       const child = childNodes[i];
 
       if (this[_childIsVisible](child)) {
@@ -197,18 +207,18 @@ class VirtualContent extends HTMLElement {
     }
 
     // Move all newly hidden elements into the after range.
-    this[_hiddenAfterRange].setStart(this, this[_hiddenBeforeRange].endOffset);
+    this[_nextHiddenAfterRange].setStart(this, this[_nextHiddenBeforeRange].endOffset);
 
     // Slide the now-mutual hidden area bounds backward until reaching the
     // first node that should appear within the viewport.
-    let moveIndex = this[_hiddenAfterRange].startOffset - 1;
-    while (moveIndex >= 0 && estimatedAdjustedHeight < difference) {
-      const child = childNodes[moveIndex];
+    let adjustedIndex = this[_nextHiddenAfterRange].startOffset;
+    for (let i = adjustedIndex - 1; i >= 0 && estimatedAdjustedHeight < difference; i--) {
+      const child = childNodes[i];
       estimatedAdjustedHeight += this[_heightEstimator].estimateHeight(child);
-      moveIndex--;
+      adjustedIndex = i;
     }
-    this[_hiddenBeforeRange].setEnd(this, moveIndex);
-    this[_hiddenAfterRange].setStart(this, moveIndex);
+    this[_nextHiddenBeforeRange].setEnd(this, adjustedIndex);
+    this[_nextHiddenAfterRange].setStart(this, adjustedIndex);
 
     this[_expandStart](entry);
   }
@@ -216,7 +226,7 @@ class VirtualContent extends HTMLElement {
   [_expandStart](entry) {
     // Add new elements to the start of the visible range.
     let estimatedAddedHeight = 0;
-    let next = this.childNodes[this[_hiddenBeforeRange].endOffset] || null;
+    let next = this.childNodes[this[_nextHiddenBeforeRange].endOffset] || null;
     while (next !== null && next.previousSibling !== null && estimatedAddedHeight < (entry.intersectionRect.height + 1)) {
       const previousSibling = next.previousSibling;
       this[_enqueueShow](previousSibling);
@@ -233,7 +243,7 @@ class VirtualContent extends HTMLElement {
     let estimatedAdjustedHeight = 0;
 
     // Hide all currently visible nodes.
-    for (let i = this[_hiddenBeforeRange].endOffset; i < this[_hiddenAfterRange].startOffset; i++) {
+    for (let i = this[_nextHiddenBeforeRange].endOffset; i < this[_nextHiddenAfterRange].startOffset; i++) {
       const child = childNodes[i];
 
       if (this[_childIsVisible](child)) {
@@ -247,18 +257,18 @@ class VirtualContent extends HTMLElement {
     }
 
     // Move all newly hidden elements into the before range.
-    this[_hiddenBeforeRange].setEnd(this, this[_hiddenAfterRange].startOffset);
+    this[_nextHiddenBeforeRange].setEnd(this, this[_nextHiddenAfterRange].startOffset);
 
     // Slide the now-mutual hidden area bounds forward until reaching the first
     // node that should appear within the viewport.
-    let moveIndex = this[_hiddenBeforeRange].endOffset;
-    while (moveIndex < childNodesLength && estimatedAdjustedHeight < difference) {
-      const child = childNodes[moveIndex];
+    let adjustedIndex = this[_nextHiddenBeforeRange].endOffset;
+    for (let i = adjustedIndex; i < childNodesLength && estimatedAdjustedHeight < difference; i++) {
+      const child = childNodes[i];
       estimatedAdjustedHeight += this[_heightEstimator].estimateHeight(child);
-      moveIndex++;
+      adjustedIndex = i;
     }
-    this[_hiddenBeforeRange].setEnd(this, moveIndex);
-    this[_hiddenAfterRange].setStart(this, moveIndex);
+    this[_nextHiddenBeforeRange].setEnd(this, adjustedIndex);
+    this[_nextHiddenAfterRange].setStart(this, adjustedIndex);
 
     this[_expandEnd](entry);
   }
@@ -266,7 +276,7 @@ class VirtualContent extends HTMLElement {
   [_expandEnd](entry) {
     // Add new elements to the end of the visible range.
     let estimatedAddedHeight = 0;
-    let next = this.childNodes[this[_hiddenAfterRange].startOffset] || null;
+    let next = this.childNodes[this[_nextHiddenAfterRange].startOffset] || null;
     while (next !== null && estimatedAddedHeight < (entry.intersectionRect.height + 1)) {
       this[_enqueueShow](next);
       estimatedAddedHeight += this[_heightEstimator].estimateHeight(next);
@@ -367,12 +377,12 @@ class VirtualContent extends HTMLElement {
     }
     this[_flushPendingToShow].clear();
 
+    // Update the space before and space after divs.
+    this[_updateSpace]();
+
     // Set the current ranges to the updated ranges.
     this[_hiddenBeforeRange] = this[_nextHiddenBeforeRange].cloneRange();
     this[_hiddenAfterRange] = this[_nextHiddenAfterRange].cloneRange();
-
-    // Update the space before and space after divs.
-    this[_updateSpace]();
 
     // If there was an element in both the old and new visible regions, make
     // sure its in the same viewport-relative position.
@@ -395,30 +405,45 @@ class VirtualContent extends HTMLElement {
 
   [_updateSpace]() {
     const childNodes = Array.from(this.childNodes);
-    const childNodesLength = childNodes.length;
 
-    const hiddenBeforeRange = this[_hiddenBeforeRange];
-    const hiddenBeforeRangeStartOffset = hiddenBeforeRange.startOffset;
-    const hiddenBeforeRangeEndOffset = hiddenBeforeRange.endOffset;
+    // Estimate the change in `_spaceBefore`.
+    const hiddenBeforeRangeEndOffset = this[_hiddenBeforeRange].endOffset;
+    const nextHiddenBeforeRangeEndOffset = this[_nextHiddenBeforeRange].endOffset;
 
-    let beforeEstimate = 0;
-    for (let i = hiddenBeforeRangeStartOffset; i < hiddenBeforeRangeEndOffset; i++) {
-      const node = childNodes[i];
-      beforeEstimate += this[_heightEstimator].estimateHeight(node);
+    const beforeChangeStartIndex =
+        Math.min(hiddenBeforeRangeEndOffset, nextHiddenBeforeRangeEndOffset);
+    const beforeChangeEndIndex =
+        Math.max(hiddenBeforeRangeEndOffset, nextHiddenBeforeRangeEndOffset);
+
+    let beforeChangeEstimate = 0;
+    for (let i = beforeChangeStartIndex; i < beforeChangeEndIndex; i++) {
+      beforeChangeEstimate += this[_heightEstimator].estimateHeight(childNodes[i]);
     }
 
-    const hiddenAfterRange = this[_hiddenAfterRange];
-    const hiddenAfterRangeStartOffset = hiddenAfterRange.startOffset;
-    const hiddenAfterRangeEndOffset = hiddenAfterRange.endOffset;
+    const beforeEstimate = beforeChangeEstimate *
+        Math.sign(nextHiddenBeforeRangeEndOffset - hiddenBeforeRangeEndOffset);
 
-    let afterEstimate = 0;
-    for (let i = hiddenAfterRangeStartOffset; i < hiddenAfterRangeEndOffset; i++) {
-      const node = childNodes[i];
-      afterEstimate += this[_heightEstimator].estimateHeight(node);
+    // Estimate the change in `_spaceAfter`.
+    const hiddenAfterRangeStartOffset = this[_hiddenAfterRange].startOffset;
+    const nextHiddenAfterRangeStartOffset = this[_nextHiddenAfterRange].startOffset;
+
+    const afterChangeStartIndex =
+        Math.min(hiddenAfterRangeStartOffset, nextHiddenAfterRangeStartOffset);
+    const afterChangeEndIndex =
+        Math.max(hiddenAfterRangeStartOffset, nextHiddenAfterRangeStartOffset);
+
+    let afterChangeEstimate = 0;
+    for (let i = afterChangeStartIndex; i < afterChangeEndIndex; i++) {
+      afterChangeEstimate += this[_heightEstimator].estimateHeight(childNodes[i]);
     }
 
-    this[_spaceBefore].style.height = `${beforeEstimate}px`;
-    this[_spaceAfter].style.height = `${afterEstimate}px`;
+    const afterEstimate = afterChangeEstimate *
+        Math.sign(hiddenAfterRangeStartOffset - nextHiddenAfterRangeStartOffset);
+
+    this[_heightBefore] = Math.max(0, this[_heightBefore] + beforeEstimate);
+    this[_heightAfter] = Math.max(0, this[_heightAfter] + afterEstimate);
+    this[_spaceBefore].style.height = `${this[_heightBefore]}px`;
+    this[_spaceAfter].style.height = `${this[_heightAfter]}px`;
   }
 }
 
