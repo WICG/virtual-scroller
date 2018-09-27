@@ -69,8 +69,8 @@ const _moveEnd = Symbol('VirtualContent#_moveEnd');
 const _expandEnd = Symbol('VirtualContent#_expandEnd');
 
 const _flushPending = Symbol('VirtualContent#_flushPending');
-const _flushPendingToShow = Symbol('VirtualContent#_flushPendingToShow');
-const _flushPendingToHide = Symbol('VirtualContent#_flushPendingToHide');
+const _childrenPendingShow = Symbol('VirtualContent#_childrenPendingShow');
+const _childrenPendingHide = Symbol('VirtualContent#_childrenPendingHide');
 const _enqueueShow = Symbol('VirtualContent#_enqueueShow');
 const _enqueueHide = Symbol('VirtualContent#_enqueueHide');
 const _enqueueFlush = Symbol('VirtualContent#_enqueueFlush');
@@ -116,8 +116,8 @@ class VirtualContent extends HTMLElement {
     this[_heightEstimator] = new HeightEstimator();
 
     this[_flushPending] = false;
-    this[_flushPendingToShow] = new Set();
-    this[_flushPendingToHide] = new Set();
+    this[_childrenPendingShow] = new Set();
+    this[_childrenPendingHide] = new Set();
 
     window.requestAnimationFrame(() => {
       this.normalize();
@@ -312,21 +312,21 @@ class VirtualContent extends HTMLElement {
   }
 
   [_enqueueShow](child) {
-    if (this[_flushPendingToHide].has(child)) {
-      this[_flushPendingToHide].delete(child);
+    if (this[_childrenPendingHide].has(child)) {
+      this[_childrenPendingHide].delete(child);
     }
     if (!this[_childIsVisible](child)) {
-      this[_flushPendingToShow].add(child);
+      this[_childrenPendingShow].add(child);
       this[_enqueueFlush]();
     }
   }
 
   [_enqueueHide](child) {
-    if (this[_flushPendingToShow].has(child)) {
-      this[_flushPendingToShow].delete(child);
+    if (this[_childrenPendingShow].has(child)) {
+      this[_childrenPendingShow].delete(child);
     }
     if (this[_childIsVisible](child)) {
-      this[_flushPendingToHide].add(child);
+      this[_childrenPendingHide].add(child);
       this[_enqueueFlush]();
     }
   }
@@ -364,19 +364,19 @@ class VirtualContent extends HTMLElement {
     //
     // NOTE: Do not interleave calls to `getBoundingClientRect` with
     // `#[_hideChild]` - this thrashes layout.
-    for (const child of this[_flushPendingToHide]) {
+    for (const child of this[_childrenPendingHide]) {
       this[_heightEstimator].set(child, child.getBoundingClientRect().height);
     }
 
-    for (const child of this[_flushPendingToHide]) {
+    for (const child of this[_childrenPendingHide]) {
       this[_hideChild](child);
     }
-    this[_flushPendingToHide].clear();
+    this[_childrenPendingHide].clear();
 
-    for (const child of this[_flushPendingToShow]) {
+    for (const child of this[_childrenPendingShow]) {
       this[_showChild](child);
     }
-    this[_flushPendingToShow].clear();
+    this[_childrenPendingShow].clear();
 
     // Update the start and end spacers.
     this[_updateSpacers]();
