@@ -1,5 +1,9 @@
 import {HeightEstimator} from './HeightEstimator.js';
 
+const sortIOEntriesByTargetDocumentPosition = (a, b) => {
+  return (a.target.compareDocumentPosition(b.target) & Node.DOCUMENT_POSITION_PRECEDING) ? 1 : -1;
+};
+
 // Elements further than this distance outside of viewport bounds will not be
 // rendered. This value is a tradeoff between keeping a sufficient buffer of
 // visible elements (so that scrolling doesn't often result in empty regions
@@ -294,20 +298,50 @@ class VirtualContent extends HTMLElement {
       lastEntryForNode.set(entry.target, entry);
     }
 
+    const newHiddenStartChildEntries = [];
+    const newHiddenEndChildEntries = [];
+
     for (const [child, entry] of lastEntryForNode) {
       this[_heightEstimator].set(child, entry.boundingClientRect.height);
 
       if (entry.isIntersecting) continue;
 
-      if (entry.boundingClientRect.bottom < entry.rootBounds.top &&
-          !this[_nextHiddenStartRange].intersectsNode(child)) {
-        this[_nextHiddenStartRange].setEndAfter(child);
-      } else if (entry.rootBounds.bottom < entry.boundingClientRect.top &&
-          !this[_nextHiddenEndRange].intersectsNode(child)) {
-        this[_nextHiddenEndRange].setStartBefore(child);
+      const rootRect = entry.rootBounds;
+      const childRect = entry.boundingClientRect;
+
+      if (childRect.bottom < rootRect.top) {
+        newHiddenStartChildEntries.push(entry);
+      } else if (rootRect.bottom < childRect.top) {
+        newHiddenEndChildEntries.push(entry);
       }
 
       this[_enqueueHide](child);
+    }
+
+    if (newHiddenStartChildEntries.length > 0) {
+      // Find the last newly hidden child on the start side of the visible set
+      // and set the next start range's end to after that child.
+      newHiddenStartChildEntries.sort(sortIOEntriesByTargetDocumentPosition);
+      while (newHiddenStartChildEntries.length > 0) {
+        const child = newHiddenStartChildEntries.pop().target;
+        if (!this[_nextHiddenStartRange].intersectsNode(child)) {
+          this[_nextHiddenStartRange].setEndAfter(child);
+          break;
+        }
+      }
+    }
+
+    if (newHiddenEndChildEntries.length > 0) {
+      // Find the first newly hidden child on the end side of the visible set
+      // and set the next end range's start to before that child.
+      newHiddenEndChildEntries.sort(sortIOEntriesByTargetDocumentPosition).reverse();
+      while (newHiddenEndChildEntries.length > 0) {
+        const child = newHiddenEndChildEntries.pop().target;
+        if (!this[_nextHiddenEndRange].intersectsNode(child)) {
+          this[_nextHiddenEndRange].setStartBefore(child);
+          break;
+        }
+      }
     }
   }
 
