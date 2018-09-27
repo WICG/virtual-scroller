@@ -317,8 +317,8 @@ class VirtualContent extends HTMLElement {
     }
     if (!this[_childIsVisible](child)) {
       this[_flushPendingToShow].add(child);
+      this[_enqueueFlush]();
     }
-    this[_enqueueFlush]();
   }
 
   [_enqueueHide](child) {
@@ -327,8 +327,8 @@ class VirtualContent extends HTMLElement {
     }
     if (this[_childIsVisible](child)) {
       this[_flushPendingToHide].add(child);
+      this[_enqueueFlush]();
     }
-    this[_enqueueFlush]();
   }
 
   [_enqueueFlush]() {
