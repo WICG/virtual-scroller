@@ -439,7 +439,7 @@ class VirtualContent extends HTMLElement {
   }
 
   [_updateSpacers]() {
-    const childNodes = Array.from(this.childNodes);
+    const childNodes = this.childNodes;
 
     // Estimate the change in the start spacer height.
     const hiddenStartRangeEndOffset = this[_hiddenStartRange].endOffset;
