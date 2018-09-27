@@ -42,41 +42,41 @@ TEMPLATE.innerHTML = `
 <div id="spacerEnd"></div>
 `;
 
-const _spacerStart = Symbol('VirtualContent#_spacerStart');
-const _spacerStartHeight = Symbol('VirtualContent#_spacerStartHeight');
-const _spacerEnd = Symbol('VirtualContent#_spacerEnd');
-const _spacerEndHeight = Symbol('VirtualContent#_spacerEndHeight');
+const _spacerStart = Symbol('VirtualContent#[_spacerStart]');
+const _spacerStartHeight = Symbol('VirtualContent#[_spacerStartHeight]');
+const _spacerEnd = Symbol('VirtualContent#[_spacerEnd]');
+const _spacerEndHeight = Symbol('VirtualContent#[_spacerEndHeight]');
 
-const _spacerObserverCallback = Symbol('VirtualContent#_spacerObserverCallback');
-const _spacerObserver = Symbol('VirtualContent#_spacerObserver');
-const _childObserverCallback = Symbol('VirtualContent#_childObserverCallback');
-const _childObserver = Symbol('VirtualContent#_childObserver');
+const _spacerObserverCallback = Symbol('VirtualContent#[_spacerObserverCallback]');
+const _spacerObserver = Symbol('VirtualContent#[_spacerObserver]');
+const _childObserverCallback = Symbol('VirtualContent#[_childObserverCallback]');
+const _childObserver = Symbol('VirtualContent#[_childObserver]');
 
-const _hiddenStartRange = Symbol('VirtualContent#_hiddenStartRange');
-const _hiddenEndRange = Symbol('VirtualContent#_hiddenEndRange');
-const _nextHiddenStartRange = Symbol('VirtualContent#_nextHiddenStartRange');
-const _nextHiddenEndRange = Symbol('VirtualContent#_nextHiddenEndRange');
+const _hiddenStartRange = Symbol('VirtualContent#[_hiddenStartRange]');
+const _hiddenEndRange = Symbol('VirtualContent#[_hiddenEndRange]');
+const _nextHiddenStartRange = Symbol('VirtualContent#[_nextHiddenStartRange]');
+const _nextHiddenEndRange = Symbol('VirtualContent#[_nextHiddenEndRange]');
 
-const _heightEstimator = Symbol('VirtualContent#_heightEstimator');
+const _heightEstimator = Symbol('VirtualContent#[_heightEstimator]');
 
-const _showChild = Symbol('VirtualContent#_showChild');
-const _hideChild = Symbol('VirtualContent#_hideChild');
-const _childIsVisible = Symbol('VirtualContent#_childIsVisible');
+const _showChild = Symbol('VirtualContent#[_showChild]');
+const _hideChild = Symbol('VirtualContent#[_hideChild]');
+const _childIsVisible = Symbol('VirtualContent#[_childIsVisible]');
 
-const _moveStart = Symbol('VirtualContent#_moveStart');
-const _expandStart = Symbol('VirtualContent#_expandStart');
-const _moveEnd = Symbol('VirtualContent#_moveEnd');
-const _expandEnd = Symbol('VirtualContent#_expandEnd');
+const _moveStart = Symbol('VirtualContent#[_moveStart]');
+const _expandStart = Symbol('VirtualContent#[_expandStart]');
+const _moveEnd = Symbol('VirtualContent#[_moveEnd]');
+const _expandEnd = Symbol('VirtualContent#[_expandEnd]');
 
-const _flushPending = Symbol('VirtualContent#_flushPending');
-const _childrenPendingShow = Symbol('VirtualContent#_childrenPendingShow');
-const _childrenPendingHide = Symbol('VirtualContent#_childrenPendingHide');
-const _enqueueShow = Symbol('VirtualContent#_enqueueShow');
-const _enqueueHide = Symbol('VirtualContent#_enqueueHide');
-const _enqueueFlush = Symbol('VirtualContent#_enqueueFlush');
-const _flush = Symbol('VirtualContent#_flush');
+const _flushPending = Symbol('VirtualContent#[_flushPending]');
+const _childrenPendingShow = Symbol('VirtualContent#[_childrenPendingShow]');
+const _childrenPendingHide = Symbol('VirtualContent#[_childrenPendingHide]');
+const _enqueueShow = Symbol('VirtualContent#[_enqueueShow]');
+const _enqueueHide = Symbol('VirtualContent#[_enqueueHide]');
+const _enqueueFlush = Symbol('VirtualContent#[_enqueueFlush]');
+const _flush = Symbol('VirtualContent#[_flush]');
 
-const _updateSpacers = Symbol('VirtualContent#_updateSpacers');
+const _updateSpacers = Symbol('VirtualContent#[_updateSpacers]');
 
 class VirtualContent extends HTMLElement {
   constructor() {
