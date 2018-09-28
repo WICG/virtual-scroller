@@ -232,13 +232,18 @@ class VirtualContent extends HTMLElement {
     // Add new elements to the start of the visible range.
     let estimatedAddedHeight = 0;
     let next = this.childNodes[this[_nextHiddenStartRange].endOffset] || null;
+    let nextFirstVisibleNode = undefined;
+
     while (next !== null && next.previousSibling !== null && estimatedAddedHeight < (entry.intersectionRect.height + 1)) {
       const previousSibling = next.previousSibling;
       this[_enqueueShow](previousSibling);
       estimatedAddedHeight += this[_heightEstimator].estimateHeight(previousSibling);
-      this[_nextHiddenStartRange].setEndBefore(previousSibling);
-
+      nextFirstVisibleNode = previousSibling;
       next = previousSibling;
+    }
+
+    if (nextFirstVisibleNode !== undefined) {
+      this[_nextHiddenStartRange].setEndBefore(nextFirstVisibleNode);
     }
   }
 
@@ -282,12 +287,17 @@ class VirtualContent extends HTMLElement {
     // Add new elements to the end of the visible range.
     let estimatedAddedHeight = 0;
     let next = this.childNodes[this[_nextHiddenEndRange].startOffset] || null;
+    let nextLastVisibleNode = undefined;
+
     while (next !== null && estimatedAddedHeight < (entry.intersectionRect.height + 1)) {
       this[_enqueueShow](next);
       estimatedAddedHeight += this[_heightEstimator].estimateHeight(next);
-      this[_nextHiddenEndRange].setStartAfter(next);
-
+      nextLastVisibleNode = next;
       next = next.nextSibling;
+    }
+
+    if (nextLastVisibleNode !== undefined) {
+      this[_nextHiddenEndRange].setStartAfter(nextLastVisibleNode);
     }
   }
 
