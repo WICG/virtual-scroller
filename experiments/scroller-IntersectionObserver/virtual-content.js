@@ -119,6 +119,7 @@ class VirtualContent extends HTMLElement {
 
     this[_heightEstimator] = new HeightEstimator();
 
+    this[_flush] = this[_flush].bind(this);
     this[_flushPending] = false;
     this[_childrenPendingShow] = new Set();
     this[_childrenPendingHide] = new Set();
@@ -379,7 +380,7 @@ class VirtualContent extends HTMLElement {
     if (this[_flushPending]) return;
     this[_flushPending] = true;
 
-    window.requestAnimationFrame(() => this[_flush]());
+    window.requestAnimationFrame(this[_flush]);
   }
 
   [_flush]() {
