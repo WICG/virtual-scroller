@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<script type="module">
+import '../virtual-content.js';
+</script>
+<style>
+virtual-content:not([ready]) {
+  display: none;
+}
+
+.space {
+  border: 4px solid blue;
+  height: 3600px;
+  background-color: lightblue;
+}
+
+.item {
+  font-size: 2em;
+  border: 4px dashed green;
+  background-color: lightgreen;
+}
+</style>
+
+<div class="space"></div>
+<script>
+for (let i = 0; i < 4; i++) {
+  document.write(`
+    <virtual-content id="virtual-content-${i}">
+      <script>
+        for (let i = 0; i < 32; i++) {
+          document.write(\`<div class="item">item \${i}</div>\`);
+        }
+        document.currentScript.remove();
+      </scr` + `ipt>
+    </virtual-content>
+    <div class="space"></div>
+  `);
+}
+document.currentScript.remove();
+</script>
