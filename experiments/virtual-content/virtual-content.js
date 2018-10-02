@@ -137,7 +137,16 @@ class VirtualContent extends HTMLElement {
       this.normalize();
 
       // TODO: This isn't the right place for this initialization logic.
-      for (let child = this.firstChild; child !== null; child = child.nextSibling) {
+      let child = this.firstChild;
+      while (child !== null) {
+        // Remove text that would become a zero-height box.
+        if (child.nodeType === Node.TEXT_NODE && child.nodeValue.trim() === '') {
+          const next = child.nextSibling;
+          this.removeChild(child);
+          child = next;
+          continue;
+        }
+
         // Replace all children with block elements.
         if (child.nodeType !== Node.ELEMENT_NODE) {
           const newDiv = document.createElement('div');
@@ -145,7 +154,9 @@ class VirtualContent extends HTMLElement {
           newDiv.appendChild(child);
           child = newDiv;
         }
+
         this[_hideChild](child);
+        child = child.nextSibling;
       }
 
       // Set `_nextHiddenEndRange` to cover all children so that
