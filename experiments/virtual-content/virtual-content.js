@@ -466,8 +466,8 @@ class VirtualContent extends HTMLElement {
     this[_updateSpacers]();
 
     // Set the current ranges to the updated ranges.
-    this[_hiddenStartRange] = this[_nextHiddenStartRange].cloneRange();
-    this[_hiddenEndRange] = this[_nextHiddenEndRange].cloneRange();
+    this[_hiddenStartRange].setEnd(this, this[_nextHiddenStartRange].endOffset);
+    this[_hiddenEndRange].setStart(this, this[_nextHiddenEndRange].startOffset);
 
     // If there was an element in both the old and new visible regions, make
     // sure its in the same viewport-relative position.
