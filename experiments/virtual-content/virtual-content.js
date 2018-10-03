@@ -214,6 +214,7 @@ class VirtualContent extends HTMLElement {
 
   [_thisObserverCallback](entries) {
     const childNodes = this.childNodes;
+    let didMoveToEdge = false;
 
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
@@ -230,6 +231,7 @@ class VirtualContent extends HTMLElement {
         this[_nextHiddenStartRange].setEnd(this, 0);
         this[_nextHiddenEndRange].setStart(this, 0);
         this[_expandEnd](entry.rootBounds.bottom - entry.boundingClientRect.top);
+        didMoveToEdge = true;
       }
 
       // Move to the end.
@@ -241,7 +243,19 @@ class VirtualContent extends HTMLElement {
         this[_nextHiddenStartRange].setEnd(this, childNodesLength);
         this[_nextHiddenEndRange].setStart(this, childNodesLength);
         this[_expandStart](entry.boundingClientRect.bottom - entry.rootBounds.top);
+        didMoveToEdge = true;
       }
+    }
+
+    if (didMoveToEdge) {
+      // Throw away any pending entries from the spacer observer (which may
+      // have been invalidated by sliding the visible region to an edge) and
+      // recompute.
+      this[_spacerObserver].takeRecords();
+      this[_spacerObserver].unobserve(this[_spacerStart]);
+      this[_spacerObserver].observe(this[_spacerStart]);
+      this[_spacerObserver].unobserve(this[_spacerEnd]);
+      this[_spacerObserver].observe(this[_spacerEnd]);
     }
   }
 
