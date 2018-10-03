@@ -362,7 +362,8 @@ class VirtualContent extends HTMLElement {
     const newHiddenStartChildEntries = [];
     const newHiddenEndChildEntries = [];
 
-    for (const [child, entry] of lastEntryForNode) {
+    for (const entry of lastEntryForNode.values()) {
+      const child = entry.target;
       this[_heightEstimator].set(child, entry.boundingClientRect.height);
 
       if (entry.isIntersecting) continue;
