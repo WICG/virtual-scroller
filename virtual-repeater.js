@@ -17,12 +17,6 @@ export const Repeats = Superclass => class extends Superclass {
 
     this.__incremental = false;
 
-    // used only internally..
-    // legacy from 1st approach to preact integration
-    this._manageDom = true;
-    // used to check if it is more perf if you don't care of dom order?
-    this._maintainDomOrder = true;
-
     this._last = 0;
     this._prevFirst = 0;
     this._prevLast = 0;
@@ -41,8 +35,6 @@ export const Repeats = Superclass => class extends Superclass {
     this._childToKey = new WeakMap();
     // Used to keep track of measures by index.
     this._indexToMeasure = {};
-    // Used to debounce _measureChildren calls.
-    this._measuringId = -1;
 
     if (config) {
       Object.assign(this, config);
@@ -324,10 +316,8 @@ export const Repeats = Superclass => class extends Superclass {
     const end = Math.min(this._last, this._prevFirst - 1);
     for (let idx = end; idx >= start; idx--) {
       const child = this._assignChild(idx);
-      if (this._manageDom) {
-        if (this._maintainDomOrder || !this._childIsAttached(child)) {
-          this._insertBefore(child, this._firstChild);
-        }
+      if (!this._childIsAttached(child)) {
+        this._insertBefore(child, this._firstChild);
       }
       if (this.updateElement) {
         this.updateElement(child, idx);
@@ -344,10 +334,8 @@ export const Repeats = Superclass => class extends Superclass {
     const end = this._last;
     for (let idx = start; idx <= end; idx++) {
       const child = this._assignChild(idx);
-      if (this._manageDom) {
-        if (this._maintainDomOrder || !this._childIsAttached(child)) {
-          this._insertBefore(child, null);
-        }
+      if (!this._childIsAttached(child)) {
+        this._insertBefore(child, null);
       }
       if (this.updateElement) {
         this.updateElement(child, idx);
@@ -367,22 +355,20 @@ export const Repeats = Superclass => class extends Superclass {
     const prevActive = this._active;
     this._active = this._prevActive;
     this._prevActive = prevActive;
-    let currentMarker = this._manageDom && this._firstChild;
+    let currentMarker = this._firstChild;
     this._ordered.length = 0;
     for (let n = 0; n < len; n++) {
       const idx = first + n;
       const child = this._assignChild(idx);
       this._ordered.push(child);
-      if (this._manageDom) {
-        if (currentMarker && this._maintainDomOrder) {
-          if (currentMarker === this._node(child)) {
-            currentMarker = this._nextSibling(child);
-          } else {
-            this._insertBefore(child, currentMarker);
-          }
-        } else if (!this._childIsAttached(child)) {
-          this._insertBefore(child, null);
+      if (currentMarker) {
+        if (currentMarker === this._node(child)) {
+          currentMarker = this._nextSibling(child);
+        } else {
+          this._insertBefore(child, currentMarker);
         }
+      } else if (!this._childIsAttached(child)) {
+        this._insertBefore(child, null);
       }
       if (this.updateElement) {
         this.updateElement(child, idx);
