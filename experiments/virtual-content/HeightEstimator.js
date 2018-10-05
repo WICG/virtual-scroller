@@ -37,7 +37,7 @@ export class HeightEstimator {
   // should be stored so that it isn't regenerated and potentially changed when
   // new estimates are inserted.
   estimateHeight(item) {
-    if (this[_total] === 0) {
+    if (this[_total] === 0 || this[_count] === 0) {
       const estimate = this[_initialEstimate];
       this[_known].set(item, estimate);
       return estimate;

@@ -38,7 +38,7 @@ TEMPLATE.innerHTML = `
   display: block !important;
   position: relative !important;
   margin: 0px !important;
-  contain: content !important;
+  contain: layout !important;
 }
 </style>
 <div id="spacerStart"></div>
@@ -85,7 +85,7 @@ const _flush = Symbol('VirtualContent#[_flush]');
 
 const _updateSpacers = Symbol('VirtualContent#[_updateSpacers]');
 
-class VirtualContent extends HTMLElement {
+export class VirtualContent extends HTMLElement {
   constructor() {
     super();
 
@@ -190,6 +190,47 @@ class VirtualContent extends HTMLElement {
 
   [_childIsVisible](child) {
     return !child.hasAttribute('invisible');
+  }
+
+  appendChild(fragment) {
+    if (!(fragment instanceof DocumentFragment)) {
+      const newFragment = new DocumentFragment();
+      newFragment.appendChild(fragment);
+      fragment = newFragment;
+    }
+
+    let child = fragment.firstChild;
+    while (child !== null) {
+      // Remove text that would become a zero-height box.
+      if (child.nodeType === Node.TEXT_NODE && child.nodeValue.trim() === '') {
+        const next = child.nextSibling;
+        fragment.removeChild(child);
+        child = next;
+        continue;
+      }
+
+      // Replace all children with block elements.
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        const newDiv = document.createElement('div');
+        fragment.insertBefore(newDiv, child);
+        newDiv.appendChild(child);
+        child = newDiv;
+      }
+
+      this[_hideChild](child);
+      child = child.nextSibling;
+    }
+    super.appendChild(fragment);
+
+    const length = this.childNodes.length;
+    this[_nextHiddenEndRange].setEnd(this, length);
+    this[_updateSpacers](true);
+    this[_hiddenEndRange].setEnd(this, length);
+
+    this[_spacerObserver].unobserve(this[_spacerStart]);
+    this[_spacerObserver].observe(this[_spacerStart]);
+    this[_spacerObserver].unobserve(this[_spacerEnd]);
+    this[_spacerObserver].observe(this[_spacerEnd]);
   }
 
   [_hideNextVisibleRange]() {
@@ -514,13 +555,19 @@ class VirtualContent extends HTMLElement {
     this[_spacerObserver].observe(this[_spacerEnd]);
   }
 
-  [_updateSpacers]() {
+  [_updateSpacers](force = false) {
     const childNodes = this.childNodes;
 
     // Estimate the change in the start spacer height.
     const nextHiddenStartRangeEndOffset = this[_nextHiddenStartRange].endOffset;
     if (nextHiddenStartRangeEndOffset === 0) {
       this[_spacerStartHeight] = 0;
+    } else if (force) {
+      let startEstimate = 0;
+      for (let i = 0; i < nextHiddenStartRangeEndOffset; i++) {
+        startEstimate += this[_heightEstimator].estimateHeight(childNodes[i]);
+      }
+      this[_spacerStartHeight] = Math.max(0, startEstimate);
     } else {
       const hiddenStartRangeEndOffset = this[_hiddenStartRange].endOffset;
 
@@ -546,6 +593,12 @@ class VirtualContent extends HTMLElement {
     const nextHiddenEndRangeStartOffset = this[_nextHiddenEndRange].startOffset;
     if (nextHiddenEndRangeStartOffset === childNodes.length) {
       this[_spacerEndHeight] = 0;
+    } else if (force) {
+      let endEstimate = 0;
+      for (let i = nextHiddenEndRangeStartOffset; i < childNodes.length; i++) {
+        endEstimate += this[_heightEstimator].estimateHeight(childNodes[i]);
+      }
+      this[_spacerEndHeight] = Math.max(0, endEstimate);
     } else {
       const hiddenEndRangeStartOffset = this[_hiddenEndRange].startOffset;
 
@@ -567,6 +620,6 @@ class VirtualContent extends HTMLElement {
 
     this[_spacerEnd].style.height = `${this[_spacerEndHeight]}px`;
   }
-}
+};
 
 customElements.define('virtual-content', VirtualContent);
