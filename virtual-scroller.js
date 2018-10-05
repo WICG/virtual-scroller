@@ -177,9 +177,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _render() {
-    // console.time(`render ${this._containerElement.localName}#${
-    //     this._containerElement.id}`);
-
     this._childrenRO.disconnect();
 
     // Update layout properties before rendering to have correct
@@ -216,9 +213,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     // measured the children.
     this._skipNextChildrenSizeChanged = true;
     this._kids.forEach(child => this._childrenRO.observe(child));
-
-    // console.timeEnd(`render ${this._containerElement.localName}#${
-    //     this._containerElement.id}`);
   }
 
   /**
@@ -364,8 +358,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       const child = kids[idx];
       if (child) {
         const {top, left} = pos[key];
-        // console.debug(`_positionChild #${this._container.id} >
-        // #${child.id}: top ${top}`);
         child.style.position = 'absolute';
         child.style.transform = `translate(${left}px, ${top}px)`;
       }
@@ -426,7 +418,6 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   _containerSizeChanged(size) {
     const {width, height} = size;
     this._containerSize = {width, height};
-    // console.debug('container changed size', this._containerSize);
     this._scheduleUpdateView();
   }
   /**

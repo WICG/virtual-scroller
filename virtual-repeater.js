@@ -10,13 +10,10 @@ export const Repeats = Superclass => class extends Superclass {
     this._measureCallback = null;
 
     this._totalItems = 0;
-    // Consider renaming this. firstVisibleIndex?
-    this._first = 0;
     // Consider renaming this. count? visibleElements?
     this._num = Infinity;
-
-    this.__incremental = false;
-
+    // Consider renaming this. firstVisibleIndex?
+    this._first = 0;
     this._last = 0;
     this._prevFirst = 0;
     this._prevLast = 0;
@@ -27,7 +24,6 @@ export const Repeats = Superclass => class extends Superclass {
 
     // Contains child nodes in the rendered order.
     this._ordered = [];
-    // this._pool = [];
     this._active = new Map();
     this._prevActive = new Map();
     // Both used for recycling purposes.
@@ -35,6 +31,8 @@ export const Repeats = Superclass => class extends Superclass {
     this._childToKey = new WeakMap();
     // Used to keep track of measures by index.
     this._indexToMeasure = {};
+
+    this.__incremental = false;
 
     if (config) {
       Object.assign(this, config);
@@ -481,8 +479,6 @@ export const Repeats = Superclass => class extends Superclass {
     // offsetWidth doesn't take transforms in consideration,
     // so we use getBoundingClientRect which does.
     const {width, height} = child.getBoundingClientRect();
-    // console.debug(`_measureChild #${this._container.id} > #${
-    //     child.id}: height: ${height}px`);
     return Object.assign({width, height}, getMargins(child));
   }
 
@@ -500,7 +496,6 @@ export const Repeats = Superclass => class extends Superclass {
 
 function getMargins(el) {
   const style = window.getComputedStyle(el);
-  // console.log(el.id, style.position);
   return {
     marginLeft: getMarginValue(style.marginLeft),
     marginRight: getMarginValue(style.marginRight),
