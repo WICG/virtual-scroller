@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <style>
 virtual-content:not([ready]) {
   display: none;
@@ -22,8 +21,7 @@ const mo = new MutationObserver(entries => {
     for (const node of entry.addedNodes) {
       if (node.parentNode === doc.head) {
         document.head.appendChild(node);
-      }
-      if (node.parentNode === doc.body) {
+      } else if (node.parentNode === doc.body) {
         bodyFragment.appendChild(node);
       }
 
@@ -51,7 +49,7 @@ mo.observe(doc, {childList: true, subtree: true});
   let syncStart = 0;
   while (true) {
     if (performance.now() - syncStart > 0.5 * (1000 / 60)) {
-      await new Promise(resolve => requestIdleCallback(resolve));
+      await new Promise(resolve => setTimeout(resolve, 0));
       syncStart = performance.now();
     }
 
