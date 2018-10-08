@@ -5,7 +5,6 @@ virtual-content:not([ready]) {
 }
 </style>
 <script type="module">
-import {Utf8Parser} from './Utf8Parser.js';
 import {VirtualContent} from '../virtual-content.js';
 
 const vc = new VirtualContent();
@@ -43,21 +42,27 @@ mo.observe(doc, {childList: true, subtree: true});
 
   console.log('Getting response reader...');
   const reader = await response.body.getReader();
-  const parser = new Utf8Parser(str => doc.write(str));
+  const decoder = new TextDecoder('utf-8');
 
   console.log('Streaming...');
   let syncStart = 0;
   while (true) {
     if (performance.now() - syncStart > 0.5 * (1000 / 60)) {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve =>
+          window.requestIdleCallback(resolve, {timeout: 10 * (1000 / 60)}));
       syncStart = performance.now();
     }
 
     const {done, value} = await reader.read();
-    if (done) break;
+    if (done) {
+      decoder.decode();
+      break;
+    }
 
-    console.log(`Pushing ${value.length} bytes.`);
-    parser.push(value);
+    console.log(`Decoding ${value.length} bytes...`);
+    doc.write(decoder.decode(value, {stream: true}));
   }
+
+  console.log('Done.');
 })();
 </script>
