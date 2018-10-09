@@ -258,6 +258,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         console.warn('event not handled', event);
     }
   }
+
   /**
    * @return {!Element}
    * @private
@@ -286,6 +287,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   get _kids() {
     return this._ordered;
   }
+
   /**
    * @private
    */
@@ -293,6 +295,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._needsUpdateView = true;
     this._scheduleRender();
   }
+
   /**
    * @private
    */
@@ -334,6 +337,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout.viewportSize = {width, height};
     this._layout.viewportScroll = {top, left};
   }
+
   /**
    * @private
    */
@@ -348,6 +352,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       style.minHeight = size && size.height ? size.height + 'px' : null;
     }
   }
+
   /**
    * @private
    */
@@ -363,6 +368,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       }
     });
   }
+
   /**
    * @private
    */
@@ -376,6 +382,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._notifyStable();
     }
   }
+
   /**
    * @protected
    */
@@ -392,6 +399,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     }
     return this._containerSize.width > 0 || this._containerSize.height > 0;
   }
+
   /**
    * @private
    */
@@ -403,6 +411,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       window.scroll(window.scrollX - err.left, window.scrollY - err.top);
     }
   }
+
   /**
    * @protected
    */
@@ -412,6 +421,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._container.dispatchEvent(
         new RangeChangeEvent('rangechange', {first, last}));
   }
+
   /**
    * @private
    */
@@ -420,6 +430,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._containerSize = {width, height};
     this._scheduleUpdateView();
   }
+
   /**
    * @private
    */

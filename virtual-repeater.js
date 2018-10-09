@@ -112,7 +112,6 @@ export const Repeats = Superclass => class extends Superclass {
   get first() {
     return this._first;
   }
-
   set first(idx) {
     if (typeof idx !== 'number') {
       throw new Error('New value must be a number.');
@@ -128,7 +127,6 @@ export const Repeats = Superclass => class extends Superclass {
   get num() {
     return this._num;
   }
-
   set num(n) {
     if (typeof n !== 'number') {
       throw new Error('New value must be a number.');
@@ -144,7 +142,6 @@ export const Repeats = Superclass => class extends Superclass {
   get totalItems() {
     return this._totalItems;
   }
-
   set totalItems(num) {
     if (typeof num !== 'number') {
       throw new Error('New value must be a number.');
@@ -162,7 +159,6 @@ export const Repeats = Superclass => class extends Superclass {
   get _incremental() {
     return this.__incremental;
   }
-
   set _incremental(inc) {
     if (inc !== this.__incremental) {
       this.__incremental = inc;
@@ -436,24 +432,28 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   // Overridable abstractions for child manipulation
+
   /**
    * @protected
    */
   _node(child) {
     return child;
   }
+
   /**
    * @protected
    */
   _nextSibling(child) {
     return child.nextSibling;
   }
+
   /**
    * @protected
    */
   _insertBefore(child, referenceNode) {
     this._container.insertBefore(child, referenceNode);
   }
+
   /**
    * @protected
    */
@@ -461,6 +461,7 @@ export const Repeats = Superclass => class extends Superclass {
     const node = this._node(child);
     return node && node.parentNode === this._container;
   }
+
   /**
    * @protected
    */
@@ -469,6 +470,7 @@ export const Repeats = Superclass => class extends Superclass {
       child.style.display = 'none';
     }
   }
+
   /**
    * @protected
    */
