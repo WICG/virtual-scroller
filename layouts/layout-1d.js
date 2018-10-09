@@ -93,7 +93,8 @@ export default class Layout extends Layout1dBase {
     return Math.max(
         0,
         Math.min(
-            this._totalItems - 1, Math.floor(((lower + upper) / 2) / this._delta)));
+            this._totalItems - 1,
+            Math.floor(((lower + upper) / 2) / this._delta)));
   }
 
   _getAnchor(lower, upper) {
