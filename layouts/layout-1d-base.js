@@ -44,7 +44,6 @@ export default class Layout extends EventTarget {
   set totalItems(num) {
     if (num !== this._totalItems) {
       this._totalItems = num;
-      this._maxIdx = num - 1;
       this._scheduleReflow();
     }
   }

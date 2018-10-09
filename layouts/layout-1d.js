@@ -90,12 +90,12 @@ export default class Layout extends Layout1dBase {
       return 0;
     }
     if (upper > this._scrollSize - this._viewDim1) {
-      return this._maxIdx;
+      return this._totalItems - 1;
     }
     return Math.max(
         0,
         Math.min(
-            this._maxIdx, Math.floor(((lower + upper) / 2) / this._delta)));
+            this._totalItems - 1, Math.floor(((lower + upper) / 2) / this._delta)));
   }
 
   _getAnchor(lower, upper) {
@@ -276,7 +276,7 @@ export default class Layout extends Layout1dBase {
     } else if (this._physicalMax >= this._scrollSize) {
       return (
           (this._physicalMax - this._scrollSize) +
-          ((this._maxIdx - this._last) * this._delta));
+          ((this._totalItems - 1 - this._last) * this._delta));
     }
     return 0;
   }
