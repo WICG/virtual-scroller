@@ -353,17 +353,17 @@ export const Repeats = Superclass => class extends Superclass {
    * @private
    */
   _reset(first, last) {
-    const len = last - first + 1;
     // Explain why swap prevActive with active - affects _assignChild.
     const prevActive = this._active;
     this._active = this._prevActive;
     this._prevActive = prevActive;
-    let currentMarker = this._firstChild;
+
     this._ordered.length = 0;
-    for (let n = 0; n < len; n++) {
-      const idx = first + n;
-      const child = this._assignChild(idx);
+    let currentMarker = this._firstChild;
+    for (let i = first; i <= last; i++) {
+      const child = this._assignChild(i);
       this._ordered.push(child);
+
       if (currentMarker) {
         if (currentMarker === this._node(child)) {
           currentMarker = this._nextSibling(child);
@@ -373,8 +373,9 @@ export const Repeats = Superclass => class extends Superclass {
       } else if (!this._childIsAttached(child)) {
         this._insertBefore(child, null);
       }
+
       if (this.updateElement) {
-        this.updateElement(child, idx);
+        this.updateElement(child, i);
       }
     }
   }
