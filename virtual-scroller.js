@@ -28,11 +28,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._containerElement = null;
     this._layout = null;
     this._scrollTarget = null;
-    // Keep track of original inline style of the container,
-    // so it can be restored when container is changed.
+    // Keep track of original inline style of the container, so it can be
+    // restored when container is changed.
     this._containerInlineStyle = null;
-    // A sentinel element that sizes the container when
-    // it is a scrolling element.
+    // A sentinel element that sizes the container when it is a scrolling
+    // element.
     this._sizer = null;
     // Layout provides these values, we set them on _render().
     this._scrollSize = null;
@@ -216,9 +216,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   /**
-   * Position children before they get measured.
-   * Measuring will force relayout, so by positioning
-   * them first, we reduce computations.
+   * Position children before they get measured. Measuring will force relayout,
+   * so by positioning them first, we reduce computations.
    * @protected
    */
   _didRender() {
@@ -265,10 +264,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    */
   _createContainerSizer() {
     const sizer = document.createElement('div');
-    // When the scrollHeight is large, the height
-    // of this element might be ignored.
-    // Setting content and font-size ensures the element
-    // has a size.
+    // When the scrollHeight is large, the height of this element might be
+    // ignored. Setting content and font-size ensures the element has a size.
     Object.assign(sizer.style, {
       position: 'absolute',
       margin: '-2px 0 0 0',
@@ -280,7 +277,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     return sizer;
   }
 
-  // Rename _ordered to _kids?
+  // TODO: Rename _ordered to _kids?
   /**
    * @protected
    */
@@ -391,8 +388,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       return false;
     }
     // NOTE: we're about to render, but the ResizeObserver didn't execute yet.
-    // Since we want to keep rAF timing, we compute _containerSize now.
-    // Would be nice to have a way to flush ResizeObservers
+    // Since we want to keep rAF timing, we compute _containerSize now. Would
+    // be nice to have a way to flush ResizeObservers.
     if (this._containerSize === null) {
       const {width, height} = this._containerElement.getBoundingClientRect();
       this._containerSize = {width, height};

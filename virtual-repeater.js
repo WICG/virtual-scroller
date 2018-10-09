@@ -200,9 +200,9 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   /**
-   * Returns those children that are about to be displayed and that
-   * require to be positioned. If reset or remeasure has been triggered,
-   * all children are returned.
+   * Returns those children that are about to be displayed and that require to
+   * be positioned. If reset or remeasure has been triggered, all children are
+   * returned.
    * @return {{indices:Array<number>,children:Array<Element>}}
    * @private
    */
@@ -219,8 +219,8 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   /**
-   * Measures each child bounds and builds a map of index/bounds to be passed to
-   * the `_measureCallback`
+   * Measures each child bounds and builds a map of index/bounds to be passed
+   * to the `_measureCallback`
    * @private
    */
   _measureChildren({indices, children}) {
@@ -455,6 +455,17 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   /**
+   * Remove child.
+   * Override to control child removal.
+   *
+   * @param {*} child
+   * @protected
+   */
+  _removeChild(child) {
+    child.parentNode.removeChild(child);
+  }
+
+  /**
    * @protected
    */
   _childIsAttached(child) {
@@ -481,27 +492,22 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   /**
-   *
    * @param {!Element} child
-   * @return {{width: number, height: number, marginTop: number, marginBottom: number, marginLeft: number, marginRight: number}} childMeasures
+   * @return {{
+   *   width: number,
+   *   height: number,
+   *   marginTop: number,
+   *   marginBottom: number,
+   *   marginLeft: number,
+   *   marginRight: number
+   * }} childMeasures
    * @protected
    */
   _measureChild(child) {
-    // offsetWidth doesn't take transforms in consideration,
-    // so we use getBoundingClientRect which does.
+    // offsetWidth doesn't take transforms in consideration, so we use
+    // getBoundingClientRect which does.
     const {width, height} = child.getBoundingClientRect();
     return Object.assign({width, height}, getMargins(child));
-  }
-
-  /**
-   * Remove child.
-   * Override to control child removal.
-   *
-   * @param {*} child
-   * @protected
-   */
-  _removeChild(child) {
-    child.parentNode.removeChild(child);
   }
 }
 

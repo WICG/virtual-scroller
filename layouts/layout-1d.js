@@ -65,8 +65,6 @@ export default class Layout extends Layout1dBase {
         Math.round(this._tMeasured / this._nMeasured);
   }
 
-  //
-
   _getMetrics(idx) {
     return (this._metrics[idx] = this._metrics[idx] || {});
   }
@@ -179,10 +177,9 @@ export default class Layout extends Layout1dBase {
   _getItems(lower, upper) {
     const items = this._newPhysicalItems;
 
-    // The anchorIdx is the anchor around which we reflow.
-    // It is designed to allow jumping to any point of the scroll size.
-    // We choose it once and stick with it until stable. first and last are
-    // deduced around it.
+    // The anchorIdx is the anchor around which we reflow. It is designed to
+    // allow jumping to any point of the scroll size. We choose it once and
+    // stick with it until stable. first and last are deduced around it.
     if (this._anchorIdx === null || this._anchorPos === null) {
       this._anchorIdx = this._getAnchor(lower, upper);
       this._anchorPos = this._getPosition(this._anchorIdx);
@@ -282,8 +279,8 @@ export default class Layout extends Layout1dBase {
   }
 
   _updateScrollSize() {
-    // Reuse previously calculated physical max, as it might be
-    // higher than the estimated size.
+    // Reuse previously calculated physical max, as it might be higher than the
+    // estimated size.
     super._updateScrollSize();
     this._scrollSize = Math.max(this._physicalMax, this._scrollSize);
   }

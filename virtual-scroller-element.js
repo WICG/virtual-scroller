@@ -158,8 +158,8 @@ export class VirtualScrollerElement extends HTMLElement {
   }
 
   [_render]() {
-    // Wait first connected as scroller needs to measure
-    // sizes of container and children.
+    // Wait first connected as scroller needs to measure sizes of container and
+    // children.
     if (!this[_firstConnected] || !this.createElement) {
       return;
     }
