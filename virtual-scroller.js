@@ -179,8 +179,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   _render() {
     this._childrenRO.disconnect();
 
-    // Update layout properties before rendering to have correct
-    // first, num, scroll size, children positions.
+    // Update layout properties before rendering to have correct first, num,
+    // scroll size, children positions.
     this._layout.totalItems = this.totalItems;
     if (this._needsUpdateView) {
       this._needsUpdateView = false;

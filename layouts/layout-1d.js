@@ -322,8 +322,8 @@ export default class Layout extends Layout1dBase {
   _getItemPosition(idx) {
     return {
       [this._positionDim]: this._getPosition(idx),
-          [this._secondaryPositionDim]: 0
-    }
+      [this._secondaryPositionDim]: 0,
+    };
   }
 
   _getItemSize(idx) {

@@ -203,7 +203,7 @@ export const Repeats = Superclass => class extends Superclass {
    * Returns those children that are about to be displayed and that require to
    * be positioned. If reset or remeasure has been triggered, all children are
    * returned.
-   * @return {{indices:Array<number>,children:Array<Element>}}
+   * @return {{indices: Array<number>, children: Array<Element>}}
    * @private
    */
   get _toMeasure() {
@@ -226,7 +226,7 @@ export const Repeats = Superclass => class extends Superclass {
   _measureChildren({indices, children}) {
     let pm = children.map(
         (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c));
-    const mm = /** @type {{ number: { width: number, height: number } }} */
+    const mm = /** @type {{number: {width: number, height: number}}} */
         (pm.reduce((out, cur, i) => {
           out[indices[i]] = this._indexToMeasure[indices[i]] = cur;
           return out;
@@ -497,9 +497,9 @@ export const Repeats = Superclass => class extends Superclass {
    *   width: number,
    *   height: number,
    *   marginTop: number,
+   *   marginRight: number,
    *   marginBottom: number,
    *   marginLeft: number,
-   *   marginRight: number
    * }} childMeasures
    * @protected
    */
@@ -514,16 +514,16 @@ export const Repeats = Superclass => class extends Superclass {
 function getMargins(el) {
   const style = window.getComputedStyle(el);
   return {
-    marginLeft: getMarginValue(style.marginLeft),
-    marginRight: getMarginValue(style.marginRight),
     marginTop: getMarginValue(style.marginTop),
+    marginRight: getMarginValue(style.marginRight),
     marginBottom: getMarginValue(style.marginBottom),
+    marginLeft: getMarginValue(style.marginLeft),
   };
 }
 
 function getMarginValue(value) {
   value = value ? parseFloat(value) : NaN;
-  return value !== value ? 0 : value;
+  return Number.isNaN(value) ? 0 : value;
 }
 
 export const VirtualRepeater = Repeats(class {});
