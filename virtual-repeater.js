@@ -48,6 +48,7 @@ export const Repeats = Superclass => class extends Superclass {
     if (container === this._container) {
       return;
     }
+
     if (this._container) {
       // Remove children from old container.
       this._ordered.forEach((child) => this._removeChild(child));
@@ -113,12 +114,14 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   set first(idx) {
-    if (typeof idx === 'number') {
-      const newFirst = Math.max(0, Math.min(idx, this._totalItems - this._num));
-      if (newFirst !== this._first) {
-        this._first = newFirst;
-        this._scheduleRender();
-      }
+    if (typeof idx !== 'number') {
+      throw new Error('New value must be a number.');
+    }
+
+    const newFirst = Math.max(0, Math.min(idx, this._totalItems - this._num));
+    if (newFirst !== this._first) {
+      this._first = newFirst;
+      this._scheduleRender();
     }
   }
 
@@ -127,12 +130,14 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   set num(n) {
-    if (typeof n === 'number') {
-      if (n !== this._num) {
-        this._num = n;
-        this.first = this._first;
-        this._scheduleRender();
-      }
+    if (typeof n !== 'number') {
+      throw new Error('New value must be a number.');
+    }
+
+    if (n !== this._num) {
+      this._num = n;
+      this.first = this._first;
+      this._scheduleRender();
     }
   }
 
@@ -141,9 +146,13 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   set totalItems(num) {
+    if (typeof num !== 'number') {
+      throw new Error('New value must be a number.');
+    }
+
     // TODO(valdrin) should we check if it is a finite number?
     // Technically, Infinity would break Layout, not VirtualRepeater.
-    if (typeof num === 'number' && num !== this._totalItems) {
+    if (num !== this._totalItems) {
       this._totalItems = num;
       this.first = this._first;
       this.requestReset();
