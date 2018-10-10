@@ -22,6 +22,8 @@ export const Repeats = Superclass => class extends Superclass {
     this._needsRemeasure = false;
     this._pendingRender = null;
 
+    this._container = null;
+
     // Contains child nodes in the rendered order.
     this._ordered = [];
     this._active = new Map();

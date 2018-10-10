@@ -18,6 +18,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 (Superclass) {
   constructor(config) {
     super();
+
     this._num = 0;
     this._first = -1;
     this._last = -1;
@@ -25,12 +26,8 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._prevLast = -1;
 
     this._needsUpdateView = false;
-    this._containerElement = null;
     this._layout = null;
     this._scrollTarget = null;
-    // Keep track of original inline style of the container, so it can be
-    // restored when container is changed.
-    this._containerInlineStyle = null;
     // A sentinel element that sizes the container when it is a scrolling
     // element.
     this._sizer = null;
@@ -39,6 +36,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._scrollErr = null;
     this._childrenPos = null;
 
+    this._containerElement = null;
+    // Keep track of original inline style of the container, so it can be
+    // restored when container is changed.
+    this._containerInlineStyle = null;
     this._containerSize = null;
     this._containerRO = new ResizeObserver(
         (entries) => this._containerSizeChanged(entries[0].contentRect));
@@ -53,7 +54,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   get container() {
-    return this._container;
+    return super.container;
   }
   set container(container) {
     super.container = container;
