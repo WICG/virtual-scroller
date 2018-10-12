@@ -98,7 +98,6 @@ export class Sample {
         }
         this._pool[type].push(child);
       },
-      // resetValue: this.resetValue
     });
   }
 
