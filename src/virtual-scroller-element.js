@@ -3,8 +3,6 @@ import {Layout1dGrid} from './layouts/Layout1dGrid.js';
 import {Layout1d} from './layouts/Layout1d.js';
 import {VirtualScroller} from './virtual-scroller.js';
 
-export {ItemSource};
-
 /** Properties */
 const _scroller = Symbol();
 const _createElement = Symbol();
