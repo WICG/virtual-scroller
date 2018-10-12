@@ -1,4 +1,4 @@
-import {_item, _key, ItemSource} from './item-source.js';
+import {ItemSource, _item, _key} from './ItemSource.js';
 import {Layout1dGrid} from './layouts/Layout1dGrid.js';
 import {Layout1d} from './layouts/Layout1d.js';
 import {VirtualScroller} from './virtual-scroller.js';
