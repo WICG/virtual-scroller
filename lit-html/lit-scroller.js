@@ -1,6 +1,6 @@
 import {Layout1d} from '../src/layouts/Layout1d.js';
 import {directive} from '../node_modules/lit-html/lit-html.js';
-import {VirtualScroller} from '../src/virtual-scroller.js';
+import {VirtualScroller} from '../src/VirtualScroller.js';
 
 import {LitMixin} from './lit-repeater.js';
 
