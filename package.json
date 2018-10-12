@@ -2,8 +2,8 @@
   "name": "virtual-scroller",
   "version": "0.0.1",
   "description": "A virtual scroller that optimizes the rendering of DOM according to the visible area and available data.",
-  "main": "virtual-scroller.js",
-  "module": "virtual-scroller.js",
+  "main": "src/virtual-scroller.js",
+  "module": "src/virtual-scroller.js",
   "flat": true,
   "directories": {},
   "devDependencies": {

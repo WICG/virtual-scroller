@@ -1,4 +1,4 @@
-import {VirtualScroller} from '../virtual-scroller.js';
+import {VirtualScroller} from '../src/virtual-scroller.js';
 
 import {PreactMixin, Repeat} from './preact-repeater.js';
 
