@@ -1,5 +1,5 @@
 import {directive, NodePart} from '../node_modules/lit-html/lit-html.js';
-import {VirtualRepeater} from '../src/virtual-repeater.js';
+import {VirtualRepeater} from '../src/VirtualRepeater.js';
 
 export const LitMixin = Superclass => class extends Superclass {
   constructor(config) {
