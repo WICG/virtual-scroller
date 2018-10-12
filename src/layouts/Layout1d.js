@@ -47,8 +47,6 @@ export class Layout1d extends Layout1dBase {
           }
         }
         this._tMeasured = this._tMeasured + delta;
-      } else {
-        // console.debug(`Could not find physical item for key ${key}`);
       }
     });
     if (!this._nMeasured) {
