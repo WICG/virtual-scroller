@@ -1,6 +1,6 @@
 import {_item, _key, ItemSource} from './item-source.js';
 import {Layout1dGrid} from './layouts/Layout1dGrid.js';
-import {default as Layout1d} from './layouts/layout-1d.js';
+import {Layout1d} from './layouts/Layout1d.js';
 import {VirtualScroller} from './virtual-scroller.js';
 
 export {ItemSource};

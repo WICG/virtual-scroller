@@ -1,4 +1,4 @@
-import Layout from '../../src/layouts/layout-1d.js';
+import {Layout1d} from '../../src/layouts/Layout1d.js';
 import {scroller} from '../../lit-html/lit-scroller.js';
 import {html, render} from '../../node_modules/lit-html/lib/lit-extended.js';
 import {VirtualScroller} from '../../src/virtual-scroller.js';
@@ -6,7 +6,7 @@ import {VirtualScroller} from '../../src/virtual-scroller.js';
 const items = new Array(200).fill({name: 'item'});
 const container = document.getElementById('container');
 
-const layout = new Layout({itemSize: {height: 50}});
+const layout = new Layout1d({itemSize: {height: 50}});
 // render(
 //     html`${scroller({
 //       items,

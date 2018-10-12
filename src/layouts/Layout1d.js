@@ -1,6 +1,6 @@
 import {Layout1dBase} from './Layout1dBase.js';
 
-export default class Layout extends Layout1dBase {
+export class Layout1d extends Layout1dBase {
   constructor(config) {
     super(config);
     this._physicalItems = new Map();
@@ -344,4 +344,4 @@ export default class Layout extends Layout1dBase {
     this._needsRemeasure = false;
     super._emitRange({remeasure, stable});
   }
-}
+};

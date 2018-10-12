@@ -1,4 +1,4 @@
-import Layout from '../../src/layouts/layout-1d.js';
+import {Layout1d} from '../../src/layouts/Layout1d.js';
 import {VirtualScroller} from '../../src/virtual-scroller.js';
 
 const scrollMethod = document.createElement('div').scrollIntoViewIfNeeded ?
@@ -12,7 +12,7 @@ export class Sample {
     this.items = [];
     this._pool = {};
     this.container = document.body;
-    this.layout = new Layout({direction: 'vertical', _overhang: 800});
+    this.layout = new Layout1d({direction: 'vertical', _overhang: 800});
     this.resetValue = {image: 'http://via.placeholder.com/73x73&text=+'};
 
     // TODO: Sample hack; should be handled by the base repeater, or a mixin for

@@ -1,4 +1,4 @@
-import Layout from '../src/layouts/layout-1d.js';
+import {Layout1d} from '../src/layouts/Layout1d.js';
 import {directive} from '../node_modules/lit-html/lit-html.js';
 import {VirtualScroller} from '../src/virtual-scroller.js';
 
@@ -14,7 +14,7 @@ export const scroller = (config = {}) => directive(async part => {
       await Promise.resolve();
     }
     if (!config.layout && config.direction) {
-      config.layout = new Layout({direction: config.direction});
+      config.layout = new Layout1d({direction: config.direction});
     }
     const {template, layout} = config;
     scroller = new LitScroller({part, template, layout});
