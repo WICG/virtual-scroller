@@ -202,4 +202,5 @@ export class VirtualScrollerElement extends HTMLElement {
     });
   }
 }
+
 customElements.define('virtual-scroller', VirtualScrollerElement);
