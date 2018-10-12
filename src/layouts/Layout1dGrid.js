@@ -1,6 +1,6 @@
 import {Layout1dBase} from './Layout1dBase.js';
 
-export default class Layout extends Layout1dBase {
+export class Layout1dGrid extends Layout1dBase {
   constructor(config) {
     super(config);
     this._rolumns = 1;
@@ -60,4 +60,4 @@ export default class Layout extends Layout1dBase {
     this._scrollSize =
         Math.max(1, Math.ceil(this._totalItems / this._rolumns) * this._delta);
   }
-}
+};

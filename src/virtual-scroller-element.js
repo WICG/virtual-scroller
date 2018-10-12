@@ -1,5 +1,5 @@
 import {_item, _key, ItemSource} from './item-source.js';
-import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
+import {Layout1dGrid} from './layouts/Layout1dGrid.js';
 import {default as Layout1d} from './layouts/layout-1d.js';
 import {VirtualScroller} from './virtual-scroller.js';
 
