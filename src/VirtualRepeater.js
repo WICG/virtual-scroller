@@ -510,7 +510,7 @@ export class VirtualRepeater {
     const {width, height} = child.getBoundingClientRect();
     return Object.assign({width, height}, getMargins(child));
   }
-};
+}
 
 function getMargins(el) {
   const style = window.getComputedStyle(el);

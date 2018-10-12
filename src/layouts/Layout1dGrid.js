@@ -60,4 +60,4 @@ export class Layout1dGrid extends Layout1dBase {
     this._scrollSize =
         Math.max(1, Math.ceil(this._totalItems / this._rolumns) * this._delta);
   }
-};
+}

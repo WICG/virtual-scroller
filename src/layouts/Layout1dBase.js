@@ -316,4 +316,4 @@ export class Layout1dBase extends EventTarget {
       [this._secondarySizeDim]: this._itemDim2,
     };
   }
-};
+}

@@ -44,4 +44,4 @@ export class ItemSource {
   get length() {
     return this[_getLength]();
   }
-};
+}

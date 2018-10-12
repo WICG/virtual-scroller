@@ -342,4 +342,4 @@ export class Layout1d extends Layout1dBase {
     this._needsRemeasure = false;
     super._emitRange({remeasure, stable});
   }
-};
+}

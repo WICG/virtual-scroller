@@ -12,7 +12,7 @@ export class RangeChangeEvent extends Event {
   get last() {
     return this._last;
   }
-};
+}
 
 export class VirtualScroller extends VirtualRepeater {
   constructor(config) {
@@ -438,4 +438,4 @@ export class VirtualScroller extends VirtualRepeater {
       this.requestRemeasure();
     }
   }
-};
+}
