@@ -1,12 +1,18 @@
 # Virtual Scroller pieces
 
-This document gives an overview of various pieces we use to build up the `<virtual-scroller>` element. For now we are considering these implementation details. A future proposal may expose these building blocks more directly, but only after significant refinement.
+This document gives an overview of various pieces we use to build up the
+`<virtual-scroller>` element. For now we are considering these implementation
+details. A future proposal may expose these building blocks more directly, but
+only after significant refinement.
 
 ## VirtualRepeater (Repeats mixin)
 
-- Orchestrates DOM creation and layouting, ensures minimum number of nodes is created.
-- Given a `totalItems` amount, it displays `num` elements starting from `first` index.
-- Delegates DOM creation, update and recycling via `createElement, updateElement, recycleElement`.
+- Orchestrates DOM creation and layouting, ensures minimum number of nodes is
+  created.
+- Given a `totalItems` amount, it displays `num` elements starting from `first`
+  index.
+- Delegates DOM creation, update and recycling via `createElement,
+  updateElement, recycleElement`.
 - Delegates DOM layout via `_measureCallback`.
 
 ### Basic setup
@@ -42,8 +48,8 @@ const repeater = new VirtualRepeater({
 
 ### Recycling
 
-You can recycle DOM through the `recycleElement`, and use the recycled DOM
-in `createElement`.
+You can recycle DOM through the `recycleElement`, and use the recycled DOM in
+`createElement`.
 
 If you decide to keep the recycled DOM attached in the main document, perform
 DOM updates in `updateElement`.
@@ -90,7 +96,10 @@ setTimeout(() => {
 
 ### Data manipulation
 
-VirtualRepeater will update the DOM when `totalItems` changes. For cases where data changes while keeping the same `totalItems`, or a specific item changes, you can use `requestReset()` to notify of the changes, or force `totalItems` change.
+VirtualRepeater will update the DOM when `totalItems` changes. For cases where
+data changes while keeping the same `totalItems`, or a specific item changes,
+you can use `requestReset()` to notify of the changes, or force `totalItems`
+change.
 
 ```js
 /**
@@ -113,8 +122,9 @@ Set to true to disable DOM additions/removals done by VirtualRepeater.
 
 #### _measureCallback()
 
-You can receive child layout information through `_measureCallback`,
-which will get invoked after each rendering.
+You can receive child layout information through `_measureCallback`, which will
+get invoked after each rendering.
+
 ```js
 repeater._measureCallback = (measuresInfo) => {
   for (const itemIndex in measuresInfo) {
@@ -127,7 +137,8 @@ repeater._measureCallback = (measuresInfo) => {
 
 ## Layout
 
-Given a viewport size and total items count, it computes children position, container size, range of visible items, and scroll error.
+Given a viewport size and total items count, it computes children position,
+container size, range of visible items, and scroll error.
 
 ```js
 const layout = new Layout({
@@ -146,7 +157,9 @@ const layout = new Layout({
 
 Apply changes by invoking `layout.reflowIfNeeded()`.
 
-It notifies subscribers about changes on range (e.g. `first, num`), item position, scroll size, scroll error. It's up to the listeners to take action on these.
+It notifies subscribers about changes on range (e.g. `first, num`), item
+position, scroll size, scroll error. It's up to the listeners to take action on
+these.
 
 ```js
 layout.addEventListener('rangechange', (event) => {
@@ -177,7 +190,9 @@ layout.addEventListener('scrollerrorchange', (event) => {
 layout.reflowIfNeeded();
 ```
 
-Use `layout.updateItemSizes()` to give layout more information regarding item sizes.
+Use `layout.updateItemSizes()` to give layout more information regarding item
+sizes.
+
 ```js
 // Pass an object with key = item index, value = bounds.
 layout.updateItemSizes({
@@ -188,7 +203,9 @@ layout.updateItemSizes({
 
 ### Move range
 
-Use `viewportScroll (type: {top: number, left: number})` to move the range to a specific point.
+Use `viewportScroll(type: {top: number, left: number})` to move the range to a
+specific point.
+
 ```js
 const el = document.scrollingElement;
 el.addEventListener('scroll', () => {
@@ -197,7 +214,9 @@ el.addEventListener('scroll', () => {
 });
 ```
 
-Use `scrollToIndex(index: number, position: string)` to move the range to a specific index.
+Use `scrollToIndex(index: number, position: string)` to move the range to a
+specific index.
+
 ```js
 // Scroll to the 3rd item, position it at the start of the viewport.
 layout.scrollToIndex(2);
@@ -216,10 +235,14 @@ layout.scrollToIndex(99, 'nearest');
 
 ## VirtualScroller (RepeatsAndScrolls mixin)
 
-- Extends `VirtualRepeater`, delegates the updates of `first, num` to a `Layout` instance
-- Exposes a `layout` property, updates the `layout.totalItems`, `layout.viewportSize`, and `layout.viewportScroll`.
-- Subscribes to `layout` updates on range (`first, num`), children position, scrolling position and scrolling size
-- Updates the container size (`min-width/height`) and children positions (`position: absolute`)
+- Extends `VirtualRepeater`, delegates the updates of `first, num` to a
+  `Layout` instance.
+- Exposes a `layout` property, updates the `layout.totalItems`,
+  `layout.viewportSize`, and `layout.viewportScroll`.
+- Subscribes to `layout` updates on range (`first, num`), children position,
+  scrolling position and scrolling size.
+- Updates the container size (`min-width/height`) and children positions
+  (`position: absolute`).
 
 ```js
 const scroller = new VirtualScroller({

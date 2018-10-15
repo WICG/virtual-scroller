@@ -18,6 +18,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
 (Superclass) {
   constructor(config) {
     super();
+
     this._num = 0;
     this._first = -1;
     this._last = -1;
@@ -25,20 +26,20 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._prevLast = -1;
 
     this._needsUpdateView = false;
-    this._containerElement = null;
     this._layout = null;
     this._scrollTarget = null;
-    // Keep track of original inline style of the container,
-    // so it can be restored when container is changed.
-    this._containerInlineStyle = null;
-    // A sentinel element that sizes the container when
-    // it is a scrolling element.
+    // A sentinel element that sizes the container when it is a scrolling
+    // element.
     this._sizer = null;
     // Layout provides these values, we set them on _render().
     this._scrollSize = null;
     this._scrollErr = null;
     this._childrenPos = null;
 
+    this._containerElement = null;
+    // Keep track of original inline style of the container, so it can be
+    // restored when container is changed.
+    this._containerInlineStyle = null;
     this._containerSize = null;
     this._containerRO = new ResizeObserver(
         (entries) => this._containerSizeChanged(entries[0].contentRect));
@@ -53,7 +54,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
   }
 
   get container() {
-    return this._container;
+    return super.container;
   }
   set container(container) {
     super.container = container;
@@ -177,13 +178,10 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
    * @protected
    */
   _render() {
-    // console.time(`render ${this._containerElement.localName}#${
-    //     this._containerElement.id}`);
-
     this._childrenRO.disconnect();
 
-    // Update layout properties before rendering to have correct
-    // first, num, scroll size, children positions.
+    // Update layout properties before rendering to have correct first, num,
+    // scroll size, children positions.
     this._layout.totalItems = this.totalItems;
     if (this._needsUpdateView) {
       this._needsUpdateView = false;
@@ -216,15 +214,11 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     // measured the children.
     this._skipNextChildrenSizeChanged = true;
     this._kids.forEach(child => this._childrenRO.observe(child));
-
-    // console.timeEnd(`render ${this._containerElement.localName}#${
-    //     this._containerElement.id}`);
   }
 
   /**
-   * Position children before they get measured.
-   * Measuring will force relayout, so by positioning
-   * them first, we reduce computations.
+   * Position children before they get measured. Measuring will force relayout,
+   * so by positioning them first, we reduce computations.
    * @protected
    */
   _didRender() {
@@ -264,16 +258,15 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
         console.warn('event not handled', event);
     }
   }
+
   /**
    * @return {!Element}
    * @private
    */
   _createContainerSizer() {
     const sizer = document.createElement('div');
-    // When the scrollHeight is large, the height
-    // of this element might be ignored.
-    // Setting content and font-size ensures the element
-    // has a size.
+    // When the scrollHeight is large, the height of this element might be
+    // ignored. Setting content and font-size ensures the element has a size.
     Object.assign(sizer.style, {
       position: 'absolute',
       margin: '-2px 0 0 0',
@@ -285,13 +278,14 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     return sizer;
   }
 
-  // Rename _ordered to _kids?
+  // TODO: Rename _ordered to _kids?
   /**
    * @protected
    */
   get _kids() {
     return this._ordered;
   }
+
   /**
    * @private
    */
@@ -299,6 +293,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._needsUpdateView = true;
     this._scheduleRender();
   }
+
   /**
    * @private
    */
@@ -340,6 +335,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._layout.viewportSize = {width, height};
     this._layout.viewportScroll = {top, left};
   }
+
   /**
    * @private
    */
@@ -354,6 +350,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       style.minHeight = size && size.height ? size.height + 'px' : null;
     }
   }
+
   /**
    * @private
    */
@@ -364,13 +361,12 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       const child = kids[idx];
       if (child) {
         const {top, left} = pos[key];
-        // console.debug(`_positionChild #${this._container.id} >
-        // #${child.id}: top ${top}`);
         child.style.position = 'absolute';
         child.style.transform = `translate(${left}px, ${top}px)`;
       }
     });
   }
+
   /**
    * @private
    */
@@ -384,6 +380,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this._notifyStable();
     }
   }
+
   /**
    * @protected
    */
@@ -392,14 +389,15 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       return false;
     }
     // NOTE: we're about to render, but the ResizeObserver didn't execute yet.
-    // Since we want to keep rAF timing, we compute _containerSize now.
-    // Would be nice to have a way to flush ResizeObservers
+    // Since we want to keep rAF timing, we compute _containerSize now. Would
+    // be nice to have a way to flush ResizeObservers.
     if (this._containerSize === null) {
       const {width, height} = this._containerElement.getBoundingClientRect();
       this._containerSize = {width, height};
     }
     return this._containerSize.width > 0 || this._containerSize.height > 0;
   }
+
   /**
    * @private
    */
@@ -411,6 +409,7 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       window.scroll(window.scrollX - err.left, window.scrollY - err.top);
     }
   }
+
   /**
    * @protected
    */
@@ -420,15 +419,16 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
     this._container.dispatchEvent(
         new RangeChangeEvent('rangechange', {first, last}));
   }
+
   /**
    * @private
    */
   _containerSizeChanged(size) {
     const {width, height} = size;
     this._containerSize = {width, height};
-    // console.debug('container changed size', this._containerSize);
     this._scheduleUpdateView();
   }
+
   /**
    * @private
    */

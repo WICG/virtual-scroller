@@ -19,6 +19,7 @@ export const Sample = RepeaterControl(class extends Component {
 
   render() {
     const {items, first, num, component, wrapper} = this.state;
-    return h(Repeat, {totalItems: items.length, first, num, component, wrapper});
+    return h(
+        Repeat, {totalItems: items.length, first, num, component, wrapper});
   }
 });

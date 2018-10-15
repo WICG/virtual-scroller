@@ -10,19 +10,10 @@ export const Repeats = Superclass => class extends Superclass {
     this._measureCallback = null;
 
     this._totalItems = 0;
-    // Consider renaming this. firstVisibleIndex?
-    this._first = 0;
     // Consider renaming this. count? visibleElements?
     this._num = Infinity;
-
-    this.__incremental = false;
-
-    // used only internally..
-    // legacy from 1st approach to preact integration
-    this._manageDom = true;
-    // used to check if it is more perf if you don't care of dom order?
-    this._maintainDomOrder = true;
-
+    // Consider renaming this. firstVisibleIndex?
+    this._first = 0;
     this._last = 0;
     this._prevFirst = 0;
     this._prevLast = 0;
@@ -31,9 +22,10 @@ export const Repeats = Superclass => class extends Superclass {
     this._needsRemeasure = false;
     this._pendingRender = null;
 
+    this._container = null;
+
     // Contains child nodes in the rendered order.
     this._ordered = [];
-    // this._pool = [];
     this._active = new Map();
     this._prevActive = new Map();
     // Both used for recycling purposes.
@@ -41,8 +33,8 @@ export const Repeats = Superclass => class extends Superclass {
     this._childToKey = new WeakMap();
     // Used to keep track of measures by index.
     this._indexToMeasure = {};
-    // Used to debounce _measureChildren calls.
-    this._measuringId = -1;
+
+    this.__incremental = false;
 
     if (config) {
       Object.assign(this, config);
@@ -58,6 +50,7 @@ export const Repeats = Superclass => class extends Superclass {
     if (container === this._container) {
       return;
     }
+
     if (this._container) {
       // Remove children from old container.
       this._ordered.forEach((child) => this._removeChild(child));
@@ -121,39 +114,44 @@ export const Repeats = Superclass => class extends Superclass {
   get first() {
     return this._first;
   }
-
   set first(idx) {
-    if (typeof idx === 'number') {
-      const newFirst = Math.max(0, Math.min(idx, this._totalItems - this._num));
-      if (newFirst !== this._first) {
-        this._first = newFirst;
-        this._scheduleRender();
-      }
+    if (typeof idx !== 'number') {
+      throw new Error('New value must be a number.');
+    }
+
+    const newFirst = Math.max(0, Math.min(idx, this._totalItems - this._num));
+    if (newFirst !== this._first) {
+      this._first = newFirst;
+      this._scheduleRender();
     }
   }
 
   get num() {
     return this._num;
   }
-
   set num(n) {
-    if (typeof n === 'number') {
-      if (n !== this._num) {
-        this._num = n;
-        this.first = this._first;
-        this._scheduleRender();
-      }
+    if (typeof n !== 'number') {
+      throw new Error('New value must be a number.');
+    }
+
+    if (n !== this._num) {
+      this._num = n;
+      this.first = this._first;
+      this._scheduleRender();
     }
   }
 
   get totalItems() {
     return this._totalItems;
   }
-
   set totalItems(num) {
+    if (typeof num !== 'number') {
+      throw new Error('New value must be a number.');
+    }
+
     // TODO(valdrin) should we check if it is a finite number?
     // Technically, Infinity would break Layout, not VirtualRepeater.
-    if (typeof num === 'number' && num !== this._totalItems) {
+    if (num !== this._totalItems) {
       this._totalItems = num;
       this.first = this._first;
       this.requestReset();
@@ -163,7 +161,6 @@ export const Repeats = Superclass => class extends Superclass {
   get _incremental() {
     return this.__incremental;
   }
-
   set _incremental(inc) {
     if (inc !== this.__incremental) {
       this.__incremental = inc;
@@ -205,10 +202,10 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   /**
-   * Returns those children that are about to be displayed and that
-   * require to be positioned. If reset or remeasure has been triggered,
-   * all children are returned.
-   * @return {{indices:Array<number>,children:Array<Element>}}
+   * Returns those children that are about to be displayed and that require to
+   * be positioned. If reset or remeasure has been triggered, all children are
+   * returned.
+   * @return {{indices: Array<number>, children: Array<Element>}}
    * @private
    */
   get _toMeasure() {
@@ -224,14 +221,14 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   /**
-   * Measures each child bounds and builds a map of index/bounds to be passed to
-   * the `_measureCallback`
+   * Measures each child bounds and builds a map of index/bounds to be passed
+   * to the `_measureCallback`
    * @private
    */
   _measureChildren({indices, children}) {
     let pm = children.map(
         (c, i) => this._indexToMeasure[indices[i]] || this._measureChild(c));
-    const mm = /** @type {{ number: { width: number, height: number } }} */
+    const mm = /** @type {{number: {width: number, height: number}}} */
         (pm.reduce((out, cur, i) => {
           out[indices[i]] = this._indexToMeasure[indices[i]] = cur;
           return out;
@@ -324,10 +321,8 @@ export const Repeats = Superclass => class extends Superclass {
     const end = Math.min(this._last, this._prevFirst - 1);
     for (let idx = end; idx >= start; idx--) {
       const child = this._assignChild(idx);
-      if (this._manageDom) {
-        if (this._maintainDomOrder || !this._childIsAttached(child)) {
-          this._insertBefore(child, this._firstChild);
-        }
+      if (!this._childIsAttached(child)) {
+        this._insertBefore(child, this._firstChild);
       }
       if (this.updateElement) {
         this.updateElement(child, idx);
@@ -344,10 +339,8 @@ export const Repeats = Superclass => class extends Superclass {
     const end = this._last;
     for (let idx = start; idx <= end; idx++) {
       const child = this._assignChild(idx);
-      if (this._manageDom) {
-        if (this._maintainDomOrder || !this._childIsAttached(child)) {
-          this._insertBefore(child, null);
-        }
+      if (!this._childIsAttached(child)) {
+        this._insertBefore(child, null);
       }
       if (this.updateElement) {
         this.updateElement(child, idx);
@@ -362,30 +355,29 @@ export const Repeats = Superclass => class extends Superclass {
    * @private
    */
   _reset(first, last) {
-    const len = last - first + 1;
     // Explain why swap prevActive with active - affects _assignChild.
     const prevActive = this._active;
     this._active = this._prevActive;
     this._prevActive = prevActive;
-    let currentMarker = this._manageDom && this._firstChild;
+
     this._ordered.length = 0;
-    for (let n = 0; n < len; n++) {
-      const idx = first + n;
-      const child = this._assignChild(idx);
+    let currentMarker = this._firstChild;
+    for (let i = first; i <= last; i++) {
+      const child = this._assignChild(i);
       this._ordered.push(child);
-      if (this._manageDom) {
-        if (currentMarker && this._maintainDomOrder) {
-          if (currentMarker === this._node(child)) {
-            currentMarker = this._nextSibling(child);
-          } else {
-            this._insertBefore(child, currentMarker);
-          }
-        } else if (!this._childIsAttached(child)) {
-          this._insertBefore(child, null);
+
+      if (currentMarker) {
+        if (currentMarker === this._node(child)) {
+          currentMarker = this._nextSibling(child);
+        } else {
+          this._insertBefore(child, currentMarker);
         }
+      } else if (!this._childIsAttached(child)) {
+        this._insertBefore(child, null);
       }
+
       if (this.updateElement) {
-        this.updateElement(child, idx);
+        this.updateElement(child, i);
       }
     }
   }
@@ -443,61 +435,26 @@ export const Repeats = Superclass => class extends Superclass {
   }
 
   // Overridable abstractions for child manipulation
+
   /**
    * @protected
    */
   _node(child) {
     return child;
   }
+
   /**
    * @protected
    */
   _nextSibling(child) {
     return child.nextSibling;
   }
+
   /**
    * @protected
    */
   _insertBefore(child, referenceNode) {
     this._container.insertBefore(child, referenceNode);
-  }
-  /**
-   * @protected
-   */
-  _childIsAttached(child) {
-    const node = this._node(child);
-    return node && node.parentNode === this._container;
-  }
-  /**
-   * @protected
-   */
-  _hideChild(child) {
-    if (child.style) {
-      child.style.display = 'none';
-    }
-  }
-  /**
-   * @protected
-   */
-  _showChild(child) {
-    if (child.style) {
-      child.style.display = null;
-    }
-  }
-
-  /**
-   *
-   * @param {!Element} child
-   * @return {{width: number, height: number, marginTop: number, marginBottom: number, marginLeft: number, marginRight: number}} childMeasures
-   * @protected
-   */
-  _measureChild(child) {
-    // offsetWidth doesn't take transforms in consideration,
-    // so we use getBoundingClientRect which does.
-    const {width, height} = child.getBoundingClientRect();
-    // console.debug(`_measureChild #${this._container.id} > #${
-    //     child.id}: height: ${height}px`);
-    return Object.assign({width, height}, getMargins(child));
   }
 
   /**
@@ -510,22 +467,66 @@ export const Repeats = Superclass => class extends Superclass {
   _removeChild(child) {
     child.parentNode.removeChild(child);
   }
+
+  /**
+   * @protected
+   */
+  _childIsAttached(child) {
+    const node = this._node(child);
+    return node && node.parentNode === this._container;
+  }
+
+  /**
+   * @protected
+   */
+  _hideChild(child) {
+    if (child.style) {
+      child.style.display = 'none';
+    }
+  }
+
+  /**
+   * @protected
+   */
+  _showChild(child) {
+    if (child.style) {
+      child.style.display = null;
+    }
+  }
+
+  /**
+   * @param {!Element} child
+   * @return {{
+   *   width: number,
+   *   height: number,
+   *   marginTop: number,
+   *   marginRight: number,
+   *   marginBottom: number,
+   *   marginLeft: number,
+   * }} childMeasures
+   * @protected
+   */
+  _measureChild(child) {
+    // offsetWidth doesn't take transforms in consideration, so we use
+    // getBoundingClientRect which does.
+    const {width, height} = child.getBoundingClientRect();
+    return Object.assign({width, height}, getMargins(child));
+  }
 }
 
 function getMargins(el) {
   const style = window.getComputedStyle(el);
-  // console.log(el.id, style.position);
   return {
-    marginLeft: getMarginValue(style.marginLeft),
-    marginRight: getMarginValue(style.marginRight),
     marginTop: getMarginValue(style.marginTop),
+    marginRight: getMarginValue(style.marginRight),
     marginBottom: getMarginValue(style.marginBottom),
+    marginLeft: getMarginValue(style.marginLeft),
   };
 }
 
 function getMarginValue(value) {
   value = value ? parseFloat(value) : NaN;
-  return value !== value ? 0 : value;
+  return Number.isNaN(value) ? 0 : value;
 }
 
 export const VirtualRepeater = Repeats(class {});

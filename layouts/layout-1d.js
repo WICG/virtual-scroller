@@ -47,8 +47,6 @@ export default class Layout extends Layout1dBase {
           }
         }
         this._tMeasured = this._tMeasured + delta;
-      } else {
-        // console.debug(`Could not find physical item for key ${key}`);
       }
     });
     if (!this._nMeasured) {
@@ -64,8 +62,6 @@ export default class Layout extends Layout1dBase {
     this._itemSize[this._sizeDim] =
         Math.round(this._tMeasured / this._nMeasured);
   }
-
-  //
 
   _getMetrics(idx) {
     return (this._metrics[idx] = this._metrics[idx] || {});
@@ -90,12 +86,13 @@ export default class Layout extends Layout1dBase {
       return 0;
     }
     if (upper > this._scrollSize - this._viewDim1) {
-      return this._maxIdx;
+      return this._totalItems - 1;
     }
     return Math.max(
         0,
         Math.min(
-            this._maxIdx, Math.floor(((lower + upper) / 2) / this._delta)));
+            this._totalItems - 1,
+            Math.floor(((lower + upper) / 2) / this._delta)));
   }
 
   _getAnchor(lower, upper) {
@@ -179,10 +176,9 @@ export default class Layout extends Layout1dBase {
   _getItems(lower, upper) {
     const items = this._newPhysicalItems;
 
-    // The anchorIdx is the anchor around which we reflow.
-    // It is designed to allow jumping to any point of the scroll size.
-    // We choose it once and stick with it until stable. first and last are
-    // deduced around it.
+    // The anchorIdx is the anchor around which we reflow. It is designed to
+    // allow jumping to any point of the scroll size. We choose it once and
+    // stick with it until stable. first and last are deduced around it.
     if (this._anchorIdx === null || this._anchorPos === null) {
       this._anchorIdx = this._getAnchor(lower, upper);
       this._anchorPos = this._getPosition(this._anchorIdx);
@@ -276,14 +272,14 @@ export default class Layout extends Layout1dBase {
     } else if (this._physicalMax >= this._scrollSize) {
       return (
           (this._physicalMax - this._scrollSize) +
-          ((this._maxIdx - this._last) * this._delta));
+          ((this._totalItems - 1 - this._last) * this._delta));
     }
     return 0;
   }
 
   _updateScrollSize() {
-    // Reuse previously calculated physical max, as it might be
-    // higher than the estimated size.
+    // Reuse previously calculated physical max, as it might be higher than the
+    // estimated size.
     super._updateScrollSize();
     this._scrollSize = Math.max(this._physicalMax, this._scrollSize);
   }
@@ -324,8 +320,8 @@ export default class Layout extends Layout1dBase {
   _getItemPosition(idx) {
     return {
       [this._positionDim]: this._getPosition(idx),
-          [this._secondaryPositionDim]: 0
-    }
+      [this._secondaryPositionDim]: 0,
+    };
   }
 
   _getItemSize(idx) {

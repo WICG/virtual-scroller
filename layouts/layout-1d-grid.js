@@ -45,7 +45,6 @@ export default class Layout extends Layout1dBase {
     }
   }
 
-
   _defineGrid() {
     const {_spacing} = this;
     this._rolumns = Math.max(1, Math.floor(this._viewDim2 / this._itemDim2));

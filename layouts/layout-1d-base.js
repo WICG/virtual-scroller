@@ -44,7 +44,6 @@ export default class Layout extends EventTarget {
   set totalItems(num) {
     if (num !== this._totalItems) {
       this._totalItems = num;
-      this._maxIdx = num - 1;
       this._scheduleReflow();
     }
   }
@@ -295,7 +294,7 @@ export default class Layout extends EventTarget {
 
   _scrollPositionChanged(oldPos, newPos) {
     // When both values are bigger than the max scroll position, keep the
-    // current _scrollToIndexx, otherwise invalidate it.
+    // current _scrollToIndex, otherwise invalidate it.
     const maxPos = this._scrollSize - this._viewDim1;
     if (oldPos < maxPos || newPos < maxPos) {
       this._scrollToIndex = -1;
