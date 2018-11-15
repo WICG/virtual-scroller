@@ -543,7 +543,8 @@ npm dependencies and serve from the project root
 
 ```sh
 $ npm install
-$ node_modules/http-server/bin/http-server -p 8081
+$ npm install -g http-server   // If http-server is not installed.
+$ http-server -p 8081
 ```
 
 Then, navigate to the url: http://localhost:8081/demo/
