@@ -8,7 +8,6 @@
   "directories": {},
   "devDependencies": {
     "clang-format": "^1.2",
-    "http-server": "latest",
     "lit-html": "latest",
     "preact": "^8.2.6",
     "streaming-spec": "github:jakearchibald/streaming-html-spec#master"
