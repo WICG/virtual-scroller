@@ -1,4 +1,4 @@
-import {directive, NodePart} from '../node_modules/lit-html/lit-html.js';
+import {directive, NodePart, createMarker} from '../node_modules/lit-html/lit-html.js';
 import {VirtualRepeater} from '../virtual-repeater.js';
 
 export const LitMixin = Superclass => class extends Superclass {
@@ -12,12 +12,12 @@ export const LitMixin = Superclass => class extends Superclass {
   }
 
   createElement() {
-    return this._pool.pop() ||
-        new NodePart(this._hostPart.instance, null, null);
+    return this._pool.pop() || new NodePart(this._hostPart.options);
   }
 
   updateElement(part, idx) {
     part.setValue(this._template(idx));
+    part.commit();
   }
 
   recycleElement(part) {
@@ -43,8 +43,8 @@ export const LitMixin = Superclass => class extends Superclass {
     }
     if (!this._childIsAttached(part)) {
       // Inserting new part
-      part.startNode = document.createTextNode('');
-      part.endNode = document.createTextNode('');
+      part.startNode = createMarker();
+      part.endNode = createMarker();
       super._insertBefore(part.startNode, referenceNode);
       super._insertBefore(part.endNode, referenceNode);
     } else {
@@ -87,7 +87,7 @@ export const LitMixin = Superclass => class extends Superclass {
 export const LitRepeater = LitMixin(VirtualRepeater);
 
 const partToRepeater = new WeakMap();
-export const repeat = (config = {}) => directive(async part => {
+export const repeat = directive((config = {}) => async part => {
   let repeater = partToRepeater.get(part);
   if (!repeater) {
     if (!part.startNode.isConnected) {

@@ -7,7 +7,7 @@ import {LitMixin} from './lit-repeater.js';
 export const LitScroller = LitMixin(VirtualScroller);
 
 const partToScroller = new WeakMap();
-export const scroller = (config = {}) => directive(async part => {
+export const scroller = directive((config = {}) => async part => {
   let scroller = partToScroller.get(part);
   if (!scroller) {
     if (!part.startNode.isConnected) {
