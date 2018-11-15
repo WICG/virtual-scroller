@@ -1,5 +1,5 @@
 import {scroller} from '../../../lit-html/lit-scroller.js';
-import {html, render} from '../../../node_modules/lit-html/lib/lit-extended.js';
+import {html, render} from '../../../node_modules/lit-html/lit-html.js';
 import {itemType, Sample as BaseSample} from '../contacts.js';
 
 export class Sample extends BaseSample {

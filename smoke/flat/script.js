@@ -1,6 +1,4 @@
 import Layout from '../../layouts/layout-1d.js';
-import {scroller} from '../../lit-html/lit-scroller.js';
-import {html, render} from '../../node_modules/lit-html/lib/lit-extended.js';
 import {VirtualScroller} from '../../virtual-scroller.js';
 
 const items = new Array(200).fill({name: 'item'});
