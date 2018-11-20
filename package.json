@@ -9,7 +9,7 @@
   "devDependencies": {
     "clang-format": "^1.2",
     "lit-html": "latest",
-    "preact": "^8.2.6",
+    "preact": "^8.3.1",
     "streaming-spec": "github:jakearchibald/streaming-html-spec#master"
   },
   "scripts": {
