@@ -321,9 +321,8 @@ export const Repeats = Superclass => class extends Superclass {
     const end = Math.min(this._last, this._prevFirst - 1);
     for (let idx = end; idx >= start; idx--) {
       const child = this._assignChild(idx);
-      if (!this._childIsAttached(child)) {
-        this._insertBefore(child, this._firstChild);
-      }
+      // Maintain dom order.
+      this._insertBefore(child, this._firstChild);
       if (this.updateElement) {
         this.updateElement(child, idx);
       }
@@ -339,9 +338,8 @@ export const Repeats = Superclass => class extends Superclass {
     const end = this._last;
     for (let idx = start; idx <= end; idx++) {
       const child = this._assignChild(idx);
-      if (!this._childIsAttached(child)) {
-        this._insertBefore(child, null);
-      }
+      // Maintain dom order.
+      this._insertBefore(child, null);
       if (this.updateElement) {
         this.updateElement(child, idx);
       }
