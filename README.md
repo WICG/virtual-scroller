@@ -27,9 +27,14 @@ group](https://github.com/domenic/infinite-list-study-group) research.
   const scroller = document.querySelector('virtual-scroller');
   const myItems = new Array(200).fill('item');
 
+  const clickHandler = (event) => {
+    console.log(`clicked item #${event.target.index}`);
+  };
+
   scroller.updateElement = (child, item, index) => {
     child.textContent = index + ' - ' + item;
-    child.onclick = () => console.log(`clicked item #${index}`);
+    child.index = index;
+    child.addEventListener('click', clickHandler);
   };
 
   // This will automatically cause a render of the visible children
