@@ -47,7 +47,11 @@ By default, the elements inside the virtual scroller created in this example
 will be `<div>`s, and will be recycled. See below for more on customizing this
 behavior through the `createElement` and `recycleElement` APIs.
 
-Checkout more examples in [demo/index.html](./demo/index.html).
+Checkout more examples at https://valdrinkoshi.github.io/virtual-scroller/demo/, source code at https://github.com/valdrinkoshi/virtual-scroller/tree/master/demo/
+
+## Announcement at Chrome Dev Summit 2018
+
+[![virtual-scroller at Chrome Dev Summit 2018](http://img.youtube.com/vi/UtD41bn6kJ0/0.jpg)](http://www.youtube.com/watch?v=UtD41bn6kJ0)
 
 ## API
 
