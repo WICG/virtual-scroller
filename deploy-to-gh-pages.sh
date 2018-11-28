@@ -45,7 +45,7 @@ mv node_modules/lit-html components/
 mv node_modules/preact components/
 mv node_modules/streaming-spec components/
 # replace node_modules/ with components/
-find node_modules/$repo -name '*.js' -exec sed -i '' 's/node_modules\//components\//g' {} \;
+find node_modules/$repo \( -name '*.js' -o -name '*.html' \) -exec sed -i '' 's/node_modules\//components\//g' {} \;
 mv node_modules/$repo/* .
 rm -rf node_modules/
 

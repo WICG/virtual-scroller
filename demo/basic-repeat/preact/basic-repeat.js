@@ -1,4 +1,4 @@
-import {Component, h, render} from '../../../node_modules/preact/dist/preact.esm.js';
+import {Component, h, render} from '../../../node_modules/preact/dist/preact.mjs';
 import {Repeat} from '../../../preact/preact-repeater.js';
 import {RepeaterControl} from '../basic-repeat.js';
 

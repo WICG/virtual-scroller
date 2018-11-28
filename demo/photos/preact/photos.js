@@ -1,4 +1,4 @@
-import {h, render} from '../../../node_modules/preact/dist/preact.esm.js';
+import {h, render} from '../../../node_modules/preact/dist/preact.mjs';
 import {Scroller} from '../../../preact/preact-scroller.js';
 import {getDims, getUrl, Sample as BaseSample} from '../photos.js';
 
