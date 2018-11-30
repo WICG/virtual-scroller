@@ -20,7 +20,8 @@
   </style>
   <virtual-scroller id="virtualScroller"></virtual-scroller>
   <script type="module">
-    import { ItemSource } from '../../virtual-scroller-element.js';
+    import '../../src/virtual-scroller.js';
+    import { ItemSource } from '../../src/ItemSource.js';
 
     // Render as many items as possible --> infinite scrolling!
     virtualScroller.itemSource = new ItemSource({

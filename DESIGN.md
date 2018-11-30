@@ -5,7 +5,7 @@ This document gives an overview of various pieces we use to build up the
 details. A future proposal may expose these building blocks more directly, but
 only after significant refinement.
 
-## VirtualRepeater (Repeats mixin)
+## VirtualRepeater
 
 - Orchestrates DOM creation and layouting, ensures minimum number of nodes is
   created.
@@ -233,7 +233,7 @@ layout.scrollToIndex(99, 'nearest');
 
 ```
 
-## VirtualScroller (RepeatsAndScrolls mixin)
+## VirtualScroller
 
 - Extends `VirtualRepeater`, delegates the updates of `first, num` to a
   `Layout` instance.

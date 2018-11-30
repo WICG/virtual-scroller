@@ -1,4 +1,4 @@
-export default class Layout extends EventTarget {
+export class Layout1dBase extends EventTarget {
   constructor(config) {
     super();
 

@@ -1,6 +1,6 @@
 import './lazy-image.js';
-import Layout from '../../layouts/layout-1d.js';
-import {VirtualScroller} from '../../virtual-scroller.js';
+import {Layout1d} from '../../src/layouts/Layout1d.js';
+import {VirtualScroller} from '../../src/VirtualScroller.js';
 import {getDims, getUrl, searchFlickr} from './flickr.js';
 
 export {getDims, getUrl, searchFlickr};
@@ -8,7 +8,7 @@ export {getDims, getUrl, searchFlickr};
 export class Sample {
   constructor() {
     this.items = [];
-    this.layout = new Layout();
+    this.layout = new Layout1d();
 
     document.body.style.margin = 0;
     document.body.style.height = '100vh';

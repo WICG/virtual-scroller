@@ -1,7 +1,7 @@
-import Layout from '../../layouts/layout-1d.js';
+import {VirtualScroller} from '../../src/VirtualScroller.js';
+import {Layout1d} from '../../src/layouts/Layout1d.js';
 import {scroller} from '../../lit-html/lit-scroller.js';
 import {html, render} from '../../node_modules/lit-html/lit-html.js';
-import {VirtualScroller} from '../../virtual-scroller.js';
 
 const items = new Array(40).fill({
   name: 'item',
@@ -19,7 +19,7 @@ function scrollerForContainer(container, items) {
   const pool = [];
   const scroller = new VirtualScroller({
     totalItems: items.length,
-    layout: new Layout({itemSize: {width: innerWidth, height: innerHeight}}),
+    layout: new Layout1d({itemSize: {width: innerWidth, height: innerHeight}}),
     container,
     createElement: (idx) => {
       let child = pool.pop();

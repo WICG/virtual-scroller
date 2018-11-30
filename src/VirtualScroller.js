@@ -1,4 +1,4 @@
-import {Repeats} from './virtual-repeater.js';
+import {VirtualRepeater} from './VirtualRepeater.js';
 
 export class RangeChangeEvent extends Event {
   constructor(type, init) {
@@ -14,8 +14,7 @@ export class RangeChangeEvent extends Event {
   }
 }
 
-export const RepeatsAndScrolls = Superclass => class extends Repeats
-(Superclass) {
+export class VirtualScroller extends VirtualRepeater {
   constructor(config) {
     super();
 
@@ -439,6 +438,4 @@ export const RepeatsAndScrolls = Superclass => class extends Repeats
       this.requestRemeasure();
     }
   }
-};
-
-export const VirtualScroller = RepeatsAndScrolls(class {});
+}

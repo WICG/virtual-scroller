@@ -1,9 +1,7 @@
-import {_item, _key, ItemSource} from './item-source.js';
-import {default as Layout1dGrid} from './layouts/layout-1d-grid.js';
-import {default as Layout1d} from './layouts/layout-1d.js';
-import {VirtualScroller} from './virtual-scroller.js';
-
-export {ItemSource};
+import {ItemSource, _item, _key} from './ItemSource.js';
+import {Layout1dGrid} from './layouts/Layout1dGrid.js';
+import {Layout1d} from './layouts/Layout1d.js';
+import {VirtualScroller} from './VirtualScroller.js';
 
 /** Properties */
 const _scroller = Symbol();
@@ -204,4 +202,5 @@ export class VirtualScrollerElement extends HTMLElement {
     });
   }
 }
+
 customElements.define('virtual-scroller', VirtualScrollerElement);

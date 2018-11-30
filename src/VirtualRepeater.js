@@ -1,7 +1,5 @@
-export const Repeats = Superclass => class extends Superclass {
+export class VirtualRepeater {
   constructor(config) {
-    super();
-
     this._createElementFn = null;
     this._updateElementFn = null;
     this._recycleElementFn = null;
@@ -526,5 +524,3 @@ function getMarginValue(value) {
   value = value ? parseFloat(value) : NaN;
   return Number.isNaN(value) ? 0 : value;
 }
-
-export const VirtualRepeater = Repeats(class {});

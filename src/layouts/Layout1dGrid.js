@@ -1,6 +1,6 @@
-import Layout1dBase from './layout-1d-base.js';
+import {Layout1dBase} from './Layout1dBase.js';
 
-export default class Layout extends Layout1dBase {
+export class Layout1dGrid extends Layout1dBase {
   constructor(config) {
     super(config);
     this._rolumns = 1;
