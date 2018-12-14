@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>&lt;virtual-content&gt; random demo</title>
+
+<template id="itemTemplate">
+  <div class="item">
+    <span class="index"></span><span class="text"></span>
+  </div>
+</template>
+
+<script type="module">
+import '../../src/virtual-content.js';
+
+const info = document.getElementById('info');
+
+function updateInfo() {
+  info.innerHTML = `
+    ${document.scrollingElement.scrollTop} / ${document.scrollingElement.scrollHeight}
+  `;
+}
+
+window.addEventListener('scroll', updateInfo);
+
+const itemTemplateElement =
+  document.getElementById('itemTemplate').content.querySelector('.item');
+function createItem(index) {
+  const item = itemTemplateElement.cloneNode(true);
+
+  Object.assign(item.style, {
+    marginTop: `${Math.ceil(16 * Math.random())}px`,
+    marginBottom: `${Math.ceil(16 * Math.random())}px`,
+  });
+
+  const indexSpan = item.querySelector('.index');
+  indexSpan.appendChild(new Text(index));
+
+  const textSpan = item.querySelector('.text');
+  let str = '';
+  const count = 100 + Math.floor(50 * Math.random());
+  for (let j = 0; j < count; j++) {
+    str += ' text';
+  }
+  textSpan.appendChild(new Text(str));
+
+  return item;
+}
+
+for (const element of document.querySelectorAll('[item-fill]')) {
+  const count = window.parseInt(element.getAttribute('item-fill'), 10);
+  for (let i = 0; i < count; i++) {
+    element.appendChild(createItem(i));
+  }
+}
+</script>
+
+<style>
+#vc0 {
+  background-color: #fdd;
+}
+#vc1 {
+  background-color: #dfd;
+}
+#vc2 {
+  background-color: #ddf;
+}
+#vc3 {
+  background-color: #fdf;
+}
+#vc4 {
+  background-color: #ffd;
+}
+#vc5 {
+  background-color: #dff;
+}
+
+.item {
+  font-size: 3em;
+  border: 8px solid black;
+  padding: 8px;
+}
+.item:nth-of-type(2n) {
+  border-style: dashed;
+}
+
+.item > .index {
+  color: #080;
+}
+
+.item > .text {
+  opacity: 0.25;
+}
+
+#info {
+  position: fixed;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid red;
+  padding: 2px;
+  background-color: white;
+}
+</style>
+
+<p>Demonstrates randomly-filled nested virtual contents, as a playground.</p>
+
+<virtual-content id="vc0" item-fill="20">
+  <div style="overflow: auto; height: 400px;">
+    <virtual-content id="vc1" item-fill="20">
+      <div style="overflow: auto; height: 200px;">
+        <virtual-content id="vc2" item-fill="20"></virtual-content>
+      </div>
+    </virtual-content>
+  </div>
+</virtual-content>
+
+<virtual-content id="vc3" item-fill="5">
+  <virtual-content id="vc4" item-fill="5">
+    <virtual-content id="vc5" item-fill="5"></virtual-content>
+  </virtual-content>
+</virtual-content>
+
+<div id="info"></div>
