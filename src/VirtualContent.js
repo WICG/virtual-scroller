@@ -79,6 +79,7 @@ export class VirtualContent extends ChildManager(HTMLElement) {
   }
 
   [_spliceChildren](index, deleteCount, ...newChildren) {
+    newChildren = newChildren.filter(x => x instanceof Element);
     super[_spliceChildren](index, deleteCount, ...newChildren);
 
     const estimatedHeights = this[_estimatedHeights];
