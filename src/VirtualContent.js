@@ -1,5 +1,3 @@
-import {ChildManager, _spliceChildren} from './ChildManager.js';
-
 const DEFAULT_HEIGHT_ESTIMATE = 100;
 const TEMPLATE = `
 <style>
@@ -48,51 +46,87 @@ const {hasTop, getTop, setTop} = (() => {
   };
 })();
 
+const _mutationObserver = Symbol('_mutationObserver');
+const _mutationObserverCallback = Symbol('_mutationObserverCallback');
+const _resizeObserver = Symbol('_resizeObserver');
+const _resizeObserverCallback = Symbol('_resizeObserverCallback');
+
 const _estimatedHeights = Symbol('_estimatedHeights');
 const _updateRAFToken = Symbol('_updateRAFToken');
 
 const _scheduleUpdate = Symbol('_scheduleUpdate');
 const _update = Symbol('_update');
 
-export class VirtualContent extends ChildManager(HTMLElement) {
+export class VirtualContent extends HTMLElement {
   constructor() {
     super();
+
+    this[_mutationObserverCallback] = this[_mutationObserverCallback].bind(this);
+    this[_resizeObserverCallback] = this[_resizeObserverCallback].bind(this);
     this[_scheduleUpdate] = this[_scheduleUpdate].bind(this);
     this[_update] = this[_update].bind(this);
 
     this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
 
-    this[_estimatedHeights] = [];
+    this[_mutationObserver] = new MutationObserver(this[_mutationObserverCallback]);
+    this[_mutationObserver].observe(this, {childList: true});
+    this[_resizeObserver] = new ResizeObserver(this[_resizeObserverCallback]);
+
+    this[_estimatedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
   }
 
   connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener('resize', this[_scheduleUpdate], {passive: true});
     window.addEventListener('scroll', this[_scheduleUpdate], {passive: true});
   }
 
   disconnectedCallback() {
-    super.connectedCallback();
-    window.removeEventListener('resize', this[_scheduleUpdate], {passive: true});
     window.removeEventListener('scroll', this[_scheduleUpdate], {passive: true});
   }
 
-  [_spliceChildren](index, deleteCount, ...newChildren) {
-    newChildren = newChildren.filter(x => x instanceof Element);
-    super[_spliceChildren](index, deleteCount, ...newChildren);
+  [_mutationObserverCallback](records) {
+    const removedNodes = new Set();
+    const addedNodes = new Set();
+
+    for (const record of records) {
+      for (const node of record.removedNodes) {
+        if (addedNodes.has(node)) {
+          addedNodes.delete(node);
+        } else {
+          removedNodes.add(node);
+        }
+      }
+      for (const node of record.addedNodes) {
+        if (removedNodes.has(node)) {
+          removedNodes.delete(node);
+        } else {
+          addedNodes.add(node);
+        }
+      }
+    }
+
+    const nonElements = [];
+    for (const node of addedNodes) {
+      if (!(node instanceof Element)) {
+        nonElements.push(node);
+      }
+    }
+    for (const node of nonElements) {
+      this.removeChild(node);
+      addedNodes.delete(node);
+    }
 
     const estimatedHeights = this[_estimatedHeights];
 
-    for (const child of newChildren) {
-      setInvisible(child);
+    for (const node of addedNodes) {
+      setInvisible(node);
+      estimatedHeights.set(node, DEFAULT_HEIGHT_ESTIMATE);
     }
-    estimatedHeights.splice(
-      index,
-      deleteCount,
-      ...newChildren.map(child => DEFAULT_HEIGHT_ESTIMATE),
-    );
 
+    this[_scheduleUpdate]();
+  }
+
+  [_resizeObserverCallback]() {
     this[_scheduleUpdate]();
   }
 
@@ -113,14 +147,15 @@ export class VirtualContent extends ChildManager(HTMLElement) {
     const thisRect = this.getBoundingClientRect();
 
     // Update height estimates with visible elements.
-    for (let child = this.firstChild, i = 0; child !== null; child = child.nextSibling, i++) {
+    for (let child = this.firstChild; child !== null; child = child.nextSibling) {
       if (!getInvisible(child)) {
         const rect = child.getBoundingClientRect();
         const style = window.getComputedStyle(child);
-        estimatedHeights[i] =
+        estimatedHeights.set(child,
           window.parseFloat(style.marginTop, 10) +
           window.parseFloat(style.marginBottom, 10) +
-          rect.height;
+          rect.height
+        );
       }
     }
 
@@ -130,8 +165,8 @@ export class VirtualContent extends ChildManager(HTMLElement) {
     let newInvisible = new Map();
     let sum = 0;
     let sumVisible = 0;
-    for (let child = this.firstChild, i = 0; child !== null; child = child.nextSibling, i++) {
-      const estimatedHeight = estimatedHeights[i];
+    for (let child = this.firstChild; child !== null; child = child.nextSibling) {
+      const estimatedHeight = estimatedHeights.get(child);
 
       const visible =
         (0 <= thisRect.top + sum + estimatedHeight) &&
@@ -144,10 +179,12 @@ export class VirtualContent extends ChildManager(HTMLElement) {
         }
         if (getInvisible(child)) {
           newInvisible.set(child, false);
+          this[_resizeObserver].observe(child);
         }
       } else {
         if (!getInvisible(child)) {
           newInvisible.set(child, true);
+          this[_resizeObserver].unobserve(child);
         }
       }
 
