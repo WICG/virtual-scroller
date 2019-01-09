@@ -17,23 +17,6 @@ const TEMPLATE = `
 <slot></slot>
 `;
 
-const {setInvisible, getInvisible} = (() => {
-  const invisible = new Set();
-  return {
-    getInvisible: element => invisible.has(element),
-    setInvisible: (element, value) => {
-      const isInvisible = invisible.has(element);
-      if (value && !isInvisible) {
-        element.setAttribute('invisible', '');
-        invisible.add(element);
-      } else if (!value && isInvisible) {
-        element.removeAttribute('invisible');
-        invisible.delete(element);
-      }
-    },
-  };
-})();
-
 const {hasTop, getTop, setTop} = (() => {
   const top = new WeakMap();
   return {
@@ -119,7 +102,7 @@ export class VirtualContent extends HTMLElement {
     const estimatedHeights = this[_estimatedHeights];
 
     for (const node of addedNodes) {
-      setInvisible(node);
+      node.setAttribute('invisible', '');
       estimatedHeights.set(node, DEFAULT_HEIGHT_ESTIMATE);
     }
 
@@ -148,7 +131,7 @@ export class VirtualContent extends HTMLElement {
 
     // Update height estimates with visible elements.
     for (let child = this.firstChild; child !== null; child = child.nextSibling) {
-      if (!getInvisible(child)) {
+      if (!child.hasAttribute('invisible')) {
         const rect = child.getBoundingClientRect();
         const style = window.getComputedStyle(child);
         estimatedHeights.set(child,
@@ -177,12 +160,12 @@ export class VirtualContent extends HTMLElement {
         if (!hasTop(child) || Math.abs(getTop(child) - top) >= 1) {
           newTop.set(child, top);
         }
-        if (getInvisible(child)) {
+        if (child.hasAttribute('invisible')) {
           newInvisible.set(child, false);
           this[_resizeObserver].observe(child);
         }
       } else {
-        if (!getInvisible(child)) {
+        if (!child.hasAttribute('invisible')) {
           newInvisible.set(child, true);
           this[_resizeObserver].unobserve(child);
         }
@@ -201,7 +184,11 @@ export class VirtualContent extends HTMLElement {
       }
 
       for (const [element, invisible] of newInvisible) {
-        setInvisible(element, invisible);
+        if (invisible) {
+          element.setAttribute('invisible', '');
+        } else {
+          element.removeAttribute('invisible');
+        }
       }
 
       this[_scheduleUpdate]();
