@@ -60,6 +60,8 @@ export class VirtualContent extends HTMLElement {
   }
 
   [_mutationObserverCallback](records) {
+    // Coalesce added and removed children from all mutation records.
+
     const removedNodes = new Set();
     const addedNodes = new Set();
 
@@ -71,6 +73,7 @@ export class VirtualContent extends HTMLElement {
           removedNodes.add(node);
         }
       }
+
       for (const node of record.addedNodes) {
         if (removedNodes.has(node)) {
           removedNodes.delete(node);
@@ -80,23 +83,34 @@ export class VirtualContent extends HTMLElement {
       }
     }
 
-    const nonElements = [];
-    for (const node of addedNodes) {
-      if (!(node instanceof Element)) {
-        nonElements.push(node);
-      }
-    }
-    for (const node of nonElements) {
-      this.removeChild(node);
-      addedNodes.delete(node);
-    }
+
+    // Handle coalesced child list changes.
 
     const estimatedHeights = this[_estimatedHeights];
 
-    for (const node of addedNodes) {
-      node.setAttribute('invisible', '');
-      estimatedHeights.set(node, DEFAULT_HEIGHT_ESTIMATE);
+    for (const node of removedNodes) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        // Removed children should have be made visible again and we should
+        // unobserve them with the resize observer.
+        this[_resizeObserver].unobserve(node);
+        node.removeAttribute('invisible');
+        estimatedHeights.delete(node);
+      }
     }
+
+    for (const node of addedNodes) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        // Added children should be invisible initially.
+        node.setAttribute('invisible', '');
+        estimatedHeights.set(node, DEFAULT_HEIGHT_ESTIMATE);
+      } else {
+        // Remove non-element children because we can't control their
+        // invisibility state or even prevent them from being rendered using
+        // CSS (they aren't distinctly selectable).
+        this.removeChild(node);
+      }
+    }
+
 
     this[_scheduleUpdate]();
   }
