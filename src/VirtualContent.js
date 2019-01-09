@@ -6,6 +6,10 @@ const TEMPLATE = `
    * collapsing is simpler and good enough to start with. */
   display: flex;
   flex-direction: column;
+
+  /* Prevent the automatic scrolling between writes and later measurements,
+   * which can invalidate previous layout. */
+  overflow-anchor: none;
 }
 
 ::slotted(*) {
@@ -16,18 +20,6 @@ const TEMPLATE = `
 </style>
 <slot></slot>
 `;
-
-const {hasTop, getTop, setTop} = (() => {
-  const top = new WeakMap();
-  return {
-    hasTop: element => top.has(element),
-    getTop: element => top.get(element),
-    setTop: (element, value) => {
-      top.set(element, value);
-      element.style.top = `${value}px`;
-    },
-  };
-})();
 
 const _mutationObserver = Symbol('_mutationObserver');
 const _mutationObserverCallback = Symbol('_mutationObserverCallback');
@@ -124,74 +116,61 @@ export class VirtualContent extends HTMLElement {
 
     const childNodes = this.childNodes;
     const estimatedHeights = this[_estimatedHeights];
-
-    // READ
-
-    const thisRect = this.getBoundingClientRect();
-
-    // Update height estimates with visible elements.
-    for (let child = this.firstChild; child !== null; child = child.nextSibling) {
+    const updateHeightEstimate = (child) => {
       if (!child.hasAttribute('invisible')) {
-        const rect = child.getBoundingClientRect();
+        const childRect = child.getBoundingClientRect();
         const style = window.getComputedStyle(child);
-        estimatedHeights.set(child,
+        const height =
           window.parseFloat(style.marginTop, 10) +
           window.parseFloat(style.marginBottom, 10) +
-          rect.height
-        );
+          childRect.height;
+        estimatedHeights.set(child, height);
       }
-    }
+      return estimatedHeights.get(child);
+    };
+    const thisRect = this.getBoundingClientRect();
 
-    // COMPUTE
-
-    let newTop = new Map();
-    let newInvisible = new Map();
     let sum = 0;
     let sumVisible = 0;
     for (let child = this.firstChild; child !== null; child = child.nextSibling) {
-      const estimatedHeight = estimatedHeights.get(child);
+      let estimatedHeight = updateHeightEstimate(child);
 
-      const visible =
+      const maybeInViewport =
         (0 <= thisRect.top + sum + estimatedHeight) &&
         (thisRect.top + sum <= window.innerHeight);
 
-      if (visible) {
-        const top = sum - sumVisible;
-        if (!hasTop(child) || Math.abs(getTop(child) - top) >= 1) {
-          newTop.set(child, top);
-        }
+      if (maybeInViewport) {
         if (child.hasAttribute('invisible')) {
-          newInvisible.set(child, false);
+          child.removeAttribute('invisible');
           this[_resizeObserver].observe(child);
+          estimatedHeight = updateHeightEstimate(child);
+        }
+
+        const isInViewport =
+          (0 <= thisRect.top + sum + estimatedHeight) &&
+          (thisRect.top + sum <= window.innerHeight);
+
+        if (isInViewport) {
+          const currentTop = window.parseFloat(window.getComputedStyle(child).top, 10);
+          const nextTop = sum - sumVisible;
+          if (Math.abs(currentTop - nextTop) >= 1) {
+            child.style.top = `${nextTop}px`;
+          }
+          sumVisible += estimatedHeight;
+        } else {
+          child.setAttribute('invisible', '');
+          this[_resizeObserver].unobserve(child);
         }
       } else {
         if (!child.hasAttribute('invisible')) {
-          newInvisible.set(child, true);
+          child.setAttribute('invisible', '');
           this[_resizeObserver].unobserve(child);
         }
       }
 
       sum += estimatedHeight;
-      sumVisible += visible ? estimatedHeight : 0;
     }
-
-    // WRITE
 
     this.style.height = `${sum}px`;
-    if (newTop.size > 0 || newInvisible.size > 0) {
-      for (const [element, top] of newTop) {
-        setTop(element, top);
-      }
-
-      for (const [element, invisible] of newInvisible) {
-        if (invisible) {
-          element.setAttribute('invisible', '');
-        } else {
-          element.removeAttribute('invisible');
-        }
-      }
-
-      this[_scheduleUpdate]();
-    }
   }
 }
