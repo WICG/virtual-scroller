@@ -13,9 +13,9 @@ const TEMPLATE = `
 }
 
 ::slotted(*) {
-  flex: 0 0 auto;
-  display: block;
-  position: relative;
+  flex: 0 0 auto !important;
+  display: block !important;
+  position: relative !important;
 }
 </style>
 <slot></slot>
@@ -169,11 +169,7 @@ export class VirtualContent extends HTMLElement {
           (thisRect.top + sum <= window.innerHeight);
 
         if (isInViewport || forceVisible.has(child)) {
-          const currentTop = window.parseFloat(window.getComputedStyle(child).top, 10);
-          const nextTop = sum - sumVisible;
-          if (Math.abs(currentTop - nextTop) >= 1) {
-            child.style.top = `${nextTop}px`;
-          }
+          child.style.top = `${sum - sumVisible}px`;
           sumVisible += estimatedHeight;
         } else {
           child.setAttribute('invisible', '');
