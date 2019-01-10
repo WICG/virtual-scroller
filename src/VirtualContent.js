@@ -31,6 +31,7 @@ const _updateRAFToken = Symbol('_updateRAFToken');
 
 const _scheduleUpdate = Symbol('_scheduleUpdate');
 const _update = Symbol('_update');
+const _onActivateinvisible = Symbol('_onActivateinvisible');
 
 export class VirtualContent extends HTMLElement {
   constructor() {
@@ -40,6 +41,7 @@ export class VirtualContent extends HTMLElement {
     this[_resizeObserverCallback] = this[_resizeObserverCallback].bind(this);
     this[_scheduleUpdate] = this[_scheduleUpdate].bind(this);
     this[_update] = this[_update].bind(this);
+    this[_onActivateinvisible] = this[_onActivateinvisible].bind(this);
 
     this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
 
@@ -49,6 +51,8 @@ export class VirtualContent extends HTMLElement {
 
     this[_estimatedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
+
+    this.addEventListener('activateinvisible', this[_onActivateinvisible], {capture: true});
   }
 
   connectedCallback() {
@@ -122,10 +126,10 @@ export class VirtualContent extends HTMLElement {
   [_scheduleUpdate]() {
     if (this[_updateRAFToken] !== undefined) return;
 
-    this[_updateRAFToken] = window.requestAnimationFrame(this[_update]);
+    this[_updateRAFToken] = window.requestAnimationFrame(() => this[_update]());
   }
 
-  [_update]() {
+  [_update](forceVisible = new Set()) {
     this[_updateRAFToken] = undefined;
 
     const childNodes = this.childNodes;
@@ -153,7 +157,7 @@ export class VirtualContent extends HTMLElement {
         (0 <= thisRect.top + sum + estimatedHeight) &&
         (thisRect.top + sum <= window.innerHeight);
 
-      if (maybeInViewport) {
+      if (maybeInViewport || forceVisible.has(child)) {
         if (child.hasAttribute('invisible')) {
           child.removeAttribute('invisible');
           this[_resizeObserver].observe(child);
@@ -164,7 +168,7 @@ export class VirtualContent extends HTMLElement {
           (0 <= thisRect.top + sum + estimatedHeight) &&
           (thisRect.top + sum <= window.innerHeight);
 
-        if (isInViewport) {
+        if (isInViewport || forceVisible.has(child)) {
           const currentTop = window.parseFloat(window.getComputedStyle(child).top, 10);
           const nextTop = sum - sumVisible;
           if (Math.abs(currentTop - nextTop) >= 1) {
@@ -186,5 +190,17 @@ export class VirtualContent extends HTMLElement {
     }
 
     this.style.height = `${sum}px`;
+  }
+
+  [_onActivateinvisible](e) {
+    // Find the child containing the target and synchronously update, forcing
+    // that child to be visible. The browser will automatically scroll to that
+    // element because it is visible, which will trigger another update to make
+    // the surrounding nodes visible.
+    const child = e.target;
+    while (child.parentNode !== this) {
+      child = child.parentNode;
+    }
+    this[_update](new Set([child]));
   }
 }
