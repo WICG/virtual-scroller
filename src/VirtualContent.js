@@ -66,57 +66,37 @@ export class VirtualContent extends HTMLElement {
   }
 
   [_mutationObserverCallback](records) {
-    // Coalesce added and removed children from all mutation records.
-
-    const removedNodes = new Set();
-    const addedNodes = new Set();
+    const estimatedHeights = this[_estimatedHeights];
 
     for (const record of records) {
       for (const node of record.removedNodes) {
-        if (addedNodes.has(node)) {
-          addedNodes.delete(node);
-        } else {
-          removedNodes.add(node);
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          // Removed children should have be made visible again and we should
+          // unobserve them with the resize observer.
+          this[_resizeObserver].unobserve(node);
+          node.removeAttribute('invisible');
+          estimatedHeights.delete(node);
         }
       }
 
       for (const node of record.addedNodes) {
-        if (removedNodes.has(node)) {
-          removedNodes.delete(node);
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          // Added children should be invisible initially.
+          node.setAttribute('invisible', '');
+          estimatedHeights.set(node, DEFAULT_HEIGHT_ESTIMATE);
         } else {
-          addedNodes.add(node);
+          // Remove non-element children because we can't control their
+          // invisibility state or even prevent them from being rendered using
+          // CSS (they aren't distinctly selectable).
+
+          // These records are not coalesced, so test that the node is actually
+          // a child of this node before removing it.
+          if (node.parentNode === this) {
+            this.removeChild(node);
+          }
         }
       }
     }
-
-
-    // Handle coalesced child list changes.
-
-    const estimatedHeights = this[_estimatedHeights];
-
-    for (const node of removedNodes) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        // Removed children should have be made visible again and we should
-        // unobserve them with the resize observer.
-        this[_resizeObserver].unobserve(node);
-        node.removeAttribute('invisible');
-        estimatedHeights.delete(node);
-      }
-    }
-
-    for (const node of addedNodes) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        // Added children should be invisible initially.
-        node.setAttribute('invisible', '');
-        estimatedHeights.set(node, DEFAULT_HEIGHT_ESTIMATE);
-      } else {
-        // Remove non-element children because we can't control their
-        // invisibility state or even prevent them from being rendered using
-        // CSS (they aren't distinctly selectable).
-        this.removeChild(node);
-      }
-    }
-
 
     this[_scheduleUpdate]();
   }
