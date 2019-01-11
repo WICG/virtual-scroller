@@ -31,6 +31,7 @@ const _updateRAFToken = Symbol('_updateRAFToken');
 
 const _scheduleUpdate = Symbol('_scheduleUpdate');
 const _update = Symbol('_update');
+const _onScroll = Symbol('_onScroll');
 const _onActivateinvisible = Symbol('_onActivateinvisible');
 
 export class VirtualContent extends HTMLElement {
@@ -41,6 +42,7 @@ export class VirtualContent extends HTMLElement {
     this[_resizeObserverCallback] = this[_resizeObserverCallback].bind(this);
     this[_scheduleUpdate] = this[_scheduleUpdate].bind(this);
     this[_update] = this[_update].bind(this);
+    this[_onScroll] = this[_onScroll].bind(this);
     this[_onActivateinvisible] = this[_onActivateinvisible].bind(this);
 
     this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
@@ -56,11 +58,11 @@ export class VirtualContent extends HTMLElement {
   }
 
   connectedCallback() {
-    window.addEventListener('scroll', this[_scheduleUpdate], {passive: true});
+    window.addEventListener('scroll', this[_onScroll], {passive: true, capture: true});
   }
 
   disconnectedCallback() {
-    window.removeEventListener('scroll', this[_scheduleUpdate], {passive: true});
+    window.removeEventListener('scroll', this[_onScroll], {passive: true, capture: true});
   }
 
   [_mutationObserverCallback](records) {
@@ -123,13 +125,15 @@ export class VirtualContent extends HTMLElement {
     this[_scheduleUpdate]();
   }
 
-  [_scheduleUpdate]() {
+  [_scheduleUpdate]({scrollTarget} = {}) {
     if (this[_updateRAFToken] !== undefined) return;
 
-    this[_updateRAFToken] = window.requestAnimationFrame(() => this[_update]());
+    this[_updateRAFToken] = window.requestAnimationFrame(() => {
+      this[_update]({scrollTarget});
+    });
   }
 
-  [_update](forceVisible = new Set()) {
+  [_update]({forceVisible = new Set(), scrollTarget} = {}) {
     this[_updateRAFToken] = undefined;
 
     const childNodes = this.childNodes;
@@ -148,9 +152,21 @@ export class VirtualContent extends HTMLElement {
     };
     const thisRect = this.getBoundingClientRect();
 
+    const previouslyVisible = new Set();
+    for (let child = this.firstChild; child !== null; child = child.nextSibling) {
+      if (!child.hasAttribute('invisible')) {
+        previouslyVisible.add(child);
+      }
+    }
+
+    let beforePreviouslyVisible = previouslyVisible.size > 0;
     let sum = 0;
     let sumVisible = 0;
     for (let child = this.firstChild; child !== null; child = child.nextSibling) {
+      if (beforePreviouslyVisible && previouslyVisible.has(child)) {
+        beforePreviouslyVisible = false;
+      }
+
       let estimatedHeight = updateHeightEstimate(child);
 
       const maybeInViewport =
@@ -161,7 +177,11 @@ export class VirtualContent extends HTMLElement {
         if (child.hasAttribute('invisible')) {
           child.removeAttribute('invisible');
           this[_resizeObserver].observe(child);
+          const lastEstimatedHeight = estimatedHeight;
           estimatedHeight = updateHeightEstimate(child);
+          if (beforePreviouslyVisible && scrollTarget !== undefined) {
+            scrollTarget.scrollTop += estimatedHeight - lastEstimatedHeight;
+          }
         }
 
         const isInViewport =
@@ -188,6 +208,13 @@ export class VirtualContent extends HTMLElement {
     this.style.height = `${sum}px`;
   }
 
+  [_onScroll](e) {
+    const target = e.target;
+    this[_scheduleUpdate]({
+      scrollTarget: target instanceof Document ? target.scrollingElement : target,
+    });
+  }
+
   [_onActivateinvisible](e) {
     // Find the child containing the target and synchronously update, forcing
     // that child to be visible. The browser will automatically scroll to that
@@ -197,6 +224,6 @@ export class VirtualContent extends HTMLElement {
     while (child.parentNode !== this) {
       child = child.parentNode;
     }
-    this[_update](new Set([child]));
+    this[_update]({forceVisible: new Set([child])});
   }
 }

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<script type="module">
+import '../../src/virtual-content.js';
+
+const info = document.getElementById('info');
+
+window.addEventListener('scroll', () => {
+  info.innerHTML = `
+    ${document.scrollingElement.scrollTop} / ${document.scrollingElement.scrollHeight}
+  `;
+});
+
+function createItem(index) {
+  const div = document.createElement('div');
+    div.classList.add('item');
+
+    Object.assign(div.style, {
+      marginTop: `${Math.ceil(16 * Math.random())}px`,
+      marginBottom: `${Math.ceil(16 * Math.random())}px`,
+    });
+
+    const indexSpan = document.createElement('span');
+      indexSpan.classList.add('index');
+      indexSpan.innerHTML = index;
+    div.appendChild(indexSpan);
+
+    const textSpan = document.createElement('span');
+      textSpan.classList.add('text');
+      let str = '';
+      const count = 100 + Math.floor(50 * Math.random());
+      for (let j = 0; j < count; j++) {
+        str += ' text';
+      }
+      textSpan.innerHTML = str;
+    div.appendChild(textSpan);
+  return div;
+}
+
+  const virtualContents = document.querySelectorAll('virtual-content');
+
+  for (const vc of virtualContents) {
+    for (let i = 0; i < 20; i++) {
+      vc.appendChild(createItem(i));
+    }
+  }
+</script>
+<style>
+#vc0 {
+  background-color: #fdd;
+}
+#vc1 {
+  background-color: #dfd;
+}
+#vc2 {
+  background-color: #ddf;
+}
+
+.item {
+  font-size: 3em;
+  border: 8px solid black;
+  padding: 8px;
+}
+.item:nth-of-type(2n) {
+  border-style: dashed;
+}
+
+.item > .index {
+  color: #080;
+}
+
+.item > .text {
+  opacity: 0.25;
+}
+
+#info {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  border: 1px solid blue;
+  background-color: #ddf;
+}
+</style>
+<virtual-content id="vc0"><div style="overflow: auto; height: 400px;">
+  <virtual-content id="vc1"><div style="overflow: auto; height: 200px;">
+    <virtual-content id="vc2"></virtual-content>
+  </div></virtual-content>
+</div></virtual-content>
+<div id="info"></div>
