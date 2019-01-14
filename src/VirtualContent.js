@@ -116,6 +116,16 @@ export class VirtualContent extends HTMLElement {
   [_update]({forceVisible = new Set(), scrollTarget} = {}) {
     this[_updateRAFToken] = undefined;
 
+    const thisRect = this.getBoundingClientRect();
+    // Don't attempt to update / run layout if this element isn't in a
+    // renderable state (e.g. disconnected, invisible, etc.).
+    if (
+      thisRect.top === 0 &&
+      thisRect.left === 0 &&
+      thisRect.width === 0 &&
+      thisRect.height === 0
+    ) return;
+
     const childNodes = this.childNodes;
     const estimatedHeights = this[_estimatedHeights];
     const updateHeightEstimate = (child) => {
@@ -130,7 +140,6 @@ export class VirtualContent extends HTMLElement {
       }
       return estimatedHeights.get(child);
     };
-    const thisRect = this.getBoundingClientRect();
 
     const previouslyVisible = new Set();
     for (let child = this.firstChild; child !== null; child = child.nextSibling) {
