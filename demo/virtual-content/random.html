@@ -1,48 +1,52 @@
 <!DOCTYPE html>
+<template id="itemTemplate">
+  <div class="item">
+    <span class="index"></span><span class="text"></span>
+  </div>
+</template>
 <script type="module">
 import '../../src/virtual-content.js';
 
 const info = document.getElementById('info');
 
-window.addEventListener('scroll', () => {
+function updateInfo() {
   info.innerHTML = `
     ${document.scrollingElement.scrollTop} / ${document.scrollingElement.scrollHeight}
   `;
-});
-
-function createItem(index) {
-  const div = document.createElement('div');
-    div.classList.add('item');
-
-    Object.assign(div.style, {
-      marginTop: `${Math.ceil(16 * Math.random())}px`,
-      marginBottom: `${Math.ceil(16 * Math.random())}px`,
-    });
-
-    const indexSpan = document.createElement('span');
-      indexSpan.classList.add('index');
-      indexSpan.innerHTML = index;
-    div.appendChild(indexSpan);
-
-    const textSpan = document.createElement('span');
-      textSpan.classList.add('text');
-      let str = '';
-      const count = 100 + Math.floor(50 * Math.random());
-      for (let j = 0; j < count; j++) {
-        str += ' text';
-      }
-      textSpan.innerHTML = str;
-    div.appendChild(textSpan);
-  return div;
 }
 
-  const virtualContents = document.querySelectorAll('virtual-content');
+window.addEventListener('scroll', updateInfo);
 
-  for (const vc of virtualContents) {
-    for (let i = 0; i < 20; i++) {
-      vc.appendChild(createItem(i));
-    }
+const itemTemplateElement =
+  document.getElementById('itemTemplate').content.querySelector('.item');
+function createItem(index) {
+  const item = itemTemplateElement.cloneNode(true);
+
+  Object.assign(item.style, {
+    marginTop: `${Math.ceil(16 * Math.random())}px`,
+    marginBottom: `${Math.ceil(16 * Math.random())}px`,
+  });
+
+  const indexSpan = item.querySelector('.index');
+  indexSpan.appendChild(new Text(index));
+
+  const textSpan = item.querySelector('.text');
+  let str = '';
+  const count = 100 + Math.floor(50 * Math.random());
+  for (let j = 0; j < count; j++) {
+    str += ' text';
   }
+  textSpan.appendChild(new Text(str));
+
+  return item;
+}
+
+for (const element of document.querySelectorAll('[item-fill]')) {
+  const count = window.parseInt(element.getAttribute('item-fill'), 10);
+  for (let i = 0; i < count; i++) {
+    element.appendChild(createItem(i));
+  }
+}
 </script>
 <style>
 #vc0 {
@@ -53,6 +57,15 @@ function createItem(index) {
 }
 #vc2 {
   background-color: #ddf;
+}
+#vc3 {
+  background-color: #fdf;
+}
+#vc4 {
+  background-color: #ffd;
+}
+#vc5 {
+  background-color: #dff;
 }
 
 .item {
@@ -74,15 +87,19 @@ function createItem(index) {
 
 #info {
   position: fixed;
-  top: 0px;
-  right: 0px;
-  border: 1px solid blue;
-  background-color: #ddf;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid red;
+  padding: 2px;
+  background-color: white;
 }
 </style>
-<virtual-content id="vc0"><div style="overflow: auto; height: 400px;">
-  <virtual-content id="vc1"><div style="overflow: auto; height: 200px;">
-    <virtual-content id="vc2"></virtual-content>
+<virtual-content id="vc0" item-fill="20"><div style="overflow: auto; height: 400px;">
+  <virtual-content id="vc1" item-fill="20"><div style="overflow: auto; height: 200px;">
+    <virtual-content id="vc2" item-fill="20"></virtual-content>
   </div></virtual-content>
 </div></virtual-content>
+<virtual-content id="vc3" item-fill="5"><virtual-content id="vc4" item-fill="5"><virtual-content id="vc5" item-fill="5"></virtual-content></virtual-content></virtual-content>
+
 <div id="info"></div>
