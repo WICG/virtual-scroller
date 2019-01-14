@@ -1,3 +1,16 @@
+function composedTreeParent(node) {
+  return node.assignedSlot || node.host || node.parentNode;
+}
+
+function nearestScrollingAncestor(node) {
+  for (node = composedTreeParent(node); node !== null; node = composedTreeParent(node)) {
+    if (node.nodeType === Node.ELEMENT_NODE && node.scrollHeight > node.clientHeight) {
+      return node;
+    }
+  }
+  return null;
+}
+
 const DEFAULT_HEIGHT_ESTIMATE = 100;
 const TEMPLATE = `
 <style>
@@ -105,15 +118,13 @@ export class VirtualContent extends HTMLElement {
     this[_scheduleUpdate]();
   }
 
-  [_scheduleUpdate]({scrollTarget} = {}) {
+  [_scheduleUpdate]() {
     if (this[_updateRAFToken] !== undefined) return;
 
-    this[_updateRAFToken] = window.requestAnimationFrame(() => {
-      this[_update]({scrollTarget});
-    });
+    this[_updateRAFToken] = window.requestAnimationFrame(this[_update]);
   }
 
-  [_update]({forceVisible = new Set(), scrollTarget} = {}) {
+  [_update]({forceVisible = new Set()} = {}) {
     this[_updateRAFToken] = undefined;
 
     const thisRect = this.getBoundingClientRect();
@@ -168,8 +179,11 @@ export class VirtualContent extends HTMLElement {
           this[_resizeObserver].observe(child);
           const lastEstimatedHeight = estimatedHeight;
           estimatedHeight = updateHeightEstimate(child);
-          if (beforePreviouslyVisible && scrollTarget !== undefined) {
-            scrollTarget.scrollTop += estimatedHeight - lastEstimatedHeight;
+          if (beforePreviouslyVisible) {
+            const scrollingAncestor = nearestScrollingAncestor(this);
+            if (scrollingAncestor !== null) {
+              scrollingAncestor.scrollTop += estimatedHeight - lastEstimatedHeight;
+            }
           }
         }
 
@@ -197,11 +211,8 @@ export class VirtualContent extends HTMLElement {
     this.style.height = `${sum}px`;
   }
 
-  [_onScroll](e) {
-    const target = e.target;
-    this[_scheduleUpdate]({
-      scrollTarget: target instanceof Document ? target.scrollingElement : target,
-    });
+  [_onScroll]() {
+    this[_scheduleUpdate]();
   }
 
   [_onActivateinvisible](e) {
