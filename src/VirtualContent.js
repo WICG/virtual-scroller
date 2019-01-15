@@ -118,6 +118,22 @@ export class VirtualContent extends HTMLElement {
     this[_scheduleUpdate]();
   }
 
+  [_onScroll]() {
+    this[_scheduleUpdate]();
+  }
+
+  [_onActivateinvisible](e) {
+    // Find the child containing the target and synchronously update, forcing
+    // that child to be visible. The browser will automatically scroll to that
+    // element because it is visible, which will trigger another update to make
+    // the surrounding nodes visible.
+    const child = e.target;
+    while (child.parentNode !== this) {
+      child = child.parentNode;
+    }
+    this[_update]({forceVisible: new Set([child])});
+  }
+
   [_scheduleUpdate]() {
     if (this[_updateRAFToken] !== undefined) return;
 
@@ -209,21 +225,5 @@ export class VirtualContent extends HTMLElement {
     }
 
     this.style.height = `${sum}px`;
-  }
-
-  [_onScroll]() {
-    this[_scheduleUpdate]();
-  }
-
-  [_onActivateinvisible](e) {
-    // Find the child containing the target and synchronously update, forcing
-    // that child to be visible. The browser will automatically scroll to that
-    // element because it is visible, which will trigger another update to make
-    // the surrounding nodes visible.
-    const child = e.target;
-    while (child.parentNode !== this) {
-      child = child.parentNode;
-    }
-    this[_update]({forceVisible: new Set([child])});
   }
 }
