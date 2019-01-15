@@ -182,7 +182,7 @@ export class VirtualContent extends HTMLElement {
           if (beforePreviouslyVisible) {
             const scrollingAncestor = nearestScrollingAncestor(this);
             if (scrollingAncestor !== null) {
-              scrollingAncestor.scrollTop += estimatedHeight - lastEstimatedHeight;
+              scrollingAncestor.scrollBy(0, estimatedHeight - lastEstimatedHeight);
             }
           }
         }
