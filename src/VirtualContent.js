@@ -34,6 +34,8 @@ const TEMPLATE = `
 <slot></slot>
 `;
 
+const _intersectionObserver = Symbol('_intersectionObserver');
+const _intersectionObserverCallback = Symbol('_intersectionObserverCallback');
 const _mutationObserver = Symbol('_mutationObserver');
 const _mutationObserverCallback = Symbol('_mutationObserverCallback');
 const _resizeObserver = Symbol('_resizeObserver');
@@ -43,6 +45,7 @@ const _estimatedHeights = Symbol('_estimatedHeights');
 const _updateRAFToken = Symbol('_updateRAFToken');
 
 const _scheduleUpdate = Symbol('_scheduleUpdate');
+const _cancelUpdate = Symbol('_cancelUpdate');
 const _update = Symbol('_update');
 const _onScroll = Symbol('_onScroll');
 const _onActivateinvisible = Symbol('_onActivateinvisible');
@@ -51,15 +54,19 @@ export class VirtualContent extends HTMLElement {
   constructor() {
     super();
 
+    this[_intersectionObserverCallback] = this[_intersectionObserverCallback].bind(this);
     this[_mutationObserverCallback] = this[_mutationObserverCallback].bind(this);
     this[_resizeObserverCallback] = this[_resizeObserverCallback].bind(this);
     this[_scheduleUpdate] = this[_scheduleUpdate].bind(this);
+    this[_cancelUpdate] = this[_cancelUpdate].bind(this);
     this[_update] = this[_update].bind(this);
     this[_onScroll] = this[_onScroll].bind(this);
     this[_onActivateinvisible] = this[_onActivateinvisible].bind(this);
 
     this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
 
+    this[_intersectionObserver] = new IntersectionObserver(this[_intersectionObserverCallback]);
+    this[_intersectionObserver].observe(this);
     this[_mutationObserver] = new MutationObserver(this[_mutationObserverCallback]);
     this[_mutationObserver].observe(this, {childList: true});
     this[_resizeObserver] = new ResizeObserver(this[_resizeObserverCallback]);
@@ -71,11 +78,23 @@ export class VirtualContent extends HTMLElement {
   }
 
   connectedCallback() {
-    window.addEventListener('scroll', this[_onScroll], {passive: true, capture: true});
+    this[_scheduleUpdate]();
   }
 
   disconnectedCallback() {
-    window.removeEventListener('scroll', this[_onScroll], {passive: true, capture: true});
+    this[_cancelUpdate]();
+  }
+
+  [_intersectionObserverCallback](entries) {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        window.addEventListener('scroll', this[_onScroll], {passive: true, capture: true});
+        this[_scheduleUpdate]();
+      } else {
+        window.removeEventListener('scroll', this[_onScroll], {passive: true, capture: true});
+        this[_cancelUpdate]();
+      }
+    }
   }
 
   [_mutationObserverCallback](records) {
@@ -138,6 +157,13 @@ export class VirtualContent extends HTMLElement {
     if (this[_updateRAFToken] !== undefined) return;
 
     this[_updateRAFToken] = window.requestAnimationFrame(this[_update]);
+  }
+
+  [_cancelUpdate]() {
+    if (this[_updateRAFToken] === undefined) return;
+
+    window.cancelAnimationFrame(this[_updateRAFToken]);
+    this[_updateRAFToken] = undefined;
   }
 
   [_update]({forceVisible = new Set()} = {}) {
