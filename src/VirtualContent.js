@@ -143,26 +143,25 @@ export class VirtualContent extends HTMLElement {
   [_update]({forceVisible = new Set()} = {}) {
     this[_updateRAFToken] = undefined;
 
-    const thisRect = this.getBoundingClientRect();
+    const thisClientRect = this.getBoundingClientRect();
     // Don't attempt to update / run layout if this element isn't in a
     // renderable state (e.g. disconnected, invisible, etc.).
     if (
-      thisRect.top === 0 &&
-      thisRect.left === 0 &&
-      thisRect.width === 0 &&
-      thisRect.height === 0
+      thisClientRect.top === 0 &&
+      thisClientRect.left === 0 &&
+      thisClientRect.width === 0 &&
+      thisClientRect.height === 0
     ) return;
 
-    const childNodes = this.childNodes;
     const estimatedHeights = this[_estimatedHeights];
     const updateHeightEstimate = (child) => {
       if (!child.hasAttribute('invisible')) {
-        const childRect = child.getBoundingClientRect();
+        const childClientRect = child.getBoundingClientRect();
         const style = window.getComputedStyle(child);
         const height =
           window.parseFloat(style.marginTop, 10) +
           window.parseFloat(style.marginBottom, 10) +
-          childRect.height;
+          childClientRect.height;
         estimatedHeights.set(child, height);
       }
       return estimatedHeights.get(child);
@@ -176,8 +175,8 @@ export class VirtualContent extends HTMLElement {
     }
 
     let beforePreviouslyVisible = previouslyVisible.size > 0;
-    let sum = 0;
-    let sumVisible = 0;
+    let nextTop = 0;
+    let renderedHeight = 0;
     for (let child = this.firstChild; child !== null; child = child.nextSibling) {
       if (beforePreviouslyVisible && previouslyVisible.has(child)) {
         beforePreviouslyVisible = false;
@@ -185,16 +184,20 @@ export class VirtualContent extends HTMLElement {
 
       let estimatedHeight = updateHeightEstimate(child);
 
+      const childClientTop = thisClientRect.top + nextTop;
       const maybeInViewport =
-        (0 <= thisRect.top + sum + estimatedHeight) &&
-        (thisRect.top + sum <= window.innerHeight);
+        (0 <= childClientTop + estimatedHeight) &&
+        (childClientTop <= window.innerHeight);
+      const childForceVisible = forceVisible.has(child);
 
-      if (maybeInViewport || forceVisible.has(child)) {
+      if (maybeInViewport || childForceVisible) {
         if (child.hasAttribute('invisible')) {
           child.removeAttribute('invisible');
           this[_resizeObserver].observe(child);
+
           const lastEstimatedHeight = estimatedHeight;
           estimatedHeight = updateHeightEstimate(child);
+
           if (beforePreviouslyVisible) {
             const scrollingAncestor = nearestScrollingAncestor(this);
             if (scrollingAncestor !== null) {
@@ -204,12 +207,12 @@ export class VirtualContent extends HTMLElement {
         }
 
         const isInViewport =
-          (0 <= thisRect.top + sum + estimatedHeight) &&
-          (thisRect.top + sum <= window.innerHeight);
+          (0 <= childClientTop + estimatedHeight) &&
+          (childClientTop <= window.innerHeight);
 
-        if (isInViewport || forceVisible.has(child)) {
-          child.style.top = `${sum - sumVisible}px`;
-          sumVisible += estimatedHeight;
+        if (isInViewport || childForceVisible) {
+          child.style.top = `${nextTop - renderedHeight}px`;
+          renderedHeight += estimatedHeight;
         } else {
           child.setAttribute('invisible', '');
           this[_resizeObserver].unobserve(child);
@@ -221,9 +224,9 @@ export class VirtualContent extends HTMLElement {
         }
       }
 
-      sum += estimatedHeight;
+      nextTop += estimatedHeight;
     }
 
-    this.style.height = `${sum}px`;
+    this.style.height = `${nextTop}px`;
   }
 }
