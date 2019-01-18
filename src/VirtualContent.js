@@ -25,12 +25,29 @@ const TEMPLATE = `
   overflow-anchor: none;
 }
 
+#emptySpaceSentinelContainer {
+  contain: size layout style;
+  pointer-events: none;
+  visibility: hidden;
+  overflow: visible;
+
+  position: relative;
+  height: 0px;
+}
+
+#emptySpaceSentinelContainer > div {
+  contain: strict;
+
+  position: absolute;
+}
+
 ::slotted(*) {
   flex: 0 0 auto !important;
   display: block !important;
   position: relative !important;
 }
 </style>
+<div id="emptySpaceSentinelContainer"></div>
 <slot></slot>
 `;
 
@@ -41,13 +58,13 @@ const _mutationObserverCallback = Symbol('_mutationObserverCallback');
 const _resizeObserver = Symbol('_resizeObserver');
 const _resizeObserverCallback = Symbol('_resizeObserverCallback');
 
+const _inViewport = Symbol('_inViewport');
 const _estimatedHeights = Symbol('_estimatedHeights');
 const _updateRAFToken = Symbol('_updateRAFToken');
+const _emptySpaceSentinelContainer = Symbol('_emptySpaceSentinelContainer');
 
 const _scheduleUpdate = Symbol('_scheduleUpdate');
-const _cancelUpdate = Symbol('_cancelUpdate');
 const _update = Symbol('_update');
-const _onScroll = Symbol('_onScroll');
 const _onActivateinvisible = Symbol('_onActivateinvisible');
 
 export class VirtualContent extends HTMLElement {
@@ -58,9 +75,7 @@ export class VirtualContent extends HTMLElement {
     this[_mutationObserverCallback] = this[_mutationObserverCallback].bind(this);
     this[_resizeObserverCallback] = this[_resizeObserverCallback].bind(this);
     this[_scheduleUpdate] = this[_scheduleUpdate].bind(this);
-    this[_cancelUpdate] = this[_cancelUpdate].bind(this);
     this[_update] = this[_update].bind(this);
-    this[_onScroll] = this[_onScroll].bind(this);
     this[_onActivateinvisible] = this[_onActivateinvisible].bind(this);
 
     this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
@@ -68,11 +83,21 @@ export class VirtualContent extends HTMLElement {
     this[_intersectionObserver] = new IntersectionObserver(this[_intersectionObserverCallback]);
     this[_intersectionObserver].observe(this);
     this[_mutationObserver] = new MutationObserver(this[_mutationObserverCallback]);
+    // NOTE: This MutationObserver will not necessarily recieve records for
+    // elements that were children of this element at parse time, if the parse
+    // time doesn't take long enough that the parser inserts its children in
+    // different tasks.
+    // TODO: Find the earliest time that `childNodes` can be read, handle those
+    // elements as other inserted elements are, and start observation at that
+    // point. Then, update the `updateHeightEstimate` function in `#[_update]`
+    // as mentioned in its comment.
     this[_mutationObserver].observe(this, {childList: true});
     this[_resizeObserver] = new ResizeObserver(this[_resizeObserverCallback]);
 
+    this[_inViewport] = false;
     this[_estimatedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
+    this[_emptySpaceSentinelContainer] = this.shadowRoot.getElementById('emptySpaceSentinelContainer');
 
     this.addEventListener('activateinvisible', this[_onActivateinvisible], {capture: true});
   }
@@ -81,19 +106,39 @@ export class VirtualContent extends HTMLElement {
     this[_scheduleUpdate]();
   }
 
-  disconnectedCallback() {
-    this[_cancelUpdate]();
-  }
-
   [_intersectionObserverCallback](entries) {
+    let thisChangedViewportIntersection = false;
+    let emptySpaceEnteredViewport = false;
+    let childExitedViewport = false;
+
     for (const entry of entries) {
-      if (entry.isIntersecting) {
-        window.addEventListener('scroll', this[_onScroll], {passive: true, capture: true});
-        this[_scheduleUpdate]();
-      } else {
-        window.removeEventListener('scroll', this[_onScroll], {passive: true, capture: true});
-        this[_cancelUpdate]();
+      const target = entry.target;
+      const isIntersecting = entry.isIntersecting;
+
+      // Update if this element has moved into or out of the viewport.
+      if (target === this) {
+        this[_inViewport] = isIntersecting;
+        thisChangedViewportIntersection = true;
       }
+
+      const targetParent = target.parentNode;
+
+      // Update if an empty space sentinel has moved into the viewport.
+      if (targetParent === this[_emptySpaceSentinelContainer] && isIntersecting) {
+        emptySpaceEnteredViewport = true;
+      }
+
+      // Update if a child has moved out of the viewport.
+      if (targetParent === this && !isIntersecting) {
+        childExitedViewport = true;
+      }
+    }
+
+    if (
+      thisChangedViewportIntersection ||
+      (this[_inViewport] && (emptySpaceEnteredViewport || childExitedViewport))
+    ) {
+      this[_scheduleUpdate]();
     }
   }
 
@@ -106,6 +151,7 @@ export class VirtualContent extends HTMLElement {
           // Removed children should have be made visible again and we should
           // unobserve them with the resize observer.
           this[_resizeObserver].unobserve(node);
+          this[_intersectionObserver].unobserve(node);
           node.removeAttribute('invisible');
           estimatedHeights.delete(node);
         }
@@ -137,10 +183,6 @@ export class VirtualContent extends HTMLElement {
     this[_scheduleUpdate]();
   }
 
-  [_onScroll]() {
-    this[_scheduleUpdate]();
-  }
-
   [_onActivateinvisible](e) {
     // Find the child containing the target and synchronously update, forcing
     // that child to be visible. The browser will automatically scroll to that
@@ -159,29 +201,22 @@ export class VirtualContent extends HTMLElement {
     this[_updateRAFToken] = window.requestAnimationFrame(this[_update]);
   }
 
-  [_cancelUpdate]() {
-    if (this[_updateRAFToken] === undefined) return;
-
-    window.cancelAnimationFrame(this[_updateRAFToken]);
-    this[_updateRAFToken] = undefined;
-  }
-
   [_update]({forceVisible = new Set()} = {}) {
     this[_updateRAFToken] = undefined;
 
     const thisClientRect = this.getBoundingClientRect();
     // Don't attempt to update / run layout if this element isn't in a
     // renderable state (e.g. disconnected, invisible, etc.).
-    if (
+    const isRenderable = !(
       thisClientRect.top === 0 &&
       thisClientRect.left === 0 &&
       thisClientRect.width === 0 &&
       thisClientRect.height === 0
-    ) return;
+    );
 
     const estimatedHeights = this[_estimatedHeights];
     const updateHeightEstimate = (child) => {
-      if (!child.hasAttribute('invisible')) {
+      if (isRenderable && !child.hasAttribute('invisible')) {
         const childClientRect = child.getBoundingClientRect();
         const style = window.getComputedStyle(child);
         const height =
@@ -190,7 +225,11 @@ export class VirtualContent extends HTMLElement {
           childClientRect.height;
         estimatedHeights.set(child, height);
       }
-      return estimatedHeights.get(child);
+      // TODO: This use of DEFAULT_HEIGHT_ESTIMATE is meant to catch elements
+      // that were not passed through the MutationObserver. After finding and
+      // updating the use of the MutationObserver to handle children that it
+      // does not see, change this back to just `estimatedHeights.get(child)`.
+      return estimatedHeights.has(child) ? estimatedHeights.get(child) : DEFAULT_HEIGHT_ESTIMATE;
     };
 
     const previouslyVisible = new Set();
@@ -200,9 +239,32 @@ export class VirtualContent extends HTMLElement {
       }
     }
 
+    while (this[_emptySpaceSentinelContainer].firstChild !== null) {
+      const sentinel = this[_emptySpaceSentinelContainer].firstChild;
+      this[_intersectionObserver].unobserve(sentinel);
+      sentinel.remove();
+    }
+
     let beforePreviouslyVisible = previouslyVisible.size > 0;
     let nextTop = 0;
     let renderedHeight = 0;
+    let currentInvisibleRunHeight = 0;
+
+    const maybeInsertEmptySpaceSentinel = () => {
+      if (currentInvisibleRunHeight > 0) {
+        const sentinel = document.createElement('div');
+
+        const sentinelStyle = sentinel.style;
+        sentinelStyle.top = `${nextTop - currentInvisibleRunHeight}px`;
+        sentinelStyle.height = `${currentInvisibleRunHeight}px`,
+
+        this[_intersectionObserver].observe(sentinel);
+        this[_emptySpaceSentinelContainer].appendChild(sentinel);
+
+        currentInvisibleRunHeight = 0;
+      }
+    };
+
     for (let child = this.firstChild; child !== null; child = child.nextSibling) {
       if (beforePreviouslyVisible && previouslyVisible.has(child)) {
         beforePreviouslyVisible = false;
@@ -220,6 +282,7 @@ export class VirtualContent extends HTMLElement {
         if (child.hasAttribute('invisible')) {
           child.removeAttribute('invisible');
           this[_resizeObserver].observe(child);
+          this[_intersectionObserver].observe(child);
 
           const lastEstimatedHeight = estimatedHeight;
           estimatedHeight = updateHeightEstimate(child);
@@ -237,22 +300,31 @@ export class VirtualContent extends HTMLElement {
           (childClientTop <= window.innerHeight);
 
         if (isInViewport || childForceVisible) {
+          maybeInsertEmptySpaceSentinel();
+
           child.style.top = `${nextTop - renderedHeight}px`;
           renderedHeight += estimatedHeight;
         } else {
           child.setAttribute('invisible', '');
           this[_resizeObserver].unobserve(child);
+          this[_intersectionObserver].unobserve(child);
+
+          currentInvisibleRunHeight += estimatedHeight;
         }
       } else {
         if (!child.hasAttribute('invisible')) {
           child.setAttribute('invisible', '');
           this[_resizeObserver].unobserve(child);
+          this[_intersectionObserver].unobserve(child);
         }
+
+        currentInvisibleRunHeight += estimatedHeight;
       }
 
       nextTop += estimatedHeight;
     }
 
+    maybeInsertEmptySpaceSentinel();
     this.style.height = `${nextTop}px`;
   }
 }
