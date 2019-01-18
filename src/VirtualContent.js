@@ -205,8 +205,8 @@ export class VirtualContent extends HTMLElement {
     this[_updateRAFToken] = undefined;
 
     const thisClientRect = this.getBoundingClientRect();
-    // Don't attempt to update / run layout if this element isn't in a
-    // renderable state (e.g. disconnected, invisible, etc.).
+    // Don't read or store layout information if this element isn't in a
+    // renderable state (e.g. disconnected, invisible, `display: none`, etc.).
     const isRenderable = !(
       thisClientRect.top === 0 &&
       thisClientRect.left === 0 &&
