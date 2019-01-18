@@ -239,27 +239,26 @@ export class VirtualContent extends HTMLElement {
       }
     }
 
-    while (this[_emptySpaceSentinelContainer].firstChild !== null) {
-      const sentinel = this[_emptySpaceSentinelContainer].firstChild;
-      this[_intersectionObserver].unobserve(sentinel);
-      sentinel.remove();
-    }
-
     let beforePreviouslyVisible = previouslyVisible.size > 0;
     let nextTop = 0;
     let renderedHeight = 0;
-    let currentInvisibleRunHeight = 0;
 
+    let currentInvisibleRunHeight = 0;
+    let nextEmptySpaceSentinel = this[_emptySpaceSentinelContainer].firstChild;
     const maybeInsertEmptySpaceSentinel = () => {
       if (currentInvisibleRunHeight > 0) {
-        const sentinel = document.createElement('div');
+        let sentinel = nextEmptySpaceSentinel;
+        if (nextEmptySpaceSentinel === null) {
+          sentinel = document.createElement('div');
+          this[_emptySpaceSentinelContainer].appendChild(sentinel);
+        }
+        nextEmptySpaceSentinel = sentinel.nextSibling;
 
         const sentinelStyle = sentinel.style;
         sentinelStyle.top = `${nextTop - currentInvisibleRunHeight}px`;
         sentinelStyle.height = `${currentInvisibleRunHeight}px`,
 
         this[_intersectionObserver].observe(sentinel);
-        this[_emptySpaceSentinelContainer].appendChild(sentinel);
 
         currentInvisibleRunHeight = 0;
       }
@@ -325,6 +324,15 @@ export class VirtualContent extends HTMLElement {
     }
 
     maybeInsertEmptySpaceSentinel();
+
+    while (nextEmptySpaceSentinel !== null) {
+      const sentinel = nextEmptySpaceSentinel;
+      nextEmptySpaceSentinel = sentinel.nextSibling;
+
+      this[_intersectionObserver].unobserve(sentinel);
+      sentinel.remove();
+    }
+
     this.style.height = `${nextTop}px`;
   }
 }
