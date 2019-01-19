@@ -37,6 +37,7 @@ const TEMPLATE = `
 #emptySpaceSentinelContainer > div {
   contain: strict;
   position: absolute;
+  width: 100%;
 }
 
 ::slotted(*) {
