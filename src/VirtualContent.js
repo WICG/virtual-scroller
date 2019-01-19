@@ -230,9 +230,15 @@ export class VirtualContent extends HTMLElement {
     let nextTop = 0;
     let renderedHeight = 0;
 
+    // The estimated height of all elements made invisible since the last time
+    // an element was made visible (or start of the child list).
     let currentInvisibleRunHeight = 0;
+    // The next empty space sentinel that should be reused, if any.
     let nextEmptySpaceSentinel = this[_emptySpaceSentinelContainer].firstChild;
-    const maybeInsertEmptySpaceSentinel = () => {
+    // Inserts an empty space sentinel representing the last contiguous run of
+    // invisible elements. Reuses already existing empty space sentinels, if
+    // possible.
+    const insertEmptySpaceSentinelIfNeeded = () => {
       if (currentInvisibleRunHeight > 0) {
         let sentinel = nextEmptySpaceSentinel;
         if (nextEmptySpaceSentinel === null) {
@@ -286,7 +292,7 @@ export class VirtualContent extends HTMLElement {
           (childClientTop <= window.innerHeight);
 
         if (isInViewport || childForceVisible) {
-          maybeInsertEmptySpaceSentinel();
+          insertEmptySpaceSentinelIfNeeded();
 
           child.style.top = `${nextTop - renderedHeight}px`;
           renderedHeight += estimatedHeight;
@@ -310,8 +316,9 @@ export class VirtualContent extends HTMLElement {
       nextTop += estimatedHeight;
     }
 
-    maybeInsertEmptySpaceSentinel();
+    insertEmptySpaceSentinelIfNeeded();
 
+    // Remove any extra empty space sentinels.
     while (nextEmptySpaceSentinel !== null) {
       const sentinel = nextEmptySpaceSentinel;
       nextEmptySpaceSentinel = sentinel.nextSibling;
