@@ -30,14 +30,12 @@ const TEMPLATE = `
   pointer-events: none;
   visibility: hidden;
   overflow: visible;
-
   position: relative;
   height: 0px;
 }
 
 #emptySpaceSentinelContainer > div {
   contain: strict;
-
   position: absolute;
 }
 
@@ -58,7 +56,6 @@ const _mutationObserverCallback = Symbol('_mutationObserverCallback');
 const _resizeObserver = Symbol('_resizeObserver');
 const _resizeObserverCallback = Symbol('_resizeObserverCallback');
 
-const _inViewport = Symbol('_inViewport');
 const _estimatedHeights = Symbol('_estimatedHeights');
 const _updateRAFToken = Symbol('_updateRAFToken');
 const _emptySpaceSentinelContainer = Symbol('_emptySpaceSentinelContainer');
@@ -94,7 +91,6 @@ export class VirtualContent extends HTMLElement {
     this[_mutationObserver].observe(this, {childList: true});
     this[_resizeObserver] = new ResizeObserver(this[_resizeObserverCallback]);
 
-    this[_inViewport] = false;
     this[_estimatedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
     this[_emptySpaceSentinelContainer] = this.shadowRoot.getElementById('emptySpaceSentinelContainer');
@@ -107,38 +103,29 @@ export class VirtualContent extends HTMLElement {
   }
 
   [_intersectionObserverCallback](entries) {
-    let thisChangedViewportIntersection = false;
-    let emptySpaceEnteredViewport = false;
-    let childExitedViewport = false;
-
     for (const entry of entries) {
       const target = entry.target;
       const isIntersecting = entry.isIntersecting;
 
       // Update if this element has moved into or out of the viewport.
       if (target === this) {
-        this[_inViewport] = isIntersecting;
-        thisChangedViewportIntersection = true;
+        this[_scheduleUpdate]();
+        break;
       }
 
       const targetParent = target.parentNode;
 
       // Update if an empty space sentinel has moved into the viewport.
       if (targetParent === this[_emptySpaceSentinelContainer] && isIntersecting) {
-        emptySpaceEnteredViewport = true;
+        this[_scheduleUpdate]();
+        break;
       }
 
       // Update if a child has moved out of the viewport.
       if (targetParent === this && !isIntersecting) {
-        childExitedViewport = true;
+        this[_scheduleUpdate]();
+        break;
       }
-    }
-
-    if (
-      thisChangedViewportIntersection ||
-      (this[_inViewport] && (emptySpaceEnteredViewport || childExitedViewport))
-    ) {
-      this[_scheduleUpdate]();
     }
   }
 
