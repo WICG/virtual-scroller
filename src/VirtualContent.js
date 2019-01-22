@@ -51,40 +51,43 @@ const TEMPLATE = `
 `;
 
 const _intersectionObserver = Symbol('_intersectionObserver');
-const _intersectionObserverCallback = Symbol('_intersectionObserverCallback');
 const _mutationObserver = Symbol('_mutationObserver');
-const _mutationObserverCallback = Symbol('_mutationObserverCallback');
 const _resizeObserver = Symbol('_resizeObserver');
-const _resizeObserverCallback = Symbol('_resizeObserverCallback');
-
 const _estimatedHeights = Symbol('_estimatedHeights');
 const _updateRAFToken = Symbol('_updateRAFToken');
 const _emptySpaceSentinelContainer = Symbol('_emptySpaceSentinelContainer');
 
+const _intersectionObserverCallback = Symbol('_intersectionObserverCallback');
+const _mutationObserverCallback = Symbol('_mutationObserverCallback');
+const _resizeObserverCallback = Symbol('_resizeObserverCallback');
+const _onActivateinvisible = Symbol('_onActivateinvisible');
 const _scheduleUpdate = Symbol('_scheduleUpdate');
 const _update = Symbol('_update');
-const _onActivateinvisible = Symbol('_onActivateinvisible');
 
 export class VirtualContent extends HTMLElement {
   constructor() {
     super();
 
-    this[_intersectionObserverCallback] = this[_intersectionObserverCallback].bind(this);
-    this[_mutationObserverCallback] = this[_mutationObserverCallback].bind(this);
-    this[_resizeObserverCallback] = this[_resizeObserverCallback].bind(this);
-    this[_scheduleUpdate] = this[_scheduleUpdate].bind(this);
-    this[_update] = this[_update].bind(this);
-    this[_onActivateinvisible] = this[_onActivateinvisible].bind(this);
+    [
+      _intersectionObserverCallback,
+      _mutationObserverCallback,
+      _resizeObserverCallback,
+      _onActivateinvisible,
+      _scheduleUpdate,
+      _update,
+    ].forEach(x => this[x] = this[x].bind(this));
 
     this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
 
-    this[_intersectionObserver] = new IntersectionObserver(this[_intersectionObserverCallback]);
-    this[_mutationObserver] = new MutationObserver(this[_mutationObserverCallback]);
+    this[_intersectionObserver] =
+        new IntersectionObserver(this[_intersectionObserverCallback]);
+    this[_mutationObserver] =
+        new MutationObserver(this[_mutationObserverCallback]);
     this[_resizeObserver] = new ResizeObserver(this[_resizeObserverCallback]);
-
     this[_estimatedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
-    this[_emptySpaceSentinelContainer] = this.shadowRoot.getElementById('emptySpaceSentinelContainer');
+    this[_emptySpaceSentinelContainer] =
+        this.shadowRoot.getElementById('emptySpaceSentinelContainer');
 
     this[_intersectionObserver].observe(this);
     // Send a MutationRecord-like object with the current, complete list of
@@ -98,7 +101,7 @@ export class VirtualContent extends HTMLElement {
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-conformance
     this[_mutationObserverCallback]([
       {
-        type: "childList",
+        type: 'childList',
         target: this,
         addedNodes: Array.from(this.childNodes),
         removedNodes: [],
@@ -108,7 +111,8 @@ export class VirtualContent extends HTMLElement {
     ]);
     this[_mutationObserver].observe(this, {childList: true});
 
-    this.addEventListener('activateinvisible', this[_onActivateinvisible], {capture: true});
+    this.addEventListener(
+        'activateinvisible', this[_onActivateinvisible], {capture: true});
   }
 
   [_intersectionObserverCallback](entries) {
