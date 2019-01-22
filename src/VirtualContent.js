@@ -225,11 +225,7 @@ export class VirtualContent extends HTMLElement {
           childClientRect.height;
         estimatedHeights.set(child, height);
       }
-      // TODO: This use of DEFAULT_HEIGHT_ESTIMATE is meant to catch elements
-      // that were not passed through the MutationObserver. After finding and
-      // updating the use of the MutationObserver to handle children that it
-      // does not see, change this back to just `estimatedHeights.get(child)`.
-      return estimatedHeights.has(child) ? estimatedHeights.get(child) : DEFAULT_HEIGHT_ESTIMATE;
+      return estimatedHeights.get(child);
     };
 
     const previouslyVisible = new Set();
