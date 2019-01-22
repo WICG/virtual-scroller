@@ -51,52 +51,68 @@ const TEMPLATE = `
 `;
 
 const _intersectionObserver = Symbol('_intersectionObserver');
-const _intersectionObserverCallback = Symbol('_intersectionObserverCallback');
 const _mutationObserver = Symbol('_mutationObserver');
-const _mutationObserverCallback = Symbol('_mutationObserverCallback');
 const _resizeObserver = Symbol('_resizeObserver');
-const _resizeObserverCallback = Symbol('_resizeObserverCallback');
-
 const _estimatedHeights = Symbol('_estimatedHeights');
 const _updateRAFToken = Symbol('_updateRAFToken');
 const _emptySpaceSentinelContainer = Symbol('_emptySpaceSentinelContainer');
 
+const _intersectionObserverCallback = Symbol('_intersectionObserverCallback');
+const _mutationObserverCallback = Symbol('_mutationObserverCallback');
+const _resizeObserverCallback = Symbol('_resizeObserverCallback');
+const _onActivateinvisible = Symbol('_onActivateinvisible');
 const _scheduleUpdate = Symbol('_scheduleUpdate');
 const _update = Symbol('_update');
-const _onActivateinvisible = Symbol('_onActivateinvisible');
 
 export class VirtualContent extends HTMLElement {
   constructor() {
     super();
 
-    this[_intersectionObserverCallback] = this[_intersectionObserverCallback].bind(this);
-    this[_mutationObserverCallback] = this[_mutationObserverCallback].bind(this);
-    this[_resizeObserverCallback] = this[_resizeObserverCallback].bind(this);
-    this[_scheduleUpdate] = this[_scheduleUpdate].bind(this);
-    this[_update] = this[_update].bind(this);
-    this[_onActivateinvisible] = this[_onActivateinvisible].bind(this);
+    [
+      _intersectionObserverCallback,
+      _mutationObserverCallback,
+      _resizeObserverCallback,
+      _onActivateinvisible,
+      _scheduleUpdate,
+      _update,
+    ].forEach(x => this[x] = this[x].bind(this));
 
     this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
 
-    this[_intersectionObserver] = new IntersectionObserver(this[_intersectionObserverCallback]);
-    this[_intersectionObserver].observe(this);
-    this[_mutationObserver] = new MutationObserver(this[_mutationObserverCallback]);
-    // NOTE: This MutationObserver will not necessarily recieve records for
-    // elements that were children of this element at parse time, if the parse
-    // time doesn't take long enough that the parser inserts its children in
-    // different tasks.
-    // TODO: Find the earliest time that `childNodes` can be read, handle those
-    // elements as other inserted elements are, and start observation at that
-    // point. Then, update the `updateHeightEstimate` function in `#[_update]`
-    // as mentioned in its comment.
-    this[_mutationObserver].observe(this, {childList: true});
+    this[_intersectionObserver] =
+        new IntersectionObserver(this[_intersectionObserverCallback]);
+    this[_mutationObserver] =
+        new MutationObserver(this[_mutationObserverCallback]);
     this[_resizeObserver] = new ResizeObserver(this[_resizeObserverCallback]);
-
     this[_estimatedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
-    this[_emptySpaceSentinelContainer] = this.shadowRoot.getElementById('emptySpaceSentinelContainer');
+    this[_emptySpaceSentinelContainer] =
+        this.shadowRoot.getElementById('emptySpaceSentinelContainer');
 
-    this.addEventListener('activateinvisible', this[_onActivateinvisible], {capture: true});
+    this[_intersectionObserver].observe(this);
+    // Send a MutationRecord-like object with the current, complete list of
+    // child nodes to the MutationObserver callback; these nodes would not
+    // otherwise be seen by the observer.
+    //
+    // TODO: Find another way to do this or a better time. Technically, it's a
+    // violation of the "Requirements for custom element constructors and
+    // reactions".
+    //
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-conformance
+    this[_mutationObserverCallback]([
+      {
+        type: 'childList',
+        target: this,
+        addedNodes: Array.from(this.childNodes),
+        removedNodes: [],
+        previousSibling: null,
+        nextSibling: null,
+      }
+    ]);
+    this[_mutationObserver].observe(this, {childList: true});
+
+    this.addEventListener(
+        'activateinvisible', this[_onActivateinvisible], {capture: true});
   }
 
   [_intersectionObserverCallback](entries) {
@@ -209,11 +225,7 @@ export class VirtualContent extends HTMLElement {
           childClientRect.height;
         estimatedHeights.set(child, height);
       }
-      // TODO: This use of DEFAULT_HEIGHT_ESTIMATE is meant to catch elements
-      // that were not passed through the MutationObserver. After finding and
-      // updating the use of the MutationObserver to handle children that it
-      // does not see, change this back to just `estimatedHeights.get(child)`.
-      return estimatedHeights.has(child) ? estimatedHeights.get(child) : DEFAULT_HEIGHT_ESTIMATE;
+      return estimatedHeights.get(child);
     };
 
     const previouslyVisible = new Set();
