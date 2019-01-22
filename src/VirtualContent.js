@@ -79,22 +79,34 @@ export class VirtualContent extends HTMLElement {
     this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
 
     this[_intersectionObserver] = new IntersectionObserver(this[_intersectionObserverCallback]);
-    this[_intersectionObserver].observe(this);
     this[_mutationObserver] = new MutationObserver(this[_mutationObserverCallback]);
-    // NOTE: This MutationObserver will not necessarily recieve records for
-    // elements that were children of this element at parse time, if the parse
-    // time doesn't take long enough that the parser inserts its children in
-    // different tasks.
-    // TODO: Find the earliest time that `childNodes` can be read, handle those
-    // elements as other inserted elements are, and start observation at that
-    // point. Then, update the `updateHeightEstimate` function in `#[_update]`
-    // as mentioned in its comment.
-    this[_mutationObserver].observe(this, {childList: true});
     this[_resizeObserver] = new ResizeObserver(this[_resizeObserverCallback]);
 
     this[_estimatedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
     this[_emptySpaceSentinelContainer] = this.shadowRoot.getElementById('emptySpaceSentinelContainer');
+
+    this[_intersectionObserver].observe(this);
+    // Send a MutationRecord-like object with the current, complete list of
+    // child nodes to the MutationObserver callback; these nodes would not
+    // otherwise be seen by the observer.
+    //
+    // TODO: Find another way to do this or a better time. Technically, it's a
+    // violation of the "Requirements for custom element constructors and
+    // reactions".
+    //
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-conformance
+    this[_mutationObserverCallback]([
+      {
+        type: "childList",
+        target: this,
+        addedNodes: Array.from(this.childNodes),
+        removedNodes: [],
+        previousSibling: null,
+        nextSibling: null,
+      }
+    ]);
+    this[_mutationObserver].observe(this, {childList: true});
 
     this.addEventListener('activateinvisible', this[_onActivateinvisible], {capture: true});
   }
