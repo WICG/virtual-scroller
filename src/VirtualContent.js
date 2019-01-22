@@ -99,10 +99,6 @@ export class VirtualContent extends HTMLElement {
     this.addEventListener('activateinvisible', this[_onActivateinvisible], {capture: true});
   }
 
-  connectedCallback() {
-    this[_scheduleUpdate]();
-  }
-
   [_intersectionObserverCallback](entries) {
     for (const entry of entries) {
       const target = entry.target;
