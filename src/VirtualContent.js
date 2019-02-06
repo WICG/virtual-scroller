@@ -3,8 +3,10 @@ function composedTreeParent(node) {
 }
 
 function nearestScrollingAncestor(node) {
-  for (node = composedTreeParent(node); node !== null; node = composedTreeParent(node)) {
-    if (node.nodeType === Node.ELEMENT_NODE && node.scrollHeight > node.clientHeight) {
+  for (node = composedTreeParent(node); node !== null;
+       node = composedTreeParent(node)) {
+    if (node.nodeType === Node.ELEMENT_NODE &&
+        node.scrollHeight > node.clientHeight) {
       return node;
     }
   }
@@ -68,13 +70,12 @@ export class VirtualContent extends HTMLElement {
   constructor() {
     super();
 
-    [
-      _intersectionObserverCallback,
-      _mutationObserverCallback,
-      _resizeObserverCallback,
-      _onActivateinvisible,
-      _scheduleUpdate,
-      _update,
+    [_intersectionObserverCallback,
+     _mutationObserverCallback,
+     _resizeObserverCallback,
+     _onActivateinvisible,
+     _scheduleUpdate,
+     _update,
     ].forEach(x => this[x] = this[x].bind(this));
 
     const shadowRoot = this.attachShadow({mode: 'closed'});
@@ -95,16 +96,14 @@ export class VirtualContent extends HTMLElement {
     // Send a MutationRecord-like object with the current, complete list of
     // child nodes to the MutationObserver callback; these nodes would not
     // otherwise be seen by the observer.
-    this[_mutationObserverCallback]([
-      {
-        type: 'childList',
-        target: this,
-        addedNodes: Array.from(this.childNodes),
-        removedNodes: [],
-        previousSibling: null,
-        nextSibling: null,
-      }
-    ]);
+    this[_mutationObserverCallback]([{
+      type: 'childList',
+      target: this,
+      addedNodes: Array.from(this.childNodes),
+      removedNodes: [],
+      previousSibling: null,
+      nextSibling: null,
+    }]);
     this[_mutationObserver].observe(this, {childList: true});
 
     this.addEventListener(
@@ -112,8 +111,7 @@ export class VirtualContent extends HTMLElement {
   }
 
   [_intersectionObserverCallback](entries) {
-    for (const { target, isIntersecting } of entries) {
-
+    for (const {target, isIntersecting} of entries) {
       // Update if the <virtual-content> has moved into or out of the viewport.
       if (target === this) {
         this[_scheduleUpdate]();
@@ -123,7 +121,8 @@ export class VirtualContent extends HTMLElement {
       const targetParent = target.parentNode;
 
       // Update if an empty space sentinel has moved into the viewport.
-      if (targetParent === this[_emptySpaceSentinelContainer] && isIntersecting) {
+      if (targetParent === this[_emptySpaceSentinelContainer] &&
+          isIntersecting) {
         this[_scheduleUpdate]();
         break;
       }
@@ -190,39 +189,39 @@ export class VirtualContent extends HTMLElement {
   }
 
   [_scheduleUpdate]() {
-    if (this[_updateRAFToken] !== undefined) return;
+    if (this[_updateRAFToken] !== undefined)
+      return;
 
     this[_updateRAFToken] = window.requestAnimationFrame(this[_update]);
   }
 
+  // TODO: this method is enormous. Split it up into several separate steps.
+  // https://refactoring.guru/smells/long-method
   [_update](childToForceVisible) {
     this[_updateRAFToken] = undefined;
 
     const thisClientRect = this.getBoundingClientRect();
-    // Don't read or store layout information if the <virtual-content> isn't in a
-    // renderable state (e.g. disconnected, invisible, `display: none`, etc.).
-    const isRenderable =
-      thisClientRect.top !== 0 ||
-      thisClientRect.left !== 0 ||
-      thisClientRect.width !== 0 ||
-      thisClientRect.height !== 0;
+    // Don't read or store layout information if the <virtual-content> isn't in
+    // a renderable state (e.g. disconnected, invisible, `display: none`, etc.).
+    const isRenderable = thisClientRect.top !== 0 ||
+        thisClientRect.left !== 0 || thisClientRect.width !== 0 ||
+        thisClientRect.height !== 0;
 
     const estimatedHeights = this[_estimatedHeights];
     const getAndUpdateHeightEstimate = (child) => {
       if (isRenderable && !child.hasAttribute('invisible')) {
         const childClientRect = child.getBoundingClientRect();
         const style = window.getComputedStyle(child);
-        const height =
-          window.parseFloat(style.marginTop, 10) +
-          window.parseFloat(style.marginBottom, 10) +
-          childClientRect.height;
+        const height = window.parseFloat(style.marginTop, 10) +
+            window.parseFloat(style.marginBottom, 10) + childClientRect.height;
         estimatedHeights.set(child, height);
       }
       return estimatedHeights.get(child);
     };
 
     const previouslyVisible = new Set();
-    for (let child = this.firstChild; child !== null; child = child.nextSibling) {
+    for (let child = this.firstChild; child !== null;
+         child = child.nextSibling) {
       if (!child.hasAttribute('invisible')) {
         previouslyVisible.add(child);
       }
@@ -259,7 +258,8 @@ export class VirtualContent extends HTMLElement {
       }
     };
 
-    for (let child = this.firstChild; child !== null; child = child.nextSibling) {
+    for (let child = this.firstChild; child !== null;
+         child = child.nextSibling) {
       if (beforePreviouslyVisible && previouslyVisible.has(child)) {
         beforePreviouslyVisible = false;
       }
@@ -267,9 +267,8 @@ export class VirtualContent extends HTMLElement {
       let estimatedHeight = getAndUpdateHeightEstimate(child);
 
       const childClientTop = thisClientRect.top + nextTop;
-      const maybeInViewport =
-        (0 <= childClientTop + estimatedHeight) &&
-        (childClientTop <= window.innerHeight);
+      const maybeInViewport = (0 <= childClientTop + estimatedHeight) &&
+          (childClientTop <= window.innerHeight);
       if (maybeInViewport || child === childToForceVisible) {
         if (child.hasAttribute('invisible')) {
           child.removeAttribute('invisible');
@@ -282,14 +281,14 @@ export class VirtualContent extends HTMLElement {
           if (beforePreviouslyVisible) {
             const scrollingAncestor = nearestScrollingAncestor(this);
             if (scrollingAncestor !== null) {
-              scrollingAncestor.scrollBy(0, estimatedHeight - lastEstimatedHeight);
+              scrollingAncestor.scrollBy(
+                  0, estimatedHeight - lastEstimatedHeight);
             }
           }
         }
 
-        const isInViewport =
-          (0 <= childClientTop + estimatedHeight) &&
-          (childClientTop <= window.innerHeight);
+        const isInViewport = (0 <= childClientTop + estimatedHeight) &&
+            (childClientTop <= window.innerHeight);
 
         if (isInViewport || child === childToForceVisible) {
           insertEmptySpaceSentinelIfNeeded();
