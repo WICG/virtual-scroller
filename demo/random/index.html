@@ -95,11 +95,23 @@ for (const element of document.querySelectorAll('[item-fill]')) {
   background-color: white;
 }
 </style>
-<virtual-content id="vc0" item-fill="20"><div style="overflow: auto; height: 400px;">
-  <virtual-content id="vc1" item-fill="20"><div style="overflow: auto; height: 200px;">
-    <virtual-content id="vc2" item-fill="20"></virtual-content>
-  </div></virtual-content>
-</div></virtual-content>
-<virtual-content id="vc3" item-fill="5"><virtual-content id="vc4" item-fill="5"><virtual-content id="vc5" item-fill="5"></virtual-content></virtual-content></virtual-content>
+
+<p>Demonstrates randomly-filled nested virtual contents, as a playground.</p>
+
+<virtual-content id="vc0" item-fill="20">
+  <div style="overflow: auto; height: 400px;">
+    <virtual-content id="vc1" item-fill="20">
+      <div style="overflow: auto; height: 200px;">
+        <virtual-content id="vc2" item-fill="20"></virtual-content>
+      </div>
+    </virtual-content>
+  </div>
+</virtual-content>
+
+<virtual-content id="vc3" item-fill="5">
+  <virtual-content id="vc4" item-fill="5">
+    <virtual-content id="vc5" item-fill="5"></virtual-content>
+  </virtual-content>
+</virtual-content>
 
 <div id="info"></div>

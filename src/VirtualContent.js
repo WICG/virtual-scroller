@@ -77,7 +77,7 @@ export class VirtualContent extends HTMLElement {
       _update,
     ].forEach(x => this[x] = this[x].bind(this));
 
-    this.attachShadow({mode: 'open'}).innerHTML = TEMPLATE;
+    this.attachShadow({mode: 'closed'}).innerHTML = TEMPLATE;
 
     this[_intersectionObserver] =
         new IntersectionObserver(this[_intersectionObserverCallback]);
@@ -93,12 +93,6 @@ export class VirtualContent extends HTMLElement {
     // Send a MutationRecord-like object with the current, complete list of
     // child nodes to the MutationObserver callback; these nodes would not
     // otherwise be seen by the observer.
-    //
-    // TODO: Find another way to do this or a better time. Technically, it's a
-    // violation of the "Requirements for custom element constructors and
-    // reactions".
-    //
-    // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-conformance
     this[_mutationObserverCallback]([
       {
         type: 'childList',
@@ -116,11 +110,9 @@ export class VirtualContent extends HTMLElement {
   }
 
   [_intersectionObserverCallback](entries) {
-    for (const entry of entries) {
-      const target = entry.target;
-      const isIntersecting = entry.isIntersecting;
+    for (const { target, isIntersecting } of entries) {
 
-      // Update if this element has moved into or out of the viewport.
+      // Update if the <virtual-content> has moved into or out of the viewport.
       if (target === this) {
         this[_scheduleUpdate]();
         break;
@@ -148,8 +140,8 @@ export class VirtualContent extends HTMLElement {
     for (const record of records) {
       for (const node of record.removedNodes) {
         if (node.nodeType === Node.ELEMENT_NODE) {
-          // Removed children should have be made visible again and we should
-          // unobserve them with the resize observer.
+          // Removed children should have be made visible again; they're no
+          // longer under our control.
           this[_resizeObserver].unobserve(node);
           this[_intersectionObserver].unobserve(node);
           node.removeAttribute('invisible');
@@ -205,17 +197,16 @@ export class VirtualContent extends HTMLElement {
     this[_updateRAFToken] = undefined;
 
     const thisClientRect = this.getBoundingClientRect();
-    // Don't read or store layout information if this element isn't in a
+    // Don't read or store layout information if the <virtual-content> isn't in a
     // renderable state (e.g. disconnected, invisible, `display: none`, etc.).
-    const isRenderable = !(
-      thisClientRect.top === 0 &&
-      thisClientRect.left === 0 &&
-      thisClientRect.width === 0 &&
-      thisClientRect.height === 0
-    );
+    const isRenderable =
+      thisClientRect.top !== 0 ||
+      thisClientRect.left !== 0 ||
+      thisClientRect.width !== 0 ||
+      thisClientRect.height !== 0;
 
     const estimatedHeights = this[_estimatedHeights];
-    const updateHeightEstimate = (child) => {
+    const getAndUpdateHeightEstimate = (child) => {
       if (isRenderable && !child.hasAttribute('invisible')) {
         const childClientRect = child.getBoundingClientRect();
         const style = window.getComputedStyle(child);
@@ -271,7 +262,7 @@ export class VirtualContent extends HTMLElement {
         beforePreviouslyVisible = false;
       }
 
-      let estimatedHeight = updateHeightEstimate(child);
+      let estimatedHeight = getAndUpdateHeightEstimate(child);
 
       const childClientTop = thisClientRect.top + nextTop;
       const maybeInViewport =
@@ -286,7 +277,7 @@ export class VirtualContent extends HTMLElement {
           this[_intersectionObserver].observe(child);
 
           const lastEstimatedHeight = estimatedHeight;
-          estimatedHeight = updateHeightEstimate(child);
+          estimatedHeight = getAndUpdateHeightEstimate(child);
 
           if (beforePreviouslyVisible) {
             const scrollingAncestor = nearestScrollingAncestor(this);
