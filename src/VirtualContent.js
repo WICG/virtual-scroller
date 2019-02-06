@@ -182,7 +182,7 @@ export class VirtualContent extends HTMLElement {
     // that child to be visible. The browser will automatically scroll to that
     // element because it is visible, which will trigger another update to make
     // the surrounding nodes visible.
-    const child = e.target;
+    let child = e.target;
     while (child.parentNode !== this) {
       child = child.parentNode;
     }
