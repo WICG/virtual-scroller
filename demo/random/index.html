@@ -1,9 +1,14 @@
 <!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>&lt;virtual-content&gt; random demo</title>
+
 <template id="itemTemplate">
   <div class="item">
     <span class="index"></span><span class="text"></span>
   </div>
 </template>
+
 <script type="module">
 import '../../src/virtual-content.js';
 
@@ -48,6 +53,7 @@ for (const element of document.querySelectorAll('[item-fill]')) {
   }
 }
 </script>
+
 <style>
 #vc0 {
   background-color: #fdd;

@@ -77,7 +77,9 @@ export class VirtualContent extends HTMLElement {
       _update,
     ].forEach(x => this[x] = this[x].bind(this));
 
-    this.attachShadow({mode: 'closed'}).innerHTML = TEMPLATE;
+    const shadowRoot = this.attachShadow({mode: 'closed'});
+
+    shadowRoot.innerHTML = TEMPLATE;
 
     this[_intersectionObserver] =
         new IntersectionObserver(this[_intersectionObserverCallback]);
@@ -87,7 +89,7 @@ export class VirtualContent extends HTMLElement {
     this[_estimatedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
     this[_emptySpaceSentinelContainer] =
-        this.shadowRoot.getElementById('emptySpaceSentinelContainer');
+        shadowRoot.getElementById('emptySpaceSentinelContainer');
 
     this[_intersectionObserver].observe(this);
     // Send a MutationRecord-like object with the current, complete list of
@@ -184,7 +186,7 @@ export class VirtualContent extends HTMLElement {
     while (child.parentNode !== this) {
       child = child.parentNode;
     }
-    this[_update]({forceVisible: new Set([child])});
+    this[_update](child);
   }
 
   [_scheduleUpdate]() {
@@ -193,7 +195,7 @@ export class VirtualContent extends HTMLElement {
     this[_updateRAFToken] = window.requestAnimationFrame(this[_update]);
   }
 
-  [_update]({forceVisible = new Set()} = {}) {
+  [_update](childToForceVisible) {
     this[_updateRAFToken] = undefined;
 
     const thisClientRect = this.getBoundingClientRect();
@@ -268,9 +270,7 @@ export class VirtualContent extends HTMLElement {
       const maybeInViewport =
         (0 <= childClientTop + estimatedHeight) &&
         (childClientTop <= window.innerHeight);
-      const childForceVisible = forceVisible.has(child);
-
-      if (maybeInViewport || childForceVisible) {
+      if (maybeInViewport || child === childToForceVisible) {
         if (child.hasAttribute('invisible')) {
           child.removeAttribute('invisible');
           this[_resizeObserver].observe(child);
@@ -291,7 +291,7 @@ export class VirtualContent extends HTMLElement {
           (0 <= childClientTop + estimatedHeight) &&
           (childClientTop <= window.innerHeight);
 
-        if (isInViewport || childForceVisible) {
+        if (isInViewport || child === childToForceVisible) {
           insertEmptySpaceSentinelIfNeeded();
 
           child.style.top = `${nextTop - renderedHeight}px`;
