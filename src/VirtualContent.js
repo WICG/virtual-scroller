@@ -22,8 +22,9 @@ const TEMPLATE = `
   display: flex;
   flex-direction: column;
 
-  /* Prevent the automatic scrolling between writes and later measurements,
-   * which can invalidate previous layout. */
+  /* Browsers will automatically change the scroll position after we modify the
+   * DOM, unless we turn it off with this property. We want to do the adjustments
+   * ourselves in [_update](), instead. */
   overflow-anchor: none;
 }
 
@@ -55,7 +56,7 @@ const TEMPLATE = `
 const _intersectionObserver = Symbol('_intersectionObserver');
 const _mutationObserver = Symbol('_mutationObserver');
 const _resizeObserver = Symbol('_resizeObserver');
-const _estimatedHeights = Symbol('_estimatedHeights');
+const _cachedHeights = Symbol('_estimatedHeights');
 const _updateRAFToken = Symbol('_updateRAFToken');
 const _emptySpaceSentinelContainer = Symbol('_emptySpaceSentinelContainer');
 
@@ -87,7 +88,7 @@ export class VirtualContent extends HTMLElement {
     this[_mutationObserver] =
         new MutationObserver(this[_mutationObserverCallback]);
     this[_resizeObserver] = new ResizeObserver(this[_resizeObserverCallback]);
-    this[_estimatedHeights] = new WeakMap();
+    this[_cachedHeights] = new WeakMap();
     this[_updateRAFToken] = undefined;
     this[_emptySpaceSentinelContainer] =
         shadowRoot.getElementById('emptySpaceSentinelContainer');
@@ -106,6 +107,13 @@ export class VirtualContent extends HTMLElement {
     }]);
     this[_mutationObserver].observe(this, {childList: true});
 
+    // `capture: true` helps support the nested <virtual-content> case. (Which
+    // is not yet officially supported, but we're trying.) In particular, this
+    // ensures that the events handlers happen from outermost <virtual-content>
+    // inward, so that we remove invisible="" from the outside in. Then, by the
+    // time we get to the innermost node, all of its parents are no longer
+    // invisible="", and thus it will be rendered (allowing us to accurately
+    // measure its height, etc.)
     this.addEventListener(
         'activateinvisible', this[_onActivateinvisible], {capture: true});
   }
@@ -136,7 +144,7 @@ export class VirtualContent extends HTMLElement {
   }
 
   [_mutationObserverCallback](records) {
-    const estimatedHeights = this[_estimatedHeights];
+    const estimatedHeights = this[_cachedHeights];
 
     for (const record of records) {
       for (const node of record.removedNodes) {
@@ -152,7 +160,13 @@ export class VirtualContent extends HTMLElement {
 
       for (const node of record.addedNodes) {
         if (node.nodeType === Node.ELEMENT_NODE) {
-          // Added children should be invisible initially.
+          // Added children should be invisible initially. We want to make them
+          // invisible at this MutationObserver timing, so that there is no
+          // frame where the browser is asked to render all of the children
+          // (which could be a lot).
+          // [_update]() will remove invisible="" if it calculates that the
+          // elements could be maybe in the viewport, at which point the
+          // necessary ones will get rendered.
           node.setAttribute('invisible', '');
           estimatedHeights.set(node, DEFAULT_HEIGHT_ESTIMATE);
         } else {
@@ -207,16 +221,16 @@ export class VirtualContent extends HTMLElement {
         thisClientRect.left !== 0 || thisClientRect.width !== 0 ||
         thisClientRect.height !== 0;
 
-    const estimatedHeights = this[_estimatedHeights];
-    const getAndUpdateHeightEstimate = (child) => {
+    const cachedHeights = this[_cachedHeights];
+    const getAndCacheHeightIfPossible = (child) => {
       if (isRenderable && !child.hasAttribute('invisible')) {
         const childClientRect = child.getBoundingClientRect();
         const style = window.getComputedStyle(child);
         const height = window.parseFloat(style.marginTop, 10) +
             window.parseFloat(style.marginBottom, 10) + childClientRect.height;
-        estimatedHeights.set(child, height);
+        cachedHeights.set(child, height);
       }
-      return estimatedHeights.get(child);
+      return cachedHeights.get(child);
     };
 
     const previouslyVisible = new Set();
@@ -264,43 +278,56 @@ export class VirtualContent extends HTMLElement {
         beforePreviouslyVisible = false;
       }
 
-      let estimatedHeight = getAndUpdateHeightEstimate(child);
+      // At this point the element might not be rendered, so this either gets
+      // the current height (if rendered) or the last known, possibly
+      // inaccurate, height.
+      let possiblyCachedHeight = getAndCacheHeightIfPossible(child);
 
       const childClientTop = thisClientRect.top + nextTop;
-      const maybeInViewport = (0 <= childClientTop + estimatedHeight) &&
+
+      // This is based on the height above, so it might not be correct.
+      // If it turns out to be true, then we make the element visible and read
+      // its height more exactly.
+      const maybeInViewport = (0 <= childClientTop + possiblyCachedHeight) &&
           (childClientTop <= window.innerHeight);
+
       if (maybeInViewport || child === childToForceVisible) {
         if (child.hasAttribute('invisible')) {
           child.removeAttribute('invisible');
           this[_resizeObserver].observe(child);
           this[_intersectionObserver].observe(child);
 
-          const lastEstimatedHeight = estimatedHeight;
-          estimatedHeight = getAndUpdateHeightEstimate(child);
+          // Since we just flipped to be visible, we should recalculate the
+          // height and update the cache.
+          const previousCachedHeight = possiblyCachedHeight;
+          possiblyCachedHeight = getAndCacheHeightIfPossible(child);
 
           if (beforePreviouslyVisible) {
             const scrollingAncestor = nearestScrollingAncestor(this);
             if (scrollingAncestor !== null) {
               scrollingAncestor.scrollBy(
-                  0, estimatedHeight - lastEstimatedHeight);
+                  0, possiblyCachedHeight - previousCachedHeight);
             }
           }
         }
 
-        const isInViewport = (0 <= childClientTop + estimatedHeight) &&
+        // At this point possiblyCachedHeight is exact, so we can use the same
+        // technique as we did when calculating maybeInViewport, but this time
+        // we will have a guaranteed-correct answer.
+        const isInViewport = (0 <= childClientTop + possiblyCachedHeight) &&
             (childClientTop <= window.innerHeight);
 
         if (isInViewport || child === childToForceVisible) {
           insertEmptySpaceSentinelIfNeeded();
 
           child.style.top = `${nextTop - renderedHeight}px`;
-          renderedHeight += estimatedHeight;
+          renderedHeight += possiblyCachedHeight;
         } else {
           child.setAttribute('invisible', '');
           this[_resizeObserver].unobserve(child);
           this[_intersectionObserver].unobserve(child);
 
-          currentInvisibleRunHeight += estimatedHeight;
+          currentInvisibleRunHeight += possiblyCachedHeight;
         }
       } else {
         if (!child.hasAttribute('invisible')) {
@@ -309,10 +336,10 @@ export class VirtualContent extends HTMLElement {
           this[_intersectionObserver].unobserve(child);
         }
 
-        currentInvisibleRunHeight += estimatedHeight;
+        currentInvisibleRunHeight += possiblyCachedHeight;
       }
 
-      nextTop += estimatedHeight;
+      nextTop += possiblyCachedHeight;
     }
 
     insertEmptySpaceSentinelIfNeeded();
