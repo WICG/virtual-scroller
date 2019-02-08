@@ -1,6 +1,6 @@
-import {repeat} from '../../../lit-html/lit-repeater.js';
+import {repeat} from '../../../lit-html/lit-repeater.mjs';
 import {html, render} from '../../../node_modules/lit-html/lit-html.js';
-import {Sample as BaseSample} from '../basic-repeat.js';
+import {Sample as BaseSample} from '../basic-repeat.mjs';
 
 export class Sample extends BaseSample {
   render() {

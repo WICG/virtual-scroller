@@ -1,6 +1,6 @@
-import {scroller} from '../../../lit-html/lit-scroller.js';
+import {scroller} from '../../../lit-html/lit-scroller.mjs';
 import {html, render} from '../../../node_modules/lit-html/lit-html.js';
-import {getDims, getUrl, Sample as BaseSample} from '../photos.js';
+import {getDims, getUrl, Sample as BaseSample} from '../photos.mjs';
 
 export class Sample extends BaseSample {
   _setUp() {

@@ -2,20 +2,21 @@
   "name": "virtual-scroller",
   "version": "0.0.1",
   "description": "A virtual scroller that optimizes the rendering of DOM according to the visible area and available data.",
-  "main": "src/VirtualScroller.js",
-  "module": "src/VirtualScroller.js",
+  "main": "src/VirtualScroller.mjs",
+  "module": "src/VirtualScroller.mjs",
   "flat": true,
   "directories": {},
   "devDependencies": {
     "clang-format": "^1.2",
     "lit-html": "latest",
     "preact": "^8.3.1",
+    "http-server": "^0.11.1",
     "streaming-spec": "github:jakearchibald/streaming-html-spec#master"
   },
   "scripts": {
     "gh-pages": "./deploy-to-gh-pages.sh",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "find . -name '*.js' | grep -v node_modules | xargs clang-format --style=file -i"
+    "start": "http-server -p 8081",
+    "format": "find . -name '*.mjs' | grep -v node_modules | xargs clang-format --style=file -i"
   },
   "repository": {
     "type": "git",

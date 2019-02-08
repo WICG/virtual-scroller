@@ -1,5 +1,5 @@
-import {VirtualRepeater} from '../../src/VirtualRepeater.js';
-import {Stateful} from './stateful.js';
+import {VirtualRepeater} from '../../src/VirtualRepeater.mjs';
+import {Stateful} from './stateful.mjs';
 
 export const RepeaterControl = Superclass => class extends Superclass {
   constructor() {

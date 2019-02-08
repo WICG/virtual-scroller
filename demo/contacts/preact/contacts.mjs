@@ -1,6 +1,6 @@
 import {h, render} from '../../../node_modules/preact/dist/preact.mjs';
-import {Scroller} from '../../../preact/preact-scroller.js';
-import {itemType, Sample as BaseSample} from '../contacts.js';
+import {Scroller} from '../../../preact/preact-scroller.mjs';
+import {itemType, Sample as BaseSample} from '../contacts.mjs';
 
 export class Sample extends BaseSample {
   _setUp() {

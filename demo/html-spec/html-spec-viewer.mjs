@@ -1,7 +1,7 @@
-import {ItemSource, VirtualScrollerElement} from 'std:virtual-scroller';
-
 import {HtmlSpec} from '../../node_modules/streaming-spec/HtmlSpec.js';
 import {iterateStream} from '../../node_modules/streaming-spec/iterateStream.js';
+import {VirtualScrollerElement} from '../../src/virtual-scroller.mjs';
+import {ItemSource} from '../../src/ItemSource.mjs';
 
 class HTMLSpecSource extends ItemSource {
   static fromArray(items) {

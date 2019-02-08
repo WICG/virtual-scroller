@@ -1,5 +1,5 @@
 import {Component, h, render} from '../node_modules/preact/dist/preact.mjs';
-import {VirtualRepeater} from '../src/VirtualRepeater.js';
+import {VirtualRepeater} from '../src/VirtualRepeater.mjs';
 
 export class Repeat extends Component {
   componentDidMount() {

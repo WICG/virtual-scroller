@@ -1,6 +1,6 @@
-import {scroller} from '../../../lit-html/lit-scroller.js';
+import {scroller} from '../../../lit-html/lit-scroller.mjs';
 import {html, render} from '../../../node_modules/lit-html/lit-html.js';
-import {itemType, Sample as BaseSample} from '../contacts.js';
+import {itemType, Sample as BaseSample} from '../contacts.mjs';
 
 export class Sample extends BaseSample {
   _setUp() {

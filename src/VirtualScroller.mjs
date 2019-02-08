@@ -1,4 +1,4 @@
-import {VirtualRepeater} from './VirtualRepeater.js';
+import {VirtualRepeater} from './VirtualRepeater.mjs';
 
 export class RangeChangeEvent extends Event {
   constructor(type, init) {

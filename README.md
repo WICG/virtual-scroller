@@ -17,8 +17,7 @@ group](https://github.com/domenic/infinite-list-study-group) research.
 ## Example
 
 ```html
-<script type="module"
-        src="std:virtual-scroller|https://some.cdn.com/virtual-scroller.js">
+<script type="module" src="std:virtual-scroller">
 </script>
 
 <virtual-scroller></virtual-scroller>
@@ -539,15 +538,14 @@ Main document scrolling will be achievable through
 ## Development
 
 To work on the proof-of-concept implementation, ensure you have installed the
-npm dependencies and serve from the project root
+npm dependencies and serve from the project root.
 
 ```sh
 $ npm install
-$ npm install -g http-server   // If http-server is not installed.
-$ http-server -p 8081
+$ npm start
 ```
 
-Then, navigate to the url: http://localhost:8081/demo/
+Then, navigate to the URL: <http://localhost:8081/demo/>.
 
 For more documentation on the internal pieces that we use to implement our
 `<virtual-scroller>` prototype, see [DESIGN.md](./DESIGN.md).

@@ -1,4 +1,4 @@
-import {Layout1dBase} from './Layout1dBase.js';
+import {Layout1dBase} from './Layout1dBase.mjs';
 
 export class Layout1d extends Layout1dBase {
   constructor(config) {

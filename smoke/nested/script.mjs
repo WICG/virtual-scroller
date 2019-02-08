@@ -1,7 +1,5 @@
-import {VirtualScroller} from '../../src/VirtualScroller.js';
-import {Layout1d} from '../../src/layouts/Layout1d.js';
-import {scroller} from '../../lit-html/lit-scroller.js';
-import {html, render} from '../../node_modules/lit-html/lit-html.js';
+import {VirtualScroller} from '../../src/VirtualScroller.mjs';
+import {Layout1d} from '../../src/layouts/Layout1d.mjs';
 
 const items = new Array(40).fill({
   name: 'item',

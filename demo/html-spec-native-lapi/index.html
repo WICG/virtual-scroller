@@ -27,7 +27,7 @@
   <script type="module">
     if (window.TransformStream) {
       document.getElementById('streamRequirement').remove();
-      import('./html-spec-viewer.js').then(() => {
+      import('./html-spec-viewer.mjs').then(() => {
         document.getElementById('lapiRequirement').remove();
       });
     }

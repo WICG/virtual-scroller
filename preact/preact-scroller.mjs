@@ -1,6 +1,6 @@
-import {VirtualScroller} from '../src/VirtualScroller.js';
+import {VirtualScroller} from '../src/VirtualScroller.mjs';
 
-import {PreactMixin, Repeat} from './preact-repeater.js';
+import {PreactMixin, Repeat} from './preact-repeater.mjs';
 
 export class Scroller extends Repeat {
   componentDidMount() {

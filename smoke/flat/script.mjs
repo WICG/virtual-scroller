@@ -1,5 +1,5 @@
-import {VirtualScroller} from '../../src/VirtualScroller.js';
-import {Layout1d} from '../../src/layouts/Layout1d.js';
+import {VirtualScroller} from '../../src/VirtualScroller.mjs';
+import {Layout1d} from '../../src/layouts/Layout1d.mjs';
 
 const items = new Array(200).fill({name: 'item'});
 const container = document.getElementById('container');

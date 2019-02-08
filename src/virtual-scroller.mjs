@@ -1,7 +1,7 @@
-import {ItemSource, _item, _key} from './ItemSource.js';
-import {Layout1dGrid} from './layouts/Layout1dGrid.js';
-import {Layout1d} from './layouts/Layout1d.js';
-import {VirtualScroller} from './VirtualScroller.js';
+import {ItemSource, _item, _key} from './ItemSource.mjs';
+import {Layout1dGrid} from './layouts/Layout1dGrid.mjs';
+import {Layout1d} from './layouts/Layout1d.mjs';
+import {VirtualScroller} from './VirtualScroller.mjs';
 
 /** Properties */
 const _scroller = Symbol();
