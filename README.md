@@ -26,9 +26,14 @@ group](https://github.com/domenic/infinite-list-study-group) research.
   const scroller = document.querySelector('virtual-scroller');
   const myItems = new Array(200).fill('item');
 
+  const clickHandler = (event) => {
+    console.log(`clicked item #${event.target.index}`);
+  };
+
   scroller.updateElement = (child, item, index) => {
     child.textContent = index + ' - ' + item;
-    child.onclick = () => console.log(`clicked item #${index}`);
+    child.index = index;
+    child.addEventListener('click', clickHandler);
   };
 
   // This will automatically cause a render of the visible children
@@ -41,7 +46,7 @@ By default, the elements inside the virtual scroller created in this example
 will be `<div>`s, and will be recycled. See below for more on customizing this
 behavior through the `createElement` and `recycleElement` APIs.
 
-Checkout more examples in [demo/index.html](./demo/index.html).
+Checkout more examples in [the demos index](https://valdrinkoshi.github.io/virtual-scroller/demo/), with source code for them in [the `demo/` directory](./demo/).
 
 ## API
 
