@@ -1,3 +1,3 @@
-import {VirtualContent} from './VirtualContent.js';
+import {VirtualContent} from './VirtualContent.mjs';
 
 customElements.define('virtual-content', VirtualContent);

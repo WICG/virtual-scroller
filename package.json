@@ -3,11 +3,13 @@
   "version": "0.0.1",
   "description": "A virtual scroller that optimizes the rendering of DOM according to the visible area and available data.",
   "devDependencies": {
+    "http-server": "^0.11.1",
     "clang-format": "^1.2",
     "streaming-spec": "github:jakearchibald/streaming-html-spec#master"
   },
   "scripts": {
-    "format": "find . -name '*.js' | grep -v node_modules | xargs clang-format --style=file -i"
+    "start": "http-server -p 8081",
+    "format": "find . -name '*.mjs' | grep -v node_modules | xargs clang-format --style=file -i"
   },
   "repository": "valdrinkoshi/virtual-scroller",
   "license": "Apache-2.0"

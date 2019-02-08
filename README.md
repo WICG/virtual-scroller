@@ -52,14 +52,13 @@ In particular, we want to get parity with the capabilities, usability, and demos
 
 ## Development
 
-To work on the proof-of-concept implementation, ensure you have installed the npm dependencies and serve from the project root
+To work on the proof-of-concept implementation, ensure you have installed the npm dependencies and serve from the project root.
 
 ```bash
 $ npm install
-$ npm install -g http-server   # If http-server is not installed.
-$ http-server -p 8081
+$ npm start
 ```
 
-Then, navigate to the url: http://localhost:8081/demo.
+Then, navigate to the URL: <http://localhost:8081/demo>.
 
 Since this prototype relies on [searchable invisible DOM](https://github.com/rakina/searchable-invisible-dom), you'll need to be using the latest Chrome Canary, with the Experimental Web Platform features flag turned on in `chrome://flags`.
