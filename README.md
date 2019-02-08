@@ -45,7 +45,7 @@ uses `display: flex` to prevent its child nodes' margins from collapsing. Do not
 
 On its own, the `virtual-content` element intentionally doesn't cover all of the situations a user might encounter when trying to virtualize an unrenderably large tree, or what the user might expect from other implementations of similar components. The `virtual-content` element itself is only meant to manage the rendering state of its children.
 
-In particular, we want to get parity with the capabilities, usability, and demos of the [master branch](https://github.com/valdrinkoshi/virtual-scroller/tree/master). Probably that will be done by layering things on top of the base `virtual-content` element. Some notable things in the pipeline:
+In particular, we want to get parity with the capabilities, usability, and demos of the [`traditional-virtualization` branch](https://github.com/valdrinkoshi/virtual-scroller/tree/traditional-virtualization). Probably that will be done by layering things on top of the base `virtual-content` element. Some notable things in the pipeline:
 
 - A way of breaking up the initial parse costs for very large sets of children. Although the rendering costs are mitigated, the costs of parsing and element creation need to be broken up to avoid jank.
 - A way of adding children lazily / on-demand based on scroll position. For example, loading more items when reaching the end of the list.
