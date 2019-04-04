@@ -1,6 +1,6 @@
 # A built-in virtual scroller for the web platform
 
-This repository hosts explorations and prototypes for a new web platform feature, a virtual scroller control. The idea of a virtual scroller is to provide a scrolling "viewport" onto some content, allow extremely large numbers of elements to exist, but maintain high performance by only paying the cost for those that are currently visible. Traditionally, we say that the non-visible content is _virtualized_.
+This repository hosts explorations for a new web platform feature, a virtual scroller control. The idea of a virtual scroller is to provide a scrolling "viewport" onto some content, allow extremely large numbers of elements to exist, but maintain high performance by only paying the cost for those that are currently visible. Traditionally, we say that the non-visible content is _virtualized_.
 
 ## Why a virtual scroller?
 
@@ -12,28 +12,77 @@ We believe that, like native platforms, the web deserves a first-class virtual s
 
 For more details on the motivation, see [Motivation.md](./Motivation.md).
 
-## Prototypes
+## Sample code
 
-We are not yet near the point of standardization, and are first working on proving out what the result should look like via JavaScript prototypes. So far this repository hosts two prototype implementations, each in separate branches:
+```html
+// The <virtual-content> will manage the rendering of its children.
+// It will prioritize rendering things that are in the viewport and not render
+// children that are far away, such that we are only paying as little rendering
+// cost as possible while still allowing them to work with find-in-page,
+// accessibility features, focus navigation, fragment url navigation etc.
+<virtual-content id='content'>
+	<div>Item 1</div>
+	<div>Item 2</div>
+	...
+	<div>Item 1000</div>
+</virtual-content>
 
-### Traditional virtualization
+<script>
+// You can add, remove, modify children of the <virtual-content> as you would
+// on a regular element, using DOM APIs.
+content.appendChild(newChildren);
 
-The [`traditional-virtualization`](https://github.com/valdrinkoshi/virtual-scroller/tree/traditional-virtualization) branch hosts our first attempt, a `<virtual-scroller>` custom element. This is a full-featured virtual scroller, with architecture and API similar to many studied in the infinite list study group. It maps JavaScript values ("items") to DOM elements, with callbacks for creating, updating, and recycling the DOM elements given an item.
+// When the set of actually-rendered children changed, the <virtual-content>
+// will fire a "rangechange" event with the new range of rendered children.
+content.addEventListener('rangechange', (event) => {
+  if (event.first === 0) {
+    console.log('rendered first item.');
+  }
+  if (event.last === scroller.children.length - 1) {
+    console.log('rendered last item.');
+    // Perhaps you would want to load more data for display!
+  }
+});
+</script>
+```
 
-The implementation had not been battle-tested or performance-optimized, but the branch contains many demos to prove out the design: things like dismissable items, grids, or integration with UI frameworks. As such, it represents a desired baseline for what capabilities we hope to be possible with a virtual scroller.
+## Goals
 
-However, we realized that this traditional approach to virtualization has the fundamental drawbacks mentioned above: it breaks accessibility, find-in-page, indexability, etc. As such, we started on a new approach...
+* Allowing web authors to use this for various kinds of scrollable content.
+* Allowing contents of the scroller to be only causing rendering costs only when necessary.
+* Allowing contents of the scroller to work with find-in-page, accessibility features, focus, fragement URL navigation, etc. as they would work on a non-virtualized state.
+// TODO add more
 
-### `<virtual-content>`
+## Non-goals
 
-The [`virtual-content`](https://github.com/valdrinkoshi/virtual-scroller/tree/virtual-content) branch starts from scratch, building on the [searchable invisible DOM](https://github.com/rakina/searchable-invisible-dom) proposal. For now, it only contains the `<virtual-content>` element, which manages the searchable-invisible-ness of its children. It does not contain any notion of item, or DOM creation/updating/recycling; it operates directly on its DOM element children. Importantly, unlike traditional virtualization, all of these children are present, even if the majority of them are (searchable-)invisible.
+* Allowing data that are not materialized into DOM to work with find-in-page, accessibility, etc.
+// TODO add more
 
-This new approach, while simple to use, is fairly powerful! Furthermore, preliminary tests and demos show that it does solve the fundamental problems mentioned above: with Blink's flagged implementation of searchable invisible DOM, the resulting virtualized content can still be found by find-in-page, or intra-page anchor navigation, or tabbed to, or found by search engine indexers. (Accessibile landmark navigation support is up next!)
+## Proposed APIs
 
-But, there is much more work to do to show that this approach is feasible. We need to re-build the demos corpus to attain parity with the `traditional-virtualization` branch, to show that all the desired user experiences and framework integrations are still possible. And we need to work out an easy-to-use solution for populating the `<virtual-content>` element's initial set of children, without causing jank.
+### <virtual-content> element
+//TODO
 
-## Talk at Chrome Dev Summit 2018
+### `rangechange` event
 
-At Chrome Dev Summit 2018, Gray Norton presented on our work so far. Give it a watch!
+Fired when the scroller has finished rendering a new range of items, e.g. because the user scrolled.
+The event has the following properties:
+* `first`: an integer, the 0-based index of the first children currently rendered.
+* `last`: an integer, the 0-based index of the last children currently rendered.
+* `bubbles`: false 
+* `cancelable`: false
+* `composed`: false
 
-[![virtual-scroller at Chrome Dev Summit 2018](http://img.youtube.com/vi/UtD41bn6kJ0/0.jpg)](http://www.youtube.com/watch?v=UtD41bn6kJ0)
+### Constraints
+// TODO
+
+## Alternatives considered
+
+### Using traditional virtualization
+// TODO
+
+### [Find-in-page APIs](https://github.com/rakina/find-in-page-api)
+// TODO 
+
+### Libraries
+// TODO
