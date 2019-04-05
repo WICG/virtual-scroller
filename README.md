@@ -50,22 +50,30 @@ content.addEventListener('rangechange', (event) => {
 
 * Allowing web authors to use this for various kinds of scrollable content.
 * Allowing contents of the scroller to be only causing rendering costs only when necessary.
-* Allowing contents of the scroller to work with find-in-page, accessibility features, focus, fragement URL navigation, etc. as they would work on a non-virtualized state.
+* Allowing contents of the scroller to work with find-in-page, accessibility features, focus, fragment URL navigation, etc. as they would work on a non-virtualized state.
 // TODO add more
 
 ## Non-goals
 
-* Allowing data that are not materialized into DOM to work with find-in-page, accessibility, etc.
+* Allowing data that are not part of the DOM to work with find-in-page, accessibility, etc.
 // TODO add more
 
 ## Proposed APIs
 
-### <virtual-content> element
-//TODO
+### `<virtual-content>` element
+
+The `<virtual-content>` element represents a container that will manage the rendering of its children.
+The children of this element might not get rendered/updated if they are not near or in the viewport.
+The element is aware of changes to the viewport, and will manage the rendered state of its children accordingly.
+The sizes and other layout values of the non-rendered children, which might affect scrollbar height, etc., are approximate sizes and might not be always accurate.
+The rendered children always have accurate style and layout values, just like other normal DOM nodes.
+All children, rendered or non-rendered, will work with find-in-page, focus navigation, anchor link navigation, just like normal DOM nodes.
+ 
+ //TODO add more
 
 ### `rangechange` event
 
-Fired when the scroller has finished rendering a new range of items, e.g. because the user scrolled.
+Fired when `<virtual-content>` has finished rendering a new range of items, e.g. because the user scrolled.
 The event has the following properties:
 * `first`: an integer, the 0-based index of the first children currently rendered.
 * `last`: an integer, the 0-based index of the last children currently rendered.
