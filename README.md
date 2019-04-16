@@ -31,10 +31,10 @@ import "std:virtual-scroller";
   accessibility features, focus navigation, fragment url navigation etc.
 -->
 <virtual-content id='content'>
-	<div>Item 1</div>
-	<div>Item 2</div>
-	...
-	<div>Item 1000</div>
+  <div>Item 1</div>
+  <div>Item 2</div>
+  ...
+  <div>Item 1000</div>
 </virtual-content>
 
 <script>
@@ -59,9 +59,9 @@ content.addEventListener('rangechange', (event) => {
 
 ## Goals
 
-* Be flexible enough to be used for various kinds of scrolling content, larger-than-viewport content, from news articles to typeaheads to contact lists to photo galleries.
+* Be flexible enough to be used for various kinds of scrolling, larger-than-viewport content, from news articles to typeaheads to contact lists to photo galleries.
 * Only pay the rendering costs for _visible_ child elements of the scroller (with some margin).
-* Allow contents of the scroller to work with find-in-page, accessibility features, focus, fragment URL navigation, etc., just as they would work in a non-virtualized context.
+* Allow contents of the scroller to work with find-in-page, accessibility features, focus, fragment URL navigation, etc., just as they would in a non-virtualized context.
 * Be flexible enough to allow developers to integrate advanced features and behaviors, such as groupings, sticky headers, animations, swiping, item selection, etc.
 * Support 1D horizontal/1D vertical/2D wrapped-grid layouts.
 
@@ -112,16 +112,26 @@ _TODO: do we need `first` and `last` on the event, or should we just use the pro
 
 These return 0-based indices giving the first and last children currently rendered.
 
-### Constraints
+_TODO: these names are kind of bad?_
+
+### Constraints and effects
 
 Ideally we would like there to be zero constraints on the contents of the `<virtual-content>` element, or on the virtual-content element itself.
 
-This may prove difficult to specify or implement, so we may need to add constraints such as:
+Similarly we would like to avoid any observable effects on the element or its children. Just like how `<select>` does not cause its `<option>` elements to change observably when you open the select box, ideally `<virtual-content>` should not cause observable effects on its children as the user scrolls around.
+
+This may prove difficult to specify or implement. In reality, we expect to have to add constraints such as:
 
 * Overriding the default values for certain CSS properties (and ignoring web developer attempts to set them).
 * Having degenerate behavior if visual order does not match DOM order (e.g. via `flex-order` or `position: absolute`).
 
-What these constraints will be, and how they will be specified, remains an open question at this time.
+And the control may influence its children via effects such as:
+
+* Changing the computed style of children (observable via `getComputedStyle(child)`).
+* Changing the display-locked status of children (observable via `child.displayLock.locked`).
+* Avoiding layout of non-visible children's descendants (observable via e.g. `child.children[0].getBoundingClientRect()`).
+
+Figuring out the exact set of constraints (including what happens when they're violated), and the exact set of effects, is a key blocker for standardization that we expect to address over time.
 
 ## Use cases
 
@@ -167,7 +177,8 @@ This proposal's answer is that: if you were going to have the data in memory any
 But, if you were going to leave the data on the server, then it is fine to continue leaving it on the server, even with a `<virtual-content>` in play.
 
 For example, in one session while browsing https://m.twitter.com/, it limited itself to only keeping 5 tweets in the DOM at one time, using traditional virtualization techniques.
-However, it appeared to have about 100 tweets in memory (available for display even if the user goes offline). And, when the user began scrolling toward the bottom of the page, it queried the server to increase the amount of in-memory tweets it had available.
+However, it appeared to have about 100 tweets in memory (available for display even if the user goes offline).
+And, when the user began scrolling toward the bottom of the page, it queried the server to increase the amount of in-memory tweets it had available.
 With a native `<virtual-content>` in the browser, which mitigates the rendering costs while still allowing you to keep items in the DOM, we're hopeful that it'd be possible to keep those 100+ tweets as DOM nodes, not just in-memory JavaScript values that are locked away from find-in-page and friends.
 
 This proposed design does mean that there could be things on the Twitter servers which are not findable by find-in-page, because they have not yet been pulled from the server and into the DOM.
@@ -179,18 +190,29 @@ What is harder for them to understand is when they saw a phrase, they scroll pas
 ## Alternatives considered
 
 ### Using traditional virtualization
-Previously, we intended to use a traditional approach to virtualization for the built-in virtual scroller.
-With that approach, we would map JavaScript values ("items") to DOM elements, putting only a small portion of items in the DOM, with callbacks for creating, updating, and recycling the DOM elements given an item.
 
-However, this approach suffers the same problem as other traditionally-virtualized scrollers regarding accessibility, find-in-page, fragment URL and focus navigation, etc., all of which depends on having the content be part of the DOM to work correctly.
-This is a known issue with traditional virtualization, and web developers are still following this approach, trading off these functionalities with the performance improvement.
-As we intend to make the built-in virtual scroller to be a "standard" virtual-scroller that a lot of web authors would use or base on, we don't want to continue having this disadvantage.
+Previously, we intended to specify a traditional approach to virtualization for the built-in virtual scroller.
+With that approach, the element would map JavaScript values ("items") to DOM element children, putting only a small portion of the items in the DOM, with callbacks for creating, updating, and recycling the DOM elements given an item.
+
+However, this approach suffers the same problem as existing traditionally-virtualized scrollers regarding accessibility, find-in-page, fragment URL and focus navigation, etc., all of which depend on having the content be part of the DOM to work correctly.
+This is a known issue with traditional virtualization, which web developers have to grapple with today, trading off these functionalities with the performance improvement.
+As we intend for the built-in virtual scroller to be a standard building block that a lot of web authors would use or build on, we don't want to continue having this disadvantage.
+
+In other words, given the problem of too much DOM causing bad performance, traditional virtualization is managing the symptoms, by decreasing the amount of DOM. For a standard solution, we want to tackle the core problem head on.
 
 ### [Find-in-page APIs](https://github.com/rakina/find-in-page-api)
-As mentioned in the [previous section](#using-traditional-virtualization), we want to make features like find-in-page to work with the built-in virtual scroller.
-We have briefly considered adding a set of Find-in-page APIs to the web platform, that would support cases like giving the web author a way to completely override the find-in-page command, or interacting and adding results to the user agent's built-in find-in-page functionality.
 
-However, designing these APIs proved to be quite challenging, and providing a find-in-page specific solution might unintentionally become a disadvantage for other things like accessibility, etc: web developers might be inclined to think that a virtual scroller that works with find-in-page is good enough, and not think about the remainder of the missing functionalities caused by virtualization.
+As mentioned in the [previous section](#using-traditional-virtualization), we want to make features like find-in-page work with the built-in virtual scroller.
+We have briefly considered adding a set of find-in-page APIs to the web platform, that would support cases like giving the web author a way to completely override the find-in-page command, or interacting with and adding results to the user agent's built-in find-in-page functionality.
+
+However, designing these APIs proved to be quite challenging, given the breadth of find-in-page user interfaces across browsers.
+Worse, providing a find-in-page-specific solution might unintentionally become a disadvantage for other things like accessibility: web developers might be inclined to think that a virtual scroller that works with find-in-page is good enough, and not think about the remainder of the missing functionality caused by virtualization.
 
 ### Libraries
-// TODO
+
+Another approach would be to standardize and implement only the low-level primitives which allow mitigating the cost of DOM, i.e. [display locking](https://github.com/chrishtr/display-locking/).
+We would then leave the building of high-level virtual scroller APIs to libraries.
+
+We fully expect that some applications and libraries will take this route, and even encourage it when appropriate.
+But we still believe there is value in providing a high-lever virtual scroller control built in to the platform, for the 90% case.
+For more on our reasoning, see [the motivation document](./Motivation.md)'s ["Standardization"](./Motivation.md#standardization) and ["Layering"](./Motivation.md#layering) sections.
