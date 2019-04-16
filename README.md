@@ -129,7 +129,7 @@ And the control may influence its children via effects such as:
 
 * Changing the computed style of children (observable via `getComputedStyle(child)`).
 * Changing the display-locked status of children (observable via `child.displayLock.locked`).
-* Avoiding layout of non-visible children's descendants (observable via e.g. `child.children[0].getBoundingClientRect()`).
+* Changing the layout of non-visible children's descendants (observable via e.g. `child.children[0].getBoundingClientRect()`).
 
 Figuring out the exact set of constraints (including what happens when they're violated), and the exact set of effects, is a key blocker for standardization that we expect to address over time.
 
@@ -210,7 +210,7 @@ Worse, providing a find-in-page-specific solution might unintentionally become a
 
 ### Libraries
 
-Another approach would be to standardize and implement only the low-level primitives which allow mitigating the cost of DOM, i.e. [display locking](https://github.com/chrishtr/display-locking/).
+Another approach would be to standardize and implement only the low-level primitives which allow mitigating the cost of DOM, i.e. [display locking](https://github.com/WICG/display-locking/).
 We would then leave the building of high-level virtual scroller APIs to libraries.
 
 We fully expect that some applications and libraries will take this route, and even encourage it when appropriate.
