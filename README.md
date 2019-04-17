@@ -30,7 +30,7 @@ import "std:virtual-scroller";
   cost as possible while still allowing them to work with find-in-page,
   accessibility features, focus navigation, fragment url navigation etc.
 -->
-<virtual-scroller id='content'>
+<virtual-scroller id='scroller'>
   <div>Item 1</div>
   <div>Item 2</div>
   ...
@@ -40,12 +40,12 @@ import "std:virtual-scroller";
 <script>
 // You can add, remove, modify children of the <virtual-scroller> as you would
 // a regular element, using DOM APIs.
-content.append(...newChildren);
+scroller.append(...newChildren);
 
 // When the set of actually-rendered children is about to change,
 // the <virtual-scroller> will fire a "rangechange" event with the
 // new range of rendered children.
-content.addEventListener('rangechange', (event) => {
+scroller.addEventListener('rangechange', (event) => {
   if (event.first === 0) {
     console.log('rendered first item.');
   }
