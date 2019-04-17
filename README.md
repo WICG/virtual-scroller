@@ -149,7 +149,7 @@ This design is intended to cover the following cases:
 
 * Large (10&nbsp;000+ item) scrollers, where data is added progressively.
   As long as the data can be held in memory, `<virtual-scroller>` ensures that there are no rendering costs, and so can scale indefinitely.
-  An example here would be an interface where scrolling down loads more content from the server, indefinitely, such as a social feed or a busy person's inbox.
+  An example here would be any interface where scrolling down loads more content from the server, indefinitely, such as a social feed or a busy person's inbox.
 
   However, note that adding a large amount of data _at once_ is tricky with this API; see below.
 
@@ -167,7 +167,7 @@ For example, just the parsing time alone for the single-page HTML specification 
 And there are staging problems in trying to deliver large amounts of HTML while the `"std:virtual-scroller"` module is still being imported, which could prevent it from properly avoiding initial rendering costs.
 
 As such we think there is still room for improvement in these scenarios, e.g. with an API that makes it easy to progressively stream data during idle time to allow the initial few screenfuls to render ASAP and without jank.
-We will be exploring this problem over time after we feel confident that we can specify and implement a solution for the core use cases.
+We will be exploring this problem over time, after we feel confident that we can specify and implement a solution for the core use cases.
 
 ### Almost-infinite data from the server
 
@@ -181,7 +181,7 @@ However, it appeared to have about 100 tweets in memory (available for display e
 And, when the user began scrolling toward the bottom of the page, it queried the server to increase the amount of in-memory tweets it had available.
 With a native `<virtual-scroller>` in the browser, which mitigates the rendering costs while still allowing you to keep items in the DOM, we're hopeful that it'd be possible to keep those 100+ tweets as DOM nodes, not just in-memory JavaScript values that are locked away from find-in-page and friends.
 
-This proposed design does mean that there could be things on the Twitter servers which are not findable by find-in-page because they have not yet been pulled from the server and into the DOM.
+This proposed design does mean that there could be things on the Twitter servers which are not findable by find-in-page, because they have not yet been pulled from the server and into the DOM.
 That is OK.
 Find-in-page is not meant to be find-in-site, and users of social feeds are able to understand the idea that not everything is yet loaded.
 What is harder for them to understand is when they saw a phrase, they scroll past it by 100 pixels, and then find-in-page can't see it anymore, because it's been moved out of the DOM.
