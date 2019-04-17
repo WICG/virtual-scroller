@@ -24,26 +24,26 @@ import "std:virtual-scroller";
 </script>
 
 <!--
-  The <virtual-content> will manage the rendering of its children.
+  The <virtual-scroller> will manage the rendering of its children.
   It will prioritize rendering things that are in the viewport and not render
   children that are far away, such that we are only paying as little rendering
   cost as possible while still allowing them to work with find-in-page,
   accessibility features, focus navigation, fragment url navigation etc.
 -->
-<virtual-content id='content'>
+<virtual-scroller id='content'>
   <div>Item 1</div>
   <div>Item 2</div>
   ...
   <div>Item 1000</div>
-</virtual-content>
+</virtual-scroller>
 
 <script>
-// You can add, remove, modify children of the <virtual-content> as you would
+// You can add, remove, modify children of the <virtual-scroller> as you would
 // a regular element, using DOM APIs.
 content.append(...newChildren);
 
 // When the set of actually-rendered children is about to change,
-// the <virtual-content> will fire a "rangechange" event with the
+// the <virtual-scroller> will fire a "rangechange" event with the
 // new range of rendered children.
 content.addEventListener('rangechange', (event) => {
   if (event.first === 0) {
@@ -76,9 +76,9 @@ And, at least in v1, the following are out of scope:
 
 ## Proposed APIs
 
-### `<virtual-content>` element
+### `<virtual-scroller>` element
 
-The `<virtual-content>` element represents a container that will manage the rendering of its children.
+The `<virtual-scroller>` element represents a container that will manage the rendering of its children.
 The children of this element might not get rendered/updated if they are not near or in the viewport.
 The element is aware of changes to the viewport, as well as to its own size, and will manage the rendered state of its children accordingly.
 
@@ -92,7 +92,7 @@ All children, rendered or non-rendered, will work with find-in-page, focus navig
 
 ### `rangechange` event
 
-Fired when `<virtual-content>` is about to render a new range of items, e.g. because the user scrolled.
+Fired when `<virtual-scroller>` is about to render a new range of items, e.g. because the user scrolled.
 This will fire at `requestAnimationFrame` timing, i.e. before the browser is about to paint.
 
 The event has the following properties:
@@ -116,9 +116,9 @@ _TODO: these names are kind of bad?_
 
 ### Constraints and effects
 
-Ideally we would like there to be zero constraints on the contents of the `<virtual-content>` element, or on the virtual-content element itself.
+Ideally we would like there to be zero constraints on the contents of the `<virtual-scroller>` element, or on the virtual-scroller element itself.
 
-Similarly we would like to avoid any observable effects on the element or its children. Just like how `<select>` does not cause its `<option>` elements to change observably when you open the select box, ideally `<virtual-content>` should not cause observable effects on its children as the user scrolls around.
+Similarly we would like to avoid any observable effects on the element or its children. Just like how `<select>` does not cause its `<option>` elements to change observably when you open the select box, ideally `<virtual-scroller>` should not cause observable effects on its children as the user scrolls around.
 
 This may prove difficult to specify or implement. In reality, we expect to have to add constraints such as:
 
@@ -141,14 +141,14 @@ This design is intended to cover the following cases:
 
 * Short (10-100 item) scrollers.
   Previously, virtualizing such scrollers was done rarely, as virtualization caused sacrifices in developer and user experience.
-  We are hopeful that with a first-class virtualization element in the web platform, it will become more expected to use `<virtual-content>` in places where overflow-scrolling `<div>`s were previously seen, thus [improving overall UI performance](./Motivation.md#performance).
+  We are hopeful that with a first-class virtualization element in the web platform, it will become more expected to use `<virtual-scroller>` in places where overflow-scrolling `<div>`s were previously seen, thus [improving overall UI performance](./Motivation.md#performance).
 
 * Medium (100-10&nbsp;000 item) scrollers.
   This is where virtual scrollers have traditionally thrived.
   We also want to expand this category to include not just traditional list- or feed-like scenarios, but also cases like news articles.
 
 * Large (10&nbsp;000+ item) scrollers, where data is added progressively.
-  As long as the data can be held in memory, `<virtual-content>` ensures that there are no rendering costs, and so can scale indefinitely.
+  As long as the data can be held in memory, `<virtual-scroller>` ensures that there are no rendering costs, and so can scale indefinitely.
   An example here would be any interface where scrolling down loads more content from the server, indefinitely, such as a social feed or a busy person's inbox.
 
   However, note that adding a large amount of data _at once_ is tricky with this API; see below.
@@ -162,7 +162,7 @@ As long as the data could feasibly fit in memory in any form, the user experienc
 This allows access to the data by browser features, such as find-in-page or accessibility tooling, as well as by search engines.
 
 However, using the above API in these scenarios suffers from the problem of initial page load costs.
-Trying to server-render all of the items as `<virtual-content>` children, or trying to do an initial JSON-to-HTML client-render pass, will jank the page.
+Trying to server-render all of the items as `<virtual-scroller>` children, or trying to do an initial JSON-to-HTML client-render pass, will jank the page.
 For example, just the parsing time alone for the single-page HTML specification [can take 0.6–4.4 seconds](https://github.com/valdrinkoshi/virtual-scroller/pull/92).
 And there are staging problems in trying to deliver large amounts of HTML while the `"std:virtual-scroller"` module is still being imported, which could prevent it from properly avoiding initial rendering costs.
 
@@ -173,19 +173,19 @@ We will be exploring this problem over time, after we feel confident that we can
 
 A consistent point of confusion about the virtual scroller proposal is how it purports to solve cases like social feeds, where there is an "almost infinite" amount of data available.
 
-This proposal's answer is that: if you were going to have the data in memory anyway, then it should be in the `<virtual-content>`, and thus accessible to the browser or other technologies (such as search engines) that operate on the DOM.
-But, if you were going to leave the data on the server, then it is fine to continue leaving it on the server, even with a `<virtual-content>` in play.
+This proposal's answer is that: if you were going to have the data in memory anyway, then it should be in the `<virtual-scroller>`, and thus accessible to the browser or other technologies (such as search engines) that operate on the DOM.
+But, if you were going to leave the data on the server, then it is fine to continue leaving it on the server, even with a `<virtual-scroller>` in play.
 
 For example, in one session while browsing https://m.twitter.com/, it limited itself to only keeping 5 tweets in the DOM at one time, using traditional virtualization techniques.
 However, it appeared to have about 100 tweets in memory (available for display even if the user goes offline).
 And, when the user began scrolling toward the bottom of the page, it queried the server to increase the amount of in-memory tweets it had available.
-With a native `<virtual-content>` in the browser, which mitigates the rendering costs while still allowing you to keep items in the DOM, we're hopeful that it'd be possible to keep those 100+ tweets as DOM nodes, not just in-memory JavaScript values that are locked away from find-in-page and friends.
+With a native `<virtual-scroller>` in the browser, which mitigates the rendering costs while still allowing you to keep items in the DOM, we're hopeful that it'd be possible to keep those 100+ tweets as DOM nodes, not just in-memory JavaScript values that are locked away from find-in-page and friends.
 
 This proposed design does mean that there could be things on the Twitter servers which are not findable by find-in-page, because they have not yet been pulled from the server and into the DOM.
 That is OK.
 Find-in-page is not meant to be find-in-site, and users of social feeds are able to understand the idea that not everything is yet loaded.
 What is harder for them to understand is when they saw a phrase, they scroll past it by 100 pixels, and then find-in-page can't see it anymore, because it's been moved out of the DOM.
-`<virtual-content>` addresses this latter problem.
+`<virtual-scroller>` addresses this latter problem.
 
 ## Alternatives considered
 
@@ -214,5 +214,5 @@ Another approach would be to standardize and implement only the low-level primit
 We would then leave the building of high-level virtual scroller APIs to libraries.
 
 We fully expect that some applications and libraries will take this route, and even encourage it when appropriate.
-But we still believe there is value in providing a high-lever virtual scroller control built in to the platform, for the 90% case.
+But we still believe there is value in providing a high-level virtual scroller control built in to the platform, for the 90% case.
 For more on our reasoning, see [the motivation document](./Motivation.md)'s ["Standardization"](./Motivation.md#standardization) and ["Layering"](./Motivation.md#layering) sections.
