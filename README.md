@@ -28,7 +28,7 @@ import "std:virtual-scroller";
   It will prioritize rendering things that are in the viewport and not render
   children that are far away, such that we are only paying as little rendering
   cost as possible while still allowing them to work with find-in-page,
-  accessibility features, focus navigation, fragment url navigation etc.
+  accessibility features, focus navigation, fragment URL navigation, etc.
 -->
 <virtual-scroller id='scroller'>
   <div>Item 1</div>
@@ -104,7 +104,7 @@ The event has the following properties:
 * `composed`: false
 
 As an example, this can be used to delay more costly rendering work.
-For example a scrolling code listing could perform just-in-time syntax highlighting on lines right before they become visible, leaving the un-adorned code accessible by find-in-page/etc. but improving the code's appearance before the user sees it.
+For example, a scrolling code listing could perform just-in-time syntax highlighting on lines right before they become visible, leaving the un-adorned code accessible by find-in-page/etc. but improving the code's appearance before the user sees it.
 
 _TODO: do we need `first` and `last` on the event, or should we just use the properties of the element?_
 
@@ -116,9 +116,9 @@ _TODO: these names are kind of bad?_
 
 ### Constraints and effects
 
-Ideally we would like there to be zero constraints on the contents of the `<virtual-scroller>` element, or on the virtual-scroller element itself.
+Ideally, we would like there to be zero constraints on the contents of the `<virtual-scroller>` element, or on the virtual-scroller element itself.
 
-Similarly we would like to avoid any observable effects on the element or its children. Just like how `<select>` does not cause its `<option>` elements to change observably when you open the select box, ideally `<virtual-scroller>` should not cause observable effects on its children as the user scrolls around.
+Similarly, we would like to avoid any observable effects on the element or its children. Just like how `<select>` does not cause its `<option>` elements to change observably when you open the select box, ideally `<virtual-scroller>` should not cause observable effects on its children as the user scrolls around.
 
 This may prove difficult to specify or implement. In reality, we expect to have to add constraints such as:
 
@@ -198,7 +198,7 @@ However, this approach suffers the same problem as existing traditionally-virtua
 This is a known issue with traditional virtualization, which web developers have to grapple with today, trading off these functionalities with the performance improvement.
 As we intend for the built-in virtual scroller to be a standard building block that a lot of web authors would use or build on, we don't want to continue having this disadvantage.
 
-In other words, given the problem of too much DOM causing bad performance, traditional virtualization is managing the symptoms, by decreasing the amount of DOM. For a standard solution, we want to tackle the core problem head on.
+In other words, given the problem of too much DOM causing bad performance, traditional virtualization is managing the symptoms, by decreasing the amount of DOM. For a standard solution, we want to tackle the core problem head-on.
 
 ### [Find-in-page APIs](https://github.com/rakina/find-in-page-api)
 
@@ -214,5 +214,5 @@ Another approach would be to standardize and implement only the low-level primit
 We would then leave the building of high-level virtual scroller APIs to libraries.
 
 We fully expect that some applications and libraries will take this route, and even encourage it when appropriate.
-But we still believe there is value in providing a high-level virtual scroller control built in to the platform, for the 90% case.
+But we still believe there is value in providing a high-level virtual scroller control built into the platform, for the 90% case.
 For more on our reasoning, see [the motivation document](./Motivation.md)'s ["Standardization"](./Motivation.md#standardization) and ["Layering"](./Motivation.md#layering) sections.
