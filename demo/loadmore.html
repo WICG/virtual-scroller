@@ -29,12 +29,17 @@
 </head>
 
 <body>
+  <div id=errors></div>
   <div>
     <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
   </div>
 
   <virtual-scroller id=scroller></virtual-scroller>
 
+  <script type="module">
+    import * as confirmFeatures from './util/confirm-features.mjs';
+    confirmFeatures.confirm(errors);
+  </script>
   <script type="module">
     import 'std:elements/virtual-scroller';
     import './contacts/contact-element.mjs';
