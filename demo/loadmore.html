@@ -74,7 +74,7 @@
     function swapScroller() {
       const swapInLocalName = scroller.localName === "div" ? "virtual-scroller" : "div";
       const swapIn = document.createElement(swapInLocalName);
-      util.swap(scroller, swapIn);
+      util.swapElement(scroller, swapIn);
     }
     swapButton.addEventListener('click', swapScroller);
   </script>

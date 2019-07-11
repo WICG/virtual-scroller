@@ -2,7 +2,7 @@
  * Replaces |swapOut| with |swapIn| in the DOM. Reparent all children
  * and copy all attributes.
 */
-export function swap(swapOut, swapIn) {
+export function swapElement(swapOut, swapIn) {
   while (swapOut.childNodes.length > 0) {
     swapIn.appendChild(swapOut.firstChild);
   }
