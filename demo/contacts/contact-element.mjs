@@ -2,6 +2,12 @@ const emptyImg =
     'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
 class ContactElement extends HTMLElement {
+  #img;
+  #label;
+  #counter;
+  #renderCount = 0;
+  #contact;
+
   connectedCallback() {
     if (this.shadowRoot) {
       return;
@@ -47,10 +53,9 @@ class ContactElement extends HTMLElement {
 <button id="up">🔼</button>
 <button id="down">🔽</button>`;
 
-    this._img = this.shadowRoot.querySelector('#img');
-    this._label = this.shadowRoot.querySelector('label');
-    this._counter = this.shadowRoot.querySelector('#counter');
-    this._renderCount = 0;
+    this.#img = this.shadowRoot.querySelector('#img');
+    this.#label = this.shadowRoot.querySelector('label');
+    this.#counter = this.shadowRoot.querySelector('#counter');
 
     const up = this.shadowRoot.querySelector('#up');
     up.addEventListener('click', () => this.dispatchEvent(new Event('moveup')));
@@ -58,28 +63,33 @@ class ContactElement extends HTMLElement {
     down.addEventListener(
         'click', () => this.dispatchEvent(new Event('movedown')));
 
-    this.contact && this._render();
+    this.contact && this.#render();
     // Animate only after the first render.
     this.style.transition = 'none';
     window.requestIdleCallback(() => this.style.transition = null);
   }
+
   get contact() {
-    return this._contact;
+    return this.#contact;
   }
+
   set contact(contact) {
-    if (contact !== this._contact) {
-      this._contact = contact;
-      this._render();
+    if (contact !== this.#contact) {
+      this.#contact = contact;
+      this.#render();
     }
   }
-  _render() {
-    if (!this.shadowRoot)
+
+  #render = () => {
+    if (!this.shadowRoot) {
       return;
+    }
     const contact = this.contact || {};
-    this._img.src = contact.image || emptyImg;
-    this._label.textContent = contact.name;
-    this._label.style.color = contact.color || null;
-    this._counter.textContent = `render count: ${++this._renderCount}`;
+    this.#img.src = contact.image || emptyImg;
+    this.#label.textContent = contact.name;
+    this.#label.style.color = contact.color || null;
+    this.#counter.textContent = `render count: ${++this.#renderCount}`;
   }
 }
+
 customElements.define('contact-element', ContactElement);

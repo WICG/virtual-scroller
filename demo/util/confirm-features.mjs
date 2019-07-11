@@ -16,7 +16,7 @@ export function confirm(element) {
   }
 
   if (!customElements.get('virtual-scroller')) {
-    let div = redDiv('virtual-scroller is not available');
+    const div = redDiv('virtual-scroller is not available');
     element.appendChild(div);
     customElements.whenDefined('virtual-scroller').then(() => {
       div.remove();
