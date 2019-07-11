@@ -9,7 +9,7 @@ export function swap(swapOut, swapIn) {
   for (const a of swapOut.getAttributeNames()) {
     swapIn.setAttribute(a, swapOut.getAttribute(a));
   }
-  swapOut.parentElement.insertBefore(swapIn, swapOut);
+  swapOut.before(swapIn);
   swapOut.remove();
 }
 

@@ -63,7 +63,7 @@
       button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
       for (const contact of newContacts) {
         let contactElement = document.createElement('contact-element');
-        scroller.insertBefore(contactElement, button);
+        button.before(contactElement);
         contactElement.contact = contact;
       }
     };
