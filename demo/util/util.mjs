@@ -12,3 +12,10 @@ export function swap(swapOut, swapIn) {
   swapOut.parentElement.insertBefore(swapIn, swapOut);
   swapOut.remove();
 }
+
+/**
+ * Returns a promise which delays for |delayMs|.
+ */
+export function delay(delayMs) {
+  return new Promise(resolve => setTimeout(resolve, delayMs));
+}

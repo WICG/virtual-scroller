@@ -1,5 +1,10 @@
+import * as util from '../util/util.mjs';
+
+// All loads after the first will be delayed by this much.
+const DELAY_MS = 1000;
+
 export class ContactDataSource {
-  #delay = 1000;
+  #delayMs = 0;
   #allContacts = null;
   #loading = false;
   #loadedAll = false;
@@ -11,10 +16,10 @@ export class ContactDataSource {
     return this.#loading;
   }
   get delay() {
-    return this.#delay;
+    return this.#delayMs;
   }
   set delay(delayMs) {
-    this.#delay = delayMs;
+    this.#delayMs = delayMs;
   }
 
   async getNextContacts(count) {
@@ -24,10 +29,12 @@ export class ContactDataSource {
           await fetch('contacts/contacts.json').then(resp => resp.json());
     }
     // Simulate slow server load...
-    await new Promise(resolve => setTimeout(resolve, this.#delay));
+    await util.delay(this.#delayMs);
     const res = this.#allContacts.splice(0, count);
     this.#loadedAll = this.#allContacts.length === 0;
     this.#loading = false;
+    // After the first load, simulate a delay.
+    this.#delayMs = DELAY_MS;
     return res;
   }
 }
