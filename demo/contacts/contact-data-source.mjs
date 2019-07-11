@@ -12,12 +12,15 @@ export class ContactDataSource {
   get loadedAll() {
     return this.#loadedAll;
   }
+
   get loading() {
     return this.#loading;
   }
+
   get delay() {
     return this.#delayMs;
   }
+
   set delay(delayMs) {
     this.#delayMs = delayMs;
   }
