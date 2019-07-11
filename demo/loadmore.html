@@ -61,13 +61,10 @@
       // ... and wait for the contacts to be loaded.
       const newContacts = await promise;
       button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
-      let i = 0;
       for (const contact of newContacts) {
         let contactElement = document.createElement('contact-element');
         scroller.insertBefore(contactElement, button);
         contactElement.contact = contact;
-        contactElement.id = "c" + i;
-        i++;
       }
     };
     button.addEventListener('click', loadMore);
