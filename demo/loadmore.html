@@ -53,7 +53,7 @@
 
     const loadMore = async () => {
       // Start loading the contacts...
-      const promise = dataSource.getContacts(20);
+      const promise = dataSource.getNextContacts(20);
       button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
       // ... and wait for the contacts to be loaded.
       const newContacts = await promise;

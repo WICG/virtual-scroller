@@ -1,33 +1,33 @@
 export class ContactDataSource {
-  constructor() {
-    this._delay = 1000;
-    this._allContacts = null;
-    this._loading = false;
-    this._loadedAll = false;
-  }
+  #delay = 1000;
+  #allContacts = null;
+  #loading = false;
+  #loadedAll = false;
+
   get loadedAll() {
-    return this._loadedAll;
+    return this.#loadedAll;
   }
   get loading() {
-    return this._loading;
+    return this.#loading;
   }
   get delay() {
-    return this._delay;
+    return this.#delay;
   }
   set delay(delayMs) {
-    this._delay = delayMs;
+    this.#delay = delayMs;
   }
-  async getContacts(count) {
-    this._loading = true;
-    if (!this._allContacts) {
-      this._allContacts =
+
+  async getNextContacts(count) {
+    this.#loading = true;
+    if (!this.#allContacts) {
+      this.#allContacts =
           await fetch('contacts/contacts.json').then(resp => resp.json());
     }
     // Simulate slow server load...
-    await new Promise(resolve => setTimeout(resolve, this._delay));
-    const res = this._allContacts.splice(0, count);
-    this._loadedAll = this._allContacts.length === 0;
-    this._loading = false;
+    await new Promise(resolve => setTimeout(resolve, this.#delay));
+    const res = this.#allContacts.splice(0, count);
+    this.#loadedAll = this.#allContacts.length === 0;
+    this.#loading = false;
     return res;
   }
 }
