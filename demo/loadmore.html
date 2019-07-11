@@ -39,9 +39,12 @@
   <script type="module">
     import * as confirmFeatures from './util/confirm-features.mjs';
     confirmFeatures.confirm(errors);
-  </script>
-  <script type="module">
+    // Do this last. If virtual-scroller is not available, the demo
+    // will still work.
     import 'std:elements/virtual-scroller';
+  </script>
+
+  <script type="module">
     import './contacts/contact-element.mjs';
     import { ContactDataSource } from './contacts/contact-data-source.mjs';
     import * as util from './util/util.mjs';
