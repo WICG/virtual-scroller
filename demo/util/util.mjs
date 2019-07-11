@@ -3,9 +3,7 @@
  * and copy all attributes.
 */
 export function swapElement(swapOut, swapIn) {
-  while (swapOut.childNodes.length > 0) {
-    swapIn.appendChild(swapOut.firstChild);
-  }
+  swapIn.append(...swapOut.childNodes);
   for (const a of swapOut.getAttributeNames()) {
     swapIn.setAttribute(a, swapOut.getAttribute(a));
   }
