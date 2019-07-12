@@ -17,14 +17,6 @@ export class ContactDataSource {
     return this.#loading;
   }
 
-  get delay() {
-    return this.#delayMs;
-  }
-
-  set delay(delayMs) {
-    this.#delayMs = delayMs;
-  }
-
   async getNextContacts(count) {
     this.#loading = true;
     if (!this.#allContacts) {
