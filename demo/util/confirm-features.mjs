@@ -11,7 +11,7 @@ function redDiv(textContent) {
 
  **/
 export function confirm(element) {
-  if (element.displayLock === null) {
+  if (element.displayLock === undefined) {
     element.appendChild(redDiv('Display Locking is not available'));
   }
 
