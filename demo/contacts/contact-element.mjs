@@ -63,10 +63,14 @@ class ContactElement extends HTMLElement {
     down.addEventListener(
         'click', () => this.dispatchEvent(new Event('movedown')));
 
-    this.contact && this.#render();
+    if (this.contact) {
+      this.#render();
+    }
     // Animate only after the first render.
     this.style.transition = 'none';
-    window.requestIdleCallback(() => this.style.transition = null);
+    window.requestIdleCallback(() => {
+ this.style.transition = null;
+});
   }
 
   get contact() {
