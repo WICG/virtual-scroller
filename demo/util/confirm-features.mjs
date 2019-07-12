@@ -1,8 +1,8 @@
-function redDiv(textContent) {
-  const div = document.createElement('div');
-  div.style.color = 'red';
-  div.textContent = textContent;
-  return div;
+function redP(textContent) {
+  const p = document.createElement('p');
+  p.style.color = 'red';
+  p.textContent = textContent;
+  return p;
 }
 
 /**
@@ -12,11 +12,11 @@ function redDiv(textContent) {
  **/
 export function confirm(element) {
   if (element.displayLock === undefined) {
-    element.appendChild(redDiv('Display Locking is not available'));
+    element.appendChild(redP('Display Locking is not available'));
   }
 
   if (!customElements.get('virtual-scroller')) {
-    const div = redDiv('virtual-scroller is not available');
+    const div = redP('virtual-scroller is not available');
     element.appendChild(div);
     customElements.whenDefined('virtual-scroller').then(() => {
       div.remove();
