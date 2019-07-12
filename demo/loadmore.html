@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Virtual Scoller Demo - Load more</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      max-width: 600px;
+      height: 100vh;
+      margin: 0px auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    virtual-scroller {
+      flex: 1;
+      margin: 10px 0;
+      border-top: 2px solid #eee;
+      border-bottom: 2px solid #eee;
+    }
+
+    contact-element,
+    button {
+      height: 80px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id=errors></div>
+  <div>
+    <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
+  </div>
+
+  <virtual-scroller id=scroller></virtual-scroller>
+
+  <script type="module">
+    // Do this separately. If virtual-scroller is not available, the demo
+    // will still work.
+    import 'std:elements/virtual-scroller';
+  </script>
+  <script type="module">
+    import * as confirmFeatures from './util/confirm-features.mjs';
+    confirmFeatures.confirm(errors);
+  </script>
+  <script type="module">
+    import './contacts/contact-element.mjs';
+    import { ContactDataSource } from './contacts/contact-data-source.mjs';
+    import * as util from './util/util.mjs';
+
+    const dataSource = new ContactDataSource();
+
+    const button = document.createElement('button');
+    scroller.appendChild(button);
+
+    async function loadMore() {
+      // Start loading the contacts...
+      const promise = dataSource.getNextContacts(20);
+      button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
+      // ... and wait for the contacts to be loaded.
+      const newContacts = await promise;
+      button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
+      for (const contact of newContacts) {
+        let contactElement = document.createElement('contact-element');
+        button.before(contactElement);
+        contactElement.contact = contact;
+      }
+    };
+    button.addEventListener('click', loadMore);
+    loadMore();
+
+    function swapScroller() {
+      const swapInLocalName = scroller.localName === "div" ? "virtual-scroller" : "div";
+      const swapIn = document.createElement(swapInLocalName);
+      util.swapElement(scroller, swapIn);
+    }
+    swapButton.addEventListener('click', swapScroller);
+  </script>
+</body>
+
+</html>
