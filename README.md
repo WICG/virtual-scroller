@@ -216,3 +216,10 @@ We would then leave the building of high-level virtual scroller APIs to librarie
 We fully expect that some applications and libraries will take this route, and even encourage it when appropriate.
 But we still believe there is value in providing a high-level virtual scroller control built into the platform, for the 90% case.
 For more on our reasoning, see [the motivation document](./Motivation.md)'s ["Standardization"](./Motivation.md#standardization) and ["Layering"](./Motivation.md#layering) sections.
+
+## Sample implementations
+
+### Chrome
+
+Launch chrome with flags `--enable-blink-features=DisplayLocking,BuiltInModuleAll`
+to get a working virtual-scroller element.
