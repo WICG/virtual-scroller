@@ -1,0 +1,50 @@
+<head>
+  <title>Virtual Scoller Demo - Moving children</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <style>
+    .scroller {
+        overflow: scroll;
+        height: 400px;
+    }
+  </style>
+</head>
+
+<body>
+  <p>Repeatedly moving the first child to the end of the content. This
+  is potentially faster as we may be able to avoid layout changes to
+  the locked elements, however the scroller's internal state must
+  react to the mutation.</p>
+
+  <script type="module">
+    // Do this separately. If virtual-scroller is not available, the demo
+    // will still work.
+    import 'std:elements/virtual-scroller';
+  </script>
+  <script type="module">
+    import '../util/confirm-features.mjs';
+  </script>
+  <script type="module">
+    import '../util/fps-display.mjs';
+  </script>
+  <script type="module">
+    import '../util/demo-controller.mjs';
+  </script>
+  <confirm-features></confirm-features>
+  <fps-display></fps-display>
+
+  <demo-controller id=dc></demo-controller>
+  <div style="width: 100%">
+    <div id=contentDiv class="scroller resize">
+      <virtual-scroller id=vs></virtual-scroller>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as Util from '../util/util.mjs';
+    dc.setContainer(vs);
+    Util.everyFrame(i => {
+    vs.appendChild(vs.firstChild);
+    });
+  </script>
+</body>

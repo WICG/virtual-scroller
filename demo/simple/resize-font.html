@@ -1,0 +1,55 @@
+<head>
+  <title>Virtual Scoller Demo - Resize font</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <style>
+    .resize {
+        animation-direction: alternate;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        animation-name: resize;
+    }
+    @keyframes resize {
+        0% { font-size: 12px; }
+        100% { font-size: 30px; }
+    }
+    .scroller {
+        overflow: scroll;
+        height: 400px;
+    }
+  </style>
+</head>
+
+<body>
+  <p>Animated resizing of the content's font. This should be faster
+  since most elements are display-locked.</p>
+
+  <script type="module">
+    // Do this separately. If virtual-scroller is not available, the demo
+    // will still work.
+    import 'std:elements/virtual-scroller';
+  </script>
+  <script type="module">
+    import '../util/confirm-features.mjs';
+  </script>
+  <script type="module">
+    import '../util/fps-display.mjs';
+  </script>
+  <script type="module">
+    import '../util/demo-controller.mjs';
+  </script>
+  <confirm-features></confirm-features>
+  <fps-display></fps-display>
+
+  <demo-controller id=dc></demo-controller>
+  <div style="width: 100%">
+    <div id=contentDiv class="scroller resize">
+      <virtual-scroller id=vs></virtual-scroller>
+    </div>
+  </div>
+
+  <script type="module">
+    dc.setContainer(vs);
+  </script>
+</body>
