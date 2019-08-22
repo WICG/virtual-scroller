@@ -1,7 +1,8 @@
-<head>
-  <title>Virtual Scoller Demo - Resize</title>
+<!DOCTYPE html>
+<html lang="en">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual Scoller Demo - Resize</title>
   <style>
     .resize {
         animation-direction: alternate;
@@ -19,11 +20,9 @@
         height: 400px;
     }
   </style>
-</head>
 
-<body>
   <p>Animated resizing of the scrolling area. This should be faster
-  since most elements are display-locked.</p>
+    since most elements are display-locked.</p>
 
   <script type="module">
     // Do this separately. If virtual-scroller is not available, the demo
@@ -52,4 +51,3 @@
   <script type="module">
     dc.setContainer(vs);
   </script>
-</body>

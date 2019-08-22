@@ -1,20 +1,19 @@
-<head>
-  <title>Virtual Scoller Demo - Moving children</title>
+<!DOCTYPE html>
+<html lang="en">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual Scoller Demo - Moving children</title>
   <style>
     .scroller {
         overflow: scroll;
         height: 400px;
     }
   </style>
-</head>
 
-<body>
   <p>Repeatedly moving the first child to the end of the content. This
-  is potentially faster as we may be able to avoid layout changes to
-  the locked elements, however the scroller's internal state must
-  react to the mutation.</p>
+    is potentially faster as we may be able to avoid layout changes to
+    the locked elements, however the scroller's internal state must
+    react to the mutation.</p>
 
   <script type="module">
     // Do this separately. If virtual-scroller is not available, the demo
@@ -47,4 +46,3 @@
     vs.appendChild(vs.firstChild);
     });
   </script>
-</body>
