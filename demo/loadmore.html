@@ -51,24 +51,31 @@
 
     const dataSource = new ContactDataSource();
 
-    const button = document.createElement('button');
-    scroller.appendChild(button);
+    const loader = document.createElement('div');
+    scroller.appendChild(loader);
 
     async function loadMore() {
       // Start loading the contacts...
       const promise = dataSource.getNextContacts(20);
-      button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
+      loader.textContent = dataSource.loading ? 'Loading...' : 'Load more';
       // ... and wait for the contacts to be loaded.
       const newContacts = await promise;
-      button.textContent = dataSource.loading ? 'Loading...' : 'Load more';
+
+      // No more contacts to load, so remove the loader.
+      if (newContacts.length === 0) {
+        loader.remove();
+        return;
+      }
+
       for (const contact of newContacts) {
         let contactElement = document.createElement('contact-element');
-        button.before(contactElement);
+        loader.before(contactElement);
         contactElement.contact = contact;
       }
     };
-    button.addEventListener('click', loadMore);
-    loadMore();
+
+    const observer = new IntersectionObserver(loadMore, {});
+    observer.observe(loader);
 
     function swapScroller() {
       const swapInLocalName = scroller.localName === "div" ? "virtual-scroller" : "div";
