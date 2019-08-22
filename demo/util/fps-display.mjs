@@ -1,3 +1,5 @@
+import * as Util from './util.mjs';
+
 const TEMPLATE = `
 <style>
   .fps { width: 23%; float: left; text-align: right; padding-right: 2% }
@@ -18,7 +20,6 @@ const MS_PER_SECOND = 1000;
  */
 export class FpsDisplay extends HTMLElement {
   #lastTime = null;
-  #counter = 0;
   #fps
 
   constructor() {
@@ -28,23 +29,18 @@ export class FpsDisplay extends HTMLElement {
     shadowRoot.innerHTML = TEMPLATE;
     this.#fps = shadowRoot.getElementById('fps')
       .getElementsByClassName('place');
-    this.#scheduleUpdate();
-  }
-
-  #scheduleUpdate = () => {
-    requestAnimationFrame(ts => {
-      this.#update(ts);
+    Util.everyFrame((n, timestamp) => {
+      this.#update(n, timestamp);
     });
   }
 
-  #update = timestamp => {
+  #update = (n, timestamp) => {
     if (this.#lastTime !== null) {
       const delta = timestamp - this.#lastTime;
-      this.#fps[this.#counter++ % this.#fps.length].innerText =
+      this.#fps[n % this.#fps.length].innerText =
         (MS_PER_SECOND / delta).toFixed(2);
     }
     this.#lastTime = timestamp;
-    this.#scheduleUpdate();
   }
 }
 

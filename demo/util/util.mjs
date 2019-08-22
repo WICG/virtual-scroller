@@ -19,12 +19,12 @@ export function delay(delayMs) {
 
 /**
  * Calls |callback| every frame, passing in a count of the frames
- * elapsed.
+ * elapsed and the RAF timestamp.
  */
 export function everyFrame(callback) {
   let i = 0;
-  function update() {
-    callback(i);
+  function update(timestamp) {
+    callback(i, timestamp);
     schedule();
     i++;
   }
