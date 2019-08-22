@@ -28,10 +28,11 @@
       height: 80px;
     }
   </style>
+  <script type="module" src="./util/confirm-features.mjs"></script>
 </head>
 
 <body>
-  <div id=errors></div>
+  <confirm-features></confirm-features>
   <div>
     <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
   </div>
@@ -42,10 +43,6 @@
     // Do this separately. If virtual-scroller is not available, the demo
     // will still work.
     import 'std:elements/virtual-scroller';
-  </script>
-  <script type="module">
-    import * as confirmFeatures from './util/confirm-features.mjs';
-    confirmFeatures.confirm(errors);
   </script>
   <script type="module">
     import './contacts/contact-element.mjs';

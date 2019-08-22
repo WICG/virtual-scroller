@@ -8,18 +8,22 @@ function redP(textContent) {
 /**
  * Checks that the features needed are present in the browser. If not,
  * it places error messages inside |element|.
-
  **/
-export function confirm(element) {
-  if (element.displayLock === undefined) {
-    element.appendChild(redP('Display Locking is not available'));
-  }
+class ConfirmFeatures extends HTMLElement {
+  constructor() {
+    super();
+    if (this.displayLock === undefined) {
+      this.appendChild(redP('Display Locking is not available'));
+    }
 
-  if (!customElements.get('virtual-scroller')) {
-    const div = redP('virtual-scroller is not available');
-    element.appendChild(div);
-    customElements.whenDefined('virtual-scroller').then(() => {
-      div.remove();
-    });
+    if (!customElements.get('virtual-scroller')) {
+      const div = redP('virtual-scroller is not available');
+      this.appendChild(div);
+      customElements.whenDefined('virtual-scroller').then(() => {
+        div.remove();
+      });
+    }
   }
 }
+
+customElements.define('confirm-features', ConfirmFeatures);
