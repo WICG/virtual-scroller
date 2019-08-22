@@ -9,24 +9,11 @@
         height: 400px;
     }
   </style>
+  <script type="module" src="./scaffolding.mjs"></script>
 
   <p>Scroll a little every frame. This will be slower as the virtual
     scroller needs to unlock the correct element(s).</p>
 
-  <script type="module">
-    // Do this separately. If virtual-scroller is not available, the demo
-    // will still work.
-    import 'std:elements/virtual-scroller';
-  </script>
-  <script type="module">
-    import '../util/confirm-features.mjs';
-  </script>
-  <script type="module">
-    import '../util/fps-display.mjs';
-  </script>
-  <script type="module">
-    import '../util/demo-controller.mjs';
-  </script>
   <confirm-features></confirm-features>
   <fps-display></fps-display>
 

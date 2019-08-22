@@ -20,24 +20,11 @@
         height: 400px;
     }
   </style>
+  <script type="module" src="./scaffolding.mjs"></script>
 
   <p>Animated resizing of the content's font. This should be faster
     since most elements are display-locked.</p>
 
-  <script type="module">
-    // Do this separately. If virtual-scroller is not available, the demo
-    // will still work.
-    import 'std:elements/virtual-scroller';
-  </script>
-  <script type="module">
-    import '../util/confirm-features.mjs';
-  </script>
-  <script type="module">
-    import '../util/fps-display.mjs';
-  </script>
-  <script type="module">
-    import '../util/demo-controller.mjs';
-  </script>
   <confirm-features></confirm-features>
   <fps-display></fps-display>
 
