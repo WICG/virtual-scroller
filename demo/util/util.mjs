@@ -1,7 +1,7 @@
 /**
  * Replaces |swapOut| with |swapIn| in the DOM. Reparent all children
  * and copy all attributes.
-*/
+ */
 export function swapElement(swapOut, swapIn) {
   for (const a of swapOut.getAttributeNames()) {
     swapIn.setAttribute(a, swapOut.getAttribute(a));
@@ -29,9 +29,7 @@ export function everyFrame(callback) {
     i++;
   }
   function schedule() {
-    window.requestAnimationFrame(
-      update
-    );
+    window.requestAnimationFrame(update);
   }
   schedule();
 }

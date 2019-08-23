@@ -70,33 +70,38 @@ export class DemoController extends HTMLElement {
     this.#updateContainer();
   }
 
-  #setCount = count => {
-    this.#count = count;
-    this.#updateContainer();
-  }
+  #setCount =
+      count => {
+        this.#count = count;
+        this.#updateContainer();
+      }
 
-  #getSwappedLocalName = () => {
-    return this.#container.localName === 'div' ? 'virtual-scroller' : 'div';
-  }
+  #getSwappedLocalName =
+      () => {
+        return this.#container.localName === 'div' ? 'virtual-scroller' : 'div';
+      }
 
-  #updateSwapButton = () => {
-    this.#swapButton.textContent = 'swap to ' + this.#getSwappedLocalName();
-  }
+  #updateSwapButton =
+      () => {
+        this.#swapButton.textContent = 'swap to ' + this.#getSwappedLocalName();
+      }
 
-  #swap = () => {
-    const swapTo = this.#getSwappedLocalName();
-    const swapIn = document.createElement(swapTo);
-    Util.swapElement(this.#container, swapIn);
-    this.#container = swapIn;
-    this.#updateSwapButton();
-    this.#updateStatus();
-  }
+  #swap =
+      () => {
+        const swapTo = this.#getSwappedLocalName();
+        const swapIn = document.createElement(swapTo);
+        Util.swapElement(this.#container, swapIn);
+        this.#container = swapIn;
+        this.#updateSwapButton();
+        this.#updateStatus();
+      }
 
-  #updateStatus = () => {
-    const localName = this.#container ? this.#container.localName : 'None';
-    this.#statusDiv.textContent =
-      `count: ${this.#count}. element: ${localName}`;
-  }
+  #updateStatus =
+      () => {
+        const localName = this.#container ? this.#container.localName : 'None';
+        this.#statusDiv.textContent =
+            `count: ${this.#count}. element: ${localName}`;
+      }
 
   #updateContainer = () => {
     this.#updateStatus();

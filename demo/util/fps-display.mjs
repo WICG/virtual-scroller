@@ -27,8 +27,8 @@ export class FpsDisplay extends HTMLElement {
 
     const shadowRoot = this.attachShadow({mode: 'closed'});
     shadowRoot.innerHTML = TEMPLATE;
-    this.#fps = shadowRoot.getElementById('fps')
-      .getElementsByClassName('place');
+    this.#fps =
+        shadowRoot.getElementById('fps').getElementsByClassName('place');
     Util.everyFrame((n, timestamp) => {
       this.#update(n, timestamp);
     });
@@ -38,7 +38,7 @@ export class FpsDisplay extends HTMLElement {
     if (this.#lastTime !== null) {
       const delta = timestamp - this.#lastTime;
       this.#fps[n % this.#fps.length].innerText =
-        (MS_PER_SECOND / delta).toFixed(2);
+          (MS_PER_SECOND / delta).toFixed(2);
     }
     this.#lastTime = timestamp;
   }
