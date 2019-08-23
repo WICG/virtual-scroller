@@ -29,12 +29,8 @@
 
   <script type="module">
     import * as Util from '../util/util.mjs';
-    let divStyle;
-    for (const rule of document.styleSheets[0].rules) {
-      if (rule.selectorText === "#vs > div") {
-        divStyle = rule.style;
-      }
-    }
+    const divStyle = [...document.styleSheets[0].rules]
+          .find(r => r.selectorText === "#vs > div").style;
     Util.everyFrame(i => {
       divStyle.backgroundColor = `hsl(${i*3 % 360} 100% 50%)`;
     });

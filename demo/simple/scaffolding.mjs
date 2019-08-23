@@ -6,6 +6,6 @@ import '../util/demo-controller.mjs';
 // demo will still work.
 import('std:elements/virtual-scroller');
 
-const dc = document.getElementById("dc");
-const vs = document.getElementById("vs");
+const dc = document.getElementById('dc');
+const vs = document.getElementById('vs');
 dc.setContainer(vs);
