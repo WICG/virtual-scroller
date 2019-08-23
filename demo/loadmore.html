@@ -33,6 +33,17 @@
 
 <body>
   <confirm-features></confirm-features>
+
+  <p>Demonstrates the ease-of-use of the <code>&lt;virtual-scroller&gt;</code> element
+    to build an <a href="https://github.com/WICG/virtual-scroller#almost-infinite-data-from-the-server">almost infinite scroller</a>.
+    It simulates pulling data from the server with an artificial 1s delay.
+    It also intentionally avoids prefetching data
+    to make it clearer what is happening.
+    Prefetching could be done by e.g.
+    specifying a <code>rootMargin</code> for the <code>IntersectionObserver</code>
+    to cause the fetch to start before the place-holder element is visible.
+  </p>
+
   <div>
     <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
   </div>
