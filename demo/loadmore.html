@@ -85,7 +85,9 @@
       }
     };
 
-    const observer = new IntersectionObserver(loadMore, {});
+    // Will trigger when the first pixel of the loader becomes
+    // visible.
+    const observer = new IntersectionObserver(loadMore);
     observer.observe(loader);
 
     function swapScroller() {
