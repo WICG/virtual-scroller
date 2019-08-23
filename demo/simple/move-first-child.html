@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual Scoller Demo - Moving children</title>
+  <style>
+    .scroller {
+        overflow: scroll;
+        height: 400px;
+    }
+  </style>
+  <script type="module" src="./scaffolding.mjs"></script>
+
+  <p>Repeatedly moving the first child to the end of the content. This
+    is potentially faster as we may be able to avoid layout changes to
+    the locked elements, however the scroller's internal state must
+    react to the mutation.</p>
+
+  <confirm-features></confirm-features>
+  <fps-display></fps-display>
+
+  <demo-controller id=dc></demo-controller>
+  <div style="width: 100%">
+    <div id=contentDiv class="scroller resize">
+      <virtual-scroller id=vs></virtual-scroller>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as Util from '../util/util.mjs';
+    Util.everyFrame(i => {
+      vs.appendChild(vs.firstChild);
+    });
+  </script>

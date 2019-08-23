@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual Scoller Demo - Restyle</title>
+  <style>
+    #vs > div {
+        background-color: red;
+    }
+    .scroller {
+        overflow: scroll;
+        height: 400px;
+    }
+  </style>
+  <script type="module" src="./scaffolding.mjs"></script>
+
+  <p>Animated restyling of the scrolling area. This should be faster
+    since most elements are display-locked.</p>
+
+  <confirm-features></confirm-features>
+  <fps-display></fps-display>
+
+  <demo-controller id=dc></demo-controller>
+  <div style="width: 100%">
+    <div id=contentDiv class="scroller resize">
+      <virtual-scroller id=vs></virtual-scroller>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as Util from '../util/util.mjs';
+    const divStyle = [...document.styleSheets[0].rules]
+          .find(r => r.selectorText === "#vs > div").style;
+    Util.everyFrame(i => {
+      divStyle.backgroundColor = `hsl(${i*3 % 360} 100% 50%)`;
+    });
+  </script>

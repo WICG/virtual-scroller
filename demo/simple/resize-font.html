@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual Scoller Demo - Resize font</title>
+  <style>
+    .resize {
+        animation-direction: alternate;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        animation-name: resize;
+    }
+    @keyframes resize {
+        0% { font-size: 12px; }
+        100% { font-size: 30px; }
+    }
+    .scroller {
+        overflow: scroll;
+        height: 400px;
+    }
+  </style>
+  <script type="module" src="./scaffolding.mjs"></script>
+
+  <p>Animated resizing of the content's font. This should be faster
+    since most elements are display-locked.</p>
+
+  <confirm-features></confirm-features>
+  <fps-display></fps-display>
+
+  <demo-controller id=dc></demo-controller>
+  <div style="width: 100%">
+    <div id=contentDiv class="scroller resize">
+      <virtual-scroller id=vs></virtual-scroller>
+    </div>
+  </div>
