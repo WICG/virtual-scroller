@@ -69,8 +69,8 @@ class ContactElement extends HTMLElement {
     // Animate only after the first render.
     this.style.transition = 'none';
     window.requestIdleCallback(() => {
- this.style.transition = null;
-});
+      this.style.transition = null;
+    });
   }
 
   get contact() {
