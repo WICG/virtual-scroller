@@ -70,8 +70,7 @@
 
     const dataSource = new ContactDataSource();
 
-    const contactsPromise = dataSource.getNextContacts(1000);
-    contactsPromise.then(populateContacts);
+    dataSource.getNextContacts(1000).then(populateContacts);
 
     const scroller = document.getElementById('scroller');
 
@@ -89,7 +88,7 @@
       let i = 0;
       let section;
       for (const contact of contacts) {
-        const firstLetter = contact.name.substr(0, 1);
+        const firstLetter = contact.name[0];
         if (!section || section.firstLetter !== firstLetter) {
           section = makeSection(firstLetter);
           scroller.appendChild(section);
@@ -126,7 +125,7 @@
     function swapScrollers() {
       const newScrollers = [];
       for (const scroller of scrollers) {
-        const swapInLocalName = scroller.localName === "div" ? "virtual-scroller" : "div";
+        const swapInLocalName = scroller.localName === 'div' ? 'virtual-scroller' : 'div';
         const swapIn = document.createElement(swapInLocalName);
         util.swapElement(scroller, swapIn);
         newScrollers.push(swapIn);
