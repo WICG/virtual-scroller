@@ -28,7 +28,6 @@
       height: 80px;
     }
   </style>
-  <script type="module" src="./util/confirm-features.mjs"></script>
 </head>
 
 <body>
@@ -51,18 +50,20 @@
   <virtual-scroller id=scroller></virtual-scroller>
 
   <script type="module">
-    // Do this separately. If virtual-scroller is not available, the demo
-    // will still work.
-    import 'std:elements/virtual-scroller';
-  </script>
-  <script type="module">
+    import './util/confirm-features.mjs';
     import './contacts/contact-element.mjs';
     import { ContactDataSource } from './contacts/contact-data-source.mjs';
     import * as util from './util/util.mjs';
 
+    // Do this dynamically. If virtual-scroller is not available, the
+    // demo will still work.
+    import('std:elements/virtual-scroller');
+
     const dataSource = new ContactDataSource();
 
     const loader = document.createElement('div');
+
+    const scroller = document.getElementById('scroller');
     scroller.appendChild(loader);
 
     async function loadMore() {
