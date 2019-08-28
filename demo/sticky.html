@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Virtual Scoller Demo - Nested sections and sticky</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <style>
+    body {
+      font-family: Roboto, Helvetica, sans-serif;
+      max-width: 600px;
+      height: 100vh;
+      margin: 0px auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    virtual-scroller {
+      flex: 1;
+      margin: 10px 0;
+      border-top: 2px solid #eee;
+      border-bottom: 2px solid #eee;
+    }
+
+    contact-element,
+    button {
+      height: 80px;
+    }
+    section > h1 {
+        font-size: 40pt;
+        position: sticky;
+        top: 0;
+        background: white;
+        opacity: 0.9;
+        z-index: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <confirm-features></confirm-features>
+
+  <p>Demonstrates using nested <code>&lt;virtual-scroller&gt;</code>
+    to get sticky section headers.
+    The outer <code>&lt;virtual-scroller&gt;</code> manages the sections.
+    Each section has its own <code>&lt;virtual-scroller&gt;</code>
+    containing the list of contacts in that section.
+    In this way we ensure that at any one time,
+    most of the sections are display-locked and for any given section,
+    with a large number of contacts,
+    most of the contacts are display-locked.
+  </p>
+
+  <div>
+    <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
+  </div>
+
+  <virtual-scroller id=scroller></virtual-scroller>
+
+  <script type="module">
+    import './util/confirm-features.mjs';
+    import './contacts/contact-element.mjs';
+    import { ContactDataSource } from './contacts/contact-data-source.mjs';
+    import * as util from './util/util.mjs';
+
+    // Do this dynamically. If virtual-scroller is not available, the
+    // demo will still work.
+    import('std:elements/virtual-scroller');
+
+    const dataSource = new ContactDataSource();
+
+    dataSource.getNextContacts(1000).then(populateContacts);
+
+    const scroller = document.getElementById('scroller');
+
+    // This array will track all of the scrollers in play, so that we
+    // can swap them all in/out for divs when we want.
+    let scrollers = [scroller];
+
+    /*
+     * Sorts the contacts and inserts them into the doc, grouped into
+     * sections by first letter.
+     */
+    function populateContacts(contacts) {
+      contacts.sort((a, b) => a.name < b.name ? -1 : a.name === b.name ? 0 : 1);
+
+      let i = 0;
+      let section;
+      let sectionLetter;
+      for (const contact of contacts) {
+        const firstLetter = contact.name[0];
+        if (!section || sectionLetter !== firstLetter) {
+          section = makeSection(firstLetter);
+          sectionLetter = firstLetter;
+          scroller.appendChild(section);
+        }
+
+        const contactElement = document.createElement('contact-element');
+        contactElement.contact = contact;
+        section.querySelector('.sectionContacts').appendChild(contactElement);
+      }
+    }
+
+    /*
+     * Creates a section of contacts with a header specifying the first letter.
+     */
+    function makeSection(firstLetter) {
+      const section = document.createElement('section');
+      section.innerHTML = `
+        <h1>${firstLetter}</h1>
+        <virtual-scroller class="sectionContacts"></virtual-scroller>
+`;
+      scrollers.push(section.querySelector('.sectionContacts'));
+      return section;
+    }
+
+    /*
+     * Swap all of the elements in scrollers from virtual-scroller to div or
+     * back.
+     */
+    function swapScrollers() {
+      const newScrollers = [];
+      for (const scroller of scrollers) {
+        const swapInLocalName = scroller.localName === 'div' ? 'virtual-scroller' : 'div';
+        const swapIn = document.createElement(swapInLocalName);
+        util.swapElement(scroller, swapIn);
+        newScrollers.push(swapIn);
+      }
+      scrollers = newScrollers;
+    }
+    swapButton.addEventListener('click', swapScrollers);
+  </script>
+</body>
+
+</html>
