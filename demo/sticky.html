@@ -87,17 +87,18 @@
 
       let i = 0;
       let section;
+      let sectionLetter;
       for (const contact of contacts) {
         const firstLetter = contact.name[0];
-        if (!section || section.firstLetter !== firstLetter) {
+        if (!section || sectionLetter !== firstLetter) {
           section = makeSection(firstLetter);
+          sectionLetter = firstLetter;
           scroller.appendChild(section);
-          scrollers.push(section.contacts);
         }
 
-        let contactElement = document.createElement('contact-element');
-        section.contacts.appendChild(contactElement);
+        const contactElement = document.createElement('contact-element');
         contactElement.contact = contact;
+        section.querySelector('.sectionContacts').appendChild(contactElement);
       }
     }
 
@@ -105,16 +106,12 @@
      * Creates a section of contacts with a header specifying the first letter.
      */
     function makeSection(firstLetter) {
-      const section = document.createElement('div');
-      const header = document.createElement('div');
-      header.className = "sectionHeader";
-      header.textContent = firstLetter;
-      section.appendChild(header);
-      const contacts = document.createElement('virtual-scroller');
-      contacts.className = "sectionContacts";
-      section.appendChild(contacts);
-      section.firstLetter = firstLetter;
-      section.contacts = contacts;
+      const section = document.createElement('section');
+      section.innerHTML = `
+        <h1>${firstLetter}</h1>
+        <virtual-scroller class="sectionContacts"></virtual-scroller>
+`;
+      scrollers.push(section.querySelector('.sectionContacts'));
       return section;
     }
 
