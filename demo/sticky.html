@@ -83,22 +83,27 @@
      * sections by first letter.
      */
     function populateContacts(contacts) {
-      contacts.sort((a, b) => a.name < b.name ? -1 : a.name === b.name ? 0 : 1);
+      const sections = new Map();
 
-      let i = 0;
-      let section;
-      let sectionLetter;
       for (const contact of contacts) {
         const firstLetter = contact.name[0];
-        if (!section || sectionLetter !== firstLetter) {
-          section = makeSection(firstLetter);
-          sectionLetter = firstLetter;
-          scroller.appendChild(section);
+        if (!sections.has(firstLetter)) {
+          sections.set(firstLetter, []);
         }
+        sections.get(firstLetter).push(contact);
+      }
 
-        const contactElement = document.createElement('contact-element');
-        contactElement.contact = contact;
-        section.querySelector('.sectionContacts').appendChild(contactElement);
+      const firstLetters = Array.from(sections.keys()).sort();
+      for (const firstLetter of firstLetters) {
+        const section = makeSection(firstLetter);
+        scroller.appendChild(section);
+        const sectionContacts = sections.get(firstLetter).sort(
+          (a, b) => a.name < b.name ? -1 : a.name === b.name ? 0 : 1)
+        for (const contact of sectionContacts) {
+          let contactElement = document.createElement('contact-element');
+          contactElement.contact = contact;
+          section.querySelector('.sectionContacts').appendChild(contactElement);
+        }
       }
     }
 
