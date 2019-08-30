@@ -14,6 +14,7 @@ class ContactElement extends HTMLElement {
     }
     this.attachShadow({mode: 'open'}).innerHTML = `
 <style>
+
   :host {
     display: flex;
     align-items: center;
@@ -27,15 +28,25 @@ class ContactElement extends HTMLElement {
     transition: transform 200ms ease-in-out;
   }
   img {
-    width: 50px;
-    height: 50px;
+    display: inline-block;
+    height: 90%;
     margin-right: 15px;
     border-radius: 50%;
     background-color: lightgray;
   }
+  #inline-block {
+    display: inline-block;
+    height: 100%;
+    vertical-align: top;
+  }
+  #container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
   label {
     width: 100%;
-    flex: 1;
   }
   button {
     background-color: transparent;
@@ -48,7 +59,11 @@ class ContactElement extends HTMLElement {
   }
 </style>
 <img id="img">
-<label id="label"></label>
+<div id=inline-block>
+  <div id=container>
+    <label id="label"></label>
+  </div>
+</div>
 <span id="counter"></span>
 <button id="up">🔼</button>
 <button id="down">🔽</button>`;
