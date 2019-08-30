@@ -96,7 +96,8 @@
       const swapIn = document.createElement(swapInLocalName);
       util.swapElement(scroller, swapIn);
     }
-    swapButton.addEventListener('click', swapScroller);
+    document.querySelector('#swapButton')
+        .addEventListener('click', swapScroller);
   </script>
 </body>
 
