@@ -35,6 +35,20 @@
         opacity: 0.9;
         z-index: 1;
     }
+    .resize {
+        animation-direction: alternate;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        animation-name: resize;
+    }
+    @keyframes resize {
+        0% { width: 400px; }
+        100% { width: 600px; }
+    }
+    .scroller {
+        overflow: scroll;
+    }
   </style>
 </head>
 
@@ -54,12 +68,16 @@
 
   <div>
     <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
+    <button id=perfDemoModeButton>performance demo mode</button>
   </div>
 
-  <virtual-scroller id=scroller></virtual-scroller>
-
+  <fps-display style="display: none"></fps-display>
+  <div id=scrollContainer>
+    <virtual-scroller id=scroller></virtual-scroller>
+  </div>
   <script type="module">
     import './util/confirm-features.mjs';
+    import './util/fps-display.mjs';
     import './contacts/contact-element.mjs';
     import { ContactDataSource } from './contacts/contact-data-source.mjs';
     import * as util from './util/util.mjs';
@@ -131,6 +149,32 @@
     }
     document.querySelector('#swapButton')
         .addEventListener('click', swapScrollers);
+
+    let perfDemoModeState = false;
+
+    /**
+     * Swaps between performance demo mode and not. In this mode we
+     * should the FPS and we do an animated resize of the contacts list.
+     */
+    function perfDemoMode() {
+      let fpsDisplayStyleDisplay;
+      let scrollContainerClass;
+      if (perfDemoModeState === false) {
+        perfDemoModeState = true;
+        fpsDisplayStyleDisplay = "";
+        scrollContainerClass = "scroller resize";
+      } else {
+        perfDemoModeState = false;
+        fpsDisplayStyleDisplay = "none";
+        scrollContainerClass = "";
+      }
+      document.querySelector('fps-display').style.display =
+          fpsDisplayStyleDisplay;
+      document.querySelector('#scrollContainer').className =
+          scrollContainerClass;
+    }
+    document.querySelector('#perfDemoModeButton')
+        .addEventListener('click', perfDemoMode);
   </script>
 </body>
 
