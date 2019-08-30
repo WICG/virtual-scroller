@@ -71,7 +71,7 @@
     <button id=perfDemoModeButton>performance demo mode</button>
   </div>
 
-  <fps-display style="display: none"></fps-display>
+  <fps-display hidden></fps-display>
   <div id=scrollContainer>
     <virtual-scroller id=scroller></virtual-scroller>
   </div>
@@ -150,31 +150,21 @@
     document.querySelector('#swapButton')
         .addEventListener('click', swapScrollers);
 
-    let perfDemoModeState = false;
+    let isInperfDemoMode = false;
 
     /**
      * Swaps between performance demo mode and not. In this mode we
-     * should the FPS and we do an animated resize of the contacts list.
+     * show the FPS and we do an animated resize of the contacts list.
      */
-    function perfDemoMode() {
-      let fpsDisplayStyleDisplay;
-      let scrollContainerClass;
-      if (perfDemoModeState === false) {
-        perfDemoModeState = true;
-        fpsDisplayStyleDisplay = "";
-        scrollContainerClass = "scroller resize";
-      } else {
-        perfDemoModeState = false;
-        fpsDisplayStyleDisplay = "none";
-        scrollContainerClass = "";
-      }
-      document.querySelector('fps-display').style.display =
-          fpsDisplayStyleDisplay;
+    function togglePerfDemoMode() {
+      isInperfDemoMode = !isInperfDemoMode;
+      document.querySelector('fps-display').toggleAttribute(
+        "hidden", !isInperfDemoMode);
       document.querySelector('#scrollContainer').className =
-          scrollContainerClass;
+        isInperfDemoMode ? "scroller resize" : ""
     }
     document.querySelector('#perfDemoModeButton')
-        .addEventListener('click', perfDemoMode);
+        .addEventListener('click', togglePerfDemoMode);
   </script>
 </body>
 
