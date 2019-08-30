@@ -35,6 +35,14 @@
         opacity: 0.9;
         z-index: 1;
     }
+
+    .compact contact-element {
+      height: 40px;
+      font-size: 80%;
+      font-weight: bold;
+      font-style: italic;
+      padding: 0 !important;
+    }
   </style>
 </head>
 
@@ -54,6 +62,10 @@
 
   <div>
     <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
+  </div>
+
+  <div>
+    <button id=toggleCompactMode>Toggle Compact Mode With Prejudice</button>
   </div>
 
   <virtual-scroller id=scroller></virtual-scroller>
@@ -85,7 +97,6 @@
     function populateContacts(contacts) {
       contacts.sort((a, b) => a.name < b.name ? -1 : a.name === b.name ? 0 : 1);
 
-      let i = 0;
       let section;
       let sectionLetter;
       for (const contact of contacts) {
@@ -131,6 +142,12 @@
     }
     document.querySelector('#swapButton')
         .addEventListener('click', swapScrollers);
+
+    function toggleCompactMode() {
+      document.body.classList.toggle('compact');
+    }
+    document.querySelector('#toggleCompactMode')
+        .addEventListener('click', toggleCompactMode);
   </script>
 </body>
 
