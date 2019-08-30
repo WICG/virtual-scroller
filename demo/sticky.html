@@ -16,6 +16,11 @@
       flex-direction: column;
     }
 
+    label {
+      display: block;
+      margin: 1em;
+    }
+
     virtual-scroller {
       flex: 1;
       margin: 10px 0;
@@ -66,16 +71,23 @@
     most of the contacts are display-locked.
   </p>
 
-  <div>
-    <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
-    <button id=perfDemoModeButton>performance demo mode</button>
-  </div>
+  <fieldset>
+    <label>
+      <std-switch id="useVirtualScroller" on></std-switch>
+      Use <code>&lt;virtual-scroller&gt;</code> instead of <code>&lt;div&gt;</code>
+    </label>
+    <label>
+      <std-switch id="perfDemoMode"></std-switch>
+      Performance demo mode
+    </label>
+  </fieldset>
 
   <fps-display style="display: none"></fps-display>
   <div id=scrollContainer>
     <virtual-scroller id=scroller></virtual-scroller>
   </div>
   <script type="module">
+    import 'std:elements/switch';
     import './util/confirm-features.mjs';
     import './util/fps-display.mjs';
     import './contacts/contact-element.mjs';
@@ -133,6 +145,9 @@
       return section;
     }
 
+    const useVirtualScroller = document.querySelector('#useVirtualScroller');
+    const perfDemoMode = document.querySelector('#perfDemoMode');
+
     /*
      * Swap all of the elements in scrollers from virtual-scroller to div or
      * back.
@@ -140,31 +155,26 @@
     function swapScrollers() {
       const newScrollers = [];
       for (const scroller of scrollers) {
-        const swapInLocalName = scroller.localName === 'div' ? 'virtual-scroller' : 'div';
+        const swapInLocalName = useVirtualScroller.on ? 'virtual-scroller' : 'div';
         const swapIn = document.createElement(swapInLocalName);
         util.swapElement(scroller, swapIn);
         newScrollers.push(swapIn);
       }
       scrollers = newScrollers;
     }
-    document.querySelector('#swapButton')
-        .addEventListener('click', swapScrollers);
-
-    let perfDemoModeState = false;
+    useVirtualScroller.addEventListener('change', swapScrollers);
 
     /**
      * Swaps between performance demo mode and not. In this mode we
      * should the FPS and we do an animated resize of the contacts list.
      */
-    function perfDemoMode() {
+    function swapPerfDemoMode() {
       let fpsDisplayStyleDisplay;
       let scrollContainerClass;
-      if (perfDemoModeState === false) {
-        perfDemoModeState = true;
+      if (perfDemoMode.on) {
         fpsDisplayStyleDisplay = "";
         scrollContainerClass = "scroller resize";
       } else {
-        perfDemoModeState = false;
         fpsDisplayStyleDisplay = "none";
         scrollContainerClass = "";
       }
@@ -173,8 +183,7 @@
       document.querySelector('#scrollContainer').className =
           scrollContainerClass;
     }
-    document.querySelector('#perfDemoModeButton')
-        .addEventListener('click', perfDemoMode);
+    perfDemoMode.addEventListener('change', swapPerfDemoMode);
   </script>
 </body>
 
