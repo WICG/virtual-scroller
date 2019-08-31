@@ -35,6 +35,15 @@
         opacity: 0.9;
         z-index: 1;
     }
+
+    .compact contact-element {
+      height: 40px;
+      font-size: 80%;
+      font-weight: bold;
+      font-style: italic;
+      padding: 0 !important;
+    }
+
     .resize {
         animation-direction: alternate;
         animation-duration: 1s;
@@ -69,12 +78,14 @@
   <div>
     <button id=swapButton>switch virtual-scroller &lt;-&gt; div</button>
     <button id=perfDemoModeButton>performance demo mode</button>
+    <button id=toggleCompactMode>Toggle Compact Mode With Prejudice</button>
   </div>
 
   <fps-display hidden></fps-display>
   <div id=scrollContainer>
     <virtual-scroller id=scroller></virtual-scroller>
   </div>
+
   <script type="module">
     import './util/confirm-features.mjs';
     import './util/fps-display.mjs';
@@ -103,7 +114,6 @@
     function populateContacts(contacts) {
       contacts.sort((a, b) => a.name < b.name ? -1 : a.name === b.name ? 0 : 1);
 
-      let i = 0;
       let section;
       let sectionLetter;
       for (const contact of contacts) {
@@ -165,6 +175,13 @@
     }
     document.querySelector('#perfDemoModeButton')
         .addEventListener('click', togglePerfDemoMode);
+    
+    function toggleCompactMode() {
+      document.body.classList.toggle('compact');
+    }
+    document.querySelector('#toggleCompactMode')
+        .addEventListener('click', toggleCompactMode);
+
   </script>
 </body>
 
