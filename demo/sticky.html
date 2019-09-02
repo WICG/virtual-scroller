@@ -16,11 +16,15 @@
       flex-direction: column;
     }
 
-    virtual-scroller {
+    scrollContainer > virtual-scroller {
       flex: 1;
       margin: 10px 0;
       border-top: 2px solid #eee;
       border-bottom: 2px solid #eee;
+    }
+
+    contact-element {
+      contain: style layout;
     }
 
     contact-element,
