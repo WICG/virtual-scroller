@@ -50,10 +50,11 @@
         animation-iteration-count: infinite;
         animation-timing-function: linear;
         animation-name: resize;
+        border-style: solid;
     }
     @keyframes resize {
-        0% { width: 400px; }
-        100% { width: 600px; }
+        0% { width: 50%; }
+        100% { width: 100%; }
     }
     .scroller {
         overflow: scroll;
@@ -175,7 +176,7 @@
     }
     document.querySelector('#perfDemoModeButton')
         .addEventListener('click', togglePerfDemoMode);
-    
+
     function toggleCompactMode() {
       document.body.classList.toggle('compact');
     }
