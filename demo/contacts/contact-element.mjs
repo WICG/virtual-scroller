@@ -99,7 +99,7 @@ class ContactElement extends HTMLElement {
     }
   }
 
-  _render = () => {
+  _render() {
     if (!this.shadowRoot) {
       return;
     }

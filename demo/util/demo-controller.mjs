@@ -96,14 +96,13 @@ export class DemoController extends HTMLElement {
         this._updateStatus();
       }
 
-  _updateStatus =
-      () => {
-        const localName = this._container ? this._container.localName : 'None';
-        this._statusDiv.textContent =
-            `count: ${this._count}. element: ${localName}`;
-      }
+  _updateStatus() {
+    const localName = this._container ? this._container.localName : 'None';
+    this._statusDiv.textContent =
+        `count: ${this._count}. element: ${localName}`;
+  }
 
-  _updateContainer = () => {
+  _updateContainer() {
     this._updateStatus();
     if (this._container === null) {
       return;

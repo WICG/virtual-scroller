@@ -34,7 +34,7 @@ export class FpsDisplay extends HTMLElement {
     });
   }
 
-  _update = (n, timestamp) => {
+  _update(n, timestamp) {
     if (this._lastTime !== null) {
       const delta = timestamp - this._lastTime;
       this._fps[n % this._fps.length].innerText =
