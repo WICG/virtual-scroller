@@ -70,24 +70,20 @@ export class DemoController extends HTMLElement {
     this._updateContainer();
   }
 
-  _setCount =
-      count => {
+  _setCount(count) {
         this._count = count;
         this._updateContainer();
       }
 
-  _getSwappedLocalName =
-      () => {
+  _getSwappedLocalName() {
         return this._container.localName === 'div' ? 'virtual-scroller' : 'div';
       }
 
-  _updateSwapButton =
-      () => {
+  _updateSwapButton() {
         this._swapButton.textContent = 'swap to ' + this._getSwappedLocalName();
       }
 
-  _swap =
-      () => {
+  _swap() {
         const swapTo = this._getSwappedLocalName();
         const swapIn = document.createElement(swapTo);
         Util.swapElement(this._container, swapIn);
