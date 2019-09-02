@@ -36,11 +36,11 @@ const TEMPLATE = `
  * div. It also displays the current count and container type.
  */
 export class DemoController extends HTMLElement {
-  #count = DEFAULT_ELEMENT_COUNT;
-  #container;
+  _count = DEFAULT_ELEMENT_COUNT;
+  _container;
 
-  #swapButton;
-  #statusDiv;
+  _swapButton;
+  _statusDiv;
 
   constructor() {
     super();
@@ -51,78 +51,78 @@ export class DemoController extends HTMLElement {
     const buttons = shadowRoot.getElementById('buttons');
     for (const button of buttons.getElementsByClassName('count')) {
       button.onclick = e => {
-        this.#setCount(parseInt(e.target.textContent));
+        this._setCount(parseInt(e.target.textContent));
       };
     }
 
-    this.#swapButton = shadowRoot.getElementById('swap');
-    this.#swapButton.onclick = () => {
-      this.#swap();
+    this._swapButton = shadowRoot.getElementById('swap');
+    this._swapButton.onclick = () => {
+      this._swap();
     };
-    this.#statusDiv = shadowRoot.getElementById('status');
+    this._statusDiv = shadowRoot.getElementById('status');
   }
 
   /**
    * Set the container that will be managed by the controller.
    */
   setContainer(container) {
-    this.#container = container;
-    this.#updateContainer();
+    this._container = container;
+    this._updateContainer();
   }
 
-  #setCount =
+  _setCount =
       count => {
-        this.#count = count;
-        this.#updateContainer();
+        this._count = count;
+        this._updateContainer();
       }
 
-  #getSwappedLocalName =
+  _getSwappedLocalName =
       () => {
-        return this.#container.localName === 'div' ? 'virtual-scroller' : 'div';
+        return this._container.localName === 'div' ? 'virtual-scroller' : 'div';
       }
 
-  #updateSwapButton =
+  _updateSwapButton =
       () => {
-        this.#swapButton.textContent = 'swap to ' + this.#getSwappedLocalName();
+        this._swapButton.textContent = 'swap to ' + this._getSwappedLocalName();
       }
 
-  #swap =
+  _swap =
       () => {
-        const swapTo = this.#getSwappedLocalName();
+        const swapTo = this._getSwappedLocalName();
         const swapIn = document.createElement(swapTo);
-        Util.swapElement(this.#container, swapIn);
-        this.#container = swapIn;
-        this.#updateSwapButton();
-        this.#updateStatus();
+        Util.swapElement(this._container, swapIn);
+        this._container = swapIn;
+        this._updateSwapButton();
+        this._updateStatus();
       }
 
-  #updateStatus =
+  _updateStatus =
       () => {
-        const localName = this.#container ? this.#container.localName : 'None';
-        this.#statusDiv.textContent =
-            `count: ${this.#count}. element: ${localName}`;
+        const localName = this._container ? this._container.localName : 'None';
+        this._statusDiv.textContent =
+            `count: ${this._count}. element: ${localName}`;
       }
 
-  #updateContainer = () => {
-    this.#updateStatus();
-    if (this.#container === null) {
+  _updateContainer = () => {
+    this._updateStatus();
+    if (this._container === null) {
       return;
     }
-    const children = this.#container.children;
-    while (children.length > this.#count) {
+    const children = this._container.children;
+    while (children.length > this._count) {
       children[0].remove();
     }
-    if (children.length < this.#count) {
+    if (children.length < this._count) {
       const divs = new DocumentFragment();
-      for (let i = children.length; i < this.#count; i++) {
+      for (let i = children.length; i < this._count; i++) {
         const newDiv = document.createElement('div');
         newDiv.innerHTML = `${i} ${WORDS}`;
         newDiv.id = 'p' + i;
         divs.append(newDiv);
       }
-      this.#container.appendChild(divs);
+      this._container.appendChild(divs);
     }
-    this.#updateSwapButton();
+    this._updateSwapButton();
   }
 }
 
