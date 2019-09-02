@@ -36,14 +36,11 @@ const TEMPLATE = `
  * div. It also displays the current count and container type.
  */
 export class DemoController extends HTMLElement {
-  _count = DEFAULT_ELEMENT_COUNT;
-  _container;
-
-  _swapButton;
-  _statusDiv;
 
   constructor() {
     super();
+
+    this._count = DEFAULT_ELEMENT_COUNT;
 
     const shadowRoot = this.attachShadow({mode: 'closed'});
     shadowRoot.innerHTML = TEMPLATE;

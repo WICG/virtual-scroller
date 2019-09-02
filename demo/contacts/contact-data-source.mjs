@@ -4,10 +4,12 @@ import * as util from '../util/util.mjs';
 const DELAY_MS = 1000;
 
 export class ContactDataSource {
-  _delayMs = 0;
-  _allContacts = null;
-  _loading = false;
-  _loadedAll = false;
+  constructor() {
+    this._delayMs = 0;
+    this._allContacts = null;
+    this._loading = false;
+    this._loadedAll = false;
+  }
 
   get loadedAll() {
     return this._loadedAll;

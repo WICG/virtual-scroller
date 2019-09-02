@@ -2,11 +2,11 @@ const emptyImg =
     'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
 class ContactElement extends HTMLElement {
-  _img;
-  _label;
-  _counter;
-  _renderCount = 0;
-  _contact;
+
+  constructor() {
+    super();
+    this._renderCount = 0;
+  }
 
   connectedCallback() {
     if (this.shadowRoot) {
