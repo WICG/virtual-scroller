@@ -2,11 +2,11 @@ const emptyImg =
     'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
 class ContactElement extends HTMLElement {
-  #img;
-  #label;
-  #counter;
-  #renderCount = 0;
-  #contact;
+  _img;
+  _label;
+  _counter;
+  _renderCount = 0;
+  _contact;
 
   connectedCallback() {
     if (this.shadowRoot) {
@@ -68,9 +68,9 @@ class ContactElement extends HTMLElement {
 <button id="up">🔼</button>
 <button id="down">🔽</button>`;
 
-    this.#img = this.shadowRoot.querySelector('#img');
-    this.#label = this.shadowRoot.querySelector('label');
-    this.#counter = this.shadowRoot.querySelector('#counter');
+    this._img = this.shadowRoot.querySelector('#img');
+    this._label = this.shadowRoot.querySelector('label');
+    this._counter = this.shadowRoot.querySelector('#counter');
 
     const up = this.shadowRoot.querySelector('#up');
     up.addEventListener('click', () => this.dispatchEvent(new Event('moveup')));
@@ -79,7 +79,7 @@ class ContactElement extends HTMLElement {
         'click', () => this.dispatchEvent(new Event('movedown')));
 
     if (this.contact) {
-      this.#render();
+      this._render();
     }
     // Animate only after the first render.
     this.style.transition = 'none';
@@ -89,25 +89,25 @@ class ContactElement extends HTMLElement {
   }
 
   get contact() {
-    return this.#contact;
+    return this._contact;
   }
 
   set contact(contact) {
-    if (contact !== this.#contact) {
-      this.#contact = contact;
-      this.#render();
+    if (contact !== this._contact) {
+      this._contact = contact;
+      this._render();
     }
   }
 
-  #render = () => {
+  _render() {
     if (!this.shadowRoot) {
       return;
     }
     const contact = this.contact || {};
-    this.#img.src = contact.image || emptyImg;
-    this.#label.textContent = contact.name;
-    this.#label.style.color = contact.color || null;
-    this.#counter.textContent = `render count: ${++this.#renderCount}`;
+    this._img.src = contact.image || emptyImg;
+    this._label.textContent = contact.name;
+    this._label.style.color = contact.color || null;
+    this._counter.textContent = `render count: ${++this._renderCount}`;
   }
 }
 
