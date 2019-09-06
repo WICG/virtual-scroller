@@ -226,4 +226,4 @@ to get a working virtual-scroller element.
 
 ## Demos
 
-https://wicg.github.io/virtual-scroller/demo/
+https://github.com/fergald/virtual-scroller-demos
