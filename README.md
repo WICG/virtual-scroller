@@ -72,7 +72,7 @@ scroller.addEventListener('rangechange', (event) => {
 And, at least in v1, the following are out of scope:
 
 * Built-in support for advanced features and behaviors, such as those mentioned above.
-* Support infinite-grid (spreadsheet-like) or masonry layouts.
+* Support infinite-grid (spreadsheet-like), multi-column (content continues from bottom of col(N) to top of col(N+1)) or masonry layouts.
 
 ## Proposed APIs
 
