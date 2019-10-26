@@ -38,6 +38,8 @@ import "std:virtual-scroller";
 </virtual-scroller>
 
 <script>
+const scroller = document.getElementById('scroller');
+  
 // You can add, remove, modify children of the <virtual-scroller> as you would
 // a regular element, using DOM APIs.
 scroller.append(...newChildren);
