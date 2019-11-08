@@ -1,3 +1,5 @@
+# Work on this approach is not proceeding, this branch is here for historical purposes.
+
 # &lt;virtual-scroller&gt;
 
 `<virtual-scroller>` maps a provided set of JavaScript objects onto DOM nodes,
