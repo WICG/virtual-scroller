@@ -2,6 +2,10 @@
 
 This repository hosts explorations for a new web platform feature, a virtual scroller control. The idea of a virtual scroller is to provide a scrolling "viewport" onto some content, allow extremely large numbers of elements to exist, but maintain high performance by only paying the cost for those that are currently visible. Traditionally, we say that the non-visible content is _virtualized_.
 
+## Current status
+
+This project is no longer being actively developed.
+
 ## Why a virtual scroller?
 
 Virtualized content is a popular and important pattern on the web. Most content uses it in some form: the https://m.twitter.com and https://facebook.com feeds; Google Photos and YouTube comments; and many news sites which have an automatic "scroll to next article" feature. Most popular frameworks have at least one high-usage virtualization component, e.g. [React Virtualized](https://bvaughn.github.io/react-virtualized/) with [~290K weekly downloads](https://www.npmjs.com/package/react-virtualized). See the [infinite list study group](https://github.com/domenic/infinite-list-study-group) for more research on existing virtualization solutions, both on the web and in other platforms like iOS.
