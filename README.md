@@ -4,7 +4,7 @@ This repository hosts explorations for a new web platform feature, a virtual scr
 
 ## Current status
 
-This project is no longer being actively developed. Instead we are pursuing primitives [here](https://github.com/WICG/display-locking.
+This project is no longer being actively developed. Instead we are pursuing primitives [here](https://github.com/WICG/display-locking).
 
 ## Why a virtual scroller?
 
